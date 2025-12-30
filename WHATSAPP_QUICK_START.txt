@@ -1,0 +1,87 @@
+========================================
+QM BEAUTY - WHATSAPP SETUP GUIDE
+Business Number: +255 657 120 151
+========================================
+
+STEP 1: Start Evolution API
+----------------------------
+1. Make sure Docker Desktop is running
+2. Double-click: start-evolution.bat
+   OR run in PowerShell:
+   docker-compose -f docker-compose.evolution.yml up -d
+
+3. Wait 10 seconds for container to start
+
+
+STEP 2: Connect Your WhatsApp
+------------------------------
+1. Open browser: http://localhost:8080/instance/qrcode/qm-beauty
+
+2. On your phone with +255 657 120 151:
+   - Open WhatsApp
+   - Go to Settings → Linked Devices
+   - Tap "Link a Device"
+   - Scan the QR code from your browser
+
+3. Wait for "Connected" status
+
+
+STEP 3: Test the Integration
+-----------------------------
+1. Start your Next.js app (if not running):
+   npm run dev
+
+2. Visit test dashboard:
+   http://localhost:3000/test/whatsapp
+
+3. Click "Check Status" - should show "Connected"
+
+4. Send a test message to yourself:
+   - Phone: 255657120151
+   - Message: "Test from QM Beauty"
+   - Click "Send Test Message"
+
+
+STEP 4: Verify Order Confirmations
+-----------------------------------
+When customers place orders, WhatsApp messages will be sent to:
+✓ Your business number: +255 657 120 151
+✓ Customer's number (confirmation)
+
+
+IMPORTANT NOTES:
+================
+✓ Evolution API is already enabled in .env.local
+✓ Your business number is configured throughout the system
+✓ WhatsApp button on website points to +255 657 120 151
+✓ Order confirmations will be sent to this number
+
+TROUBLESHOOTING:
+================
+❌ QR Code not showing?
+   → Restart: docker-compose -f docker-compose.evolution.yml restart
+
+❌ Messages not sending?
+   → Check status: http://localhost:3000/api/whatsapp/evolution
+   → View logs: docker logs qm-beauty-whatsapp
+
+❌ Connection lost?
+   → Just scan QR code again (Step 2)
+
+
+STOP WHATSAPP API:
+==================
+docker-compose -f docker-compose.evolution.yml down
+
+
+NEED HELP?
+==========
+Check: EVOLUTION_API_SETUP.md (full documentation)
+Test Dashboard: http://localhost:3000/test/whatsapp
+API Status: http://localhost:8080
+
+
+========================================
+Your WhatsApp Business Number:
++255 657 120 151
+========================================
