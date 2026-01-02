@@ -107,11 +107,19 @@ export async function POST(request: NextRequest) {
       console.log('Booking Data:', bookingData);
 
       // Send WhatsApp notification to QM Beauty team
+      const bookingTime = new Date(eventDetails.start_time);
+      const duration = Math.round((new Date(eventDetails.end_time).getTime() - bookingTime.getTime()) / 60000);
+
       const bookingMessage = generateBookingMessage({
         customerName: invitee.name,
         customerPhone: phoneNumber,
         serviceName: eventDetails.name,
+<<<<<<< HEAD
         bookingTime: new Date(eventDetails.start_time),
+=======
+        bookingTime,
+        duration,
+>>>>>>> 16ccfa0dfae6f041ca8f9bbf982cd9dc188ff225
       });
 
       if (unifiedWhatsApp.isConfigured()) {
@@ -148,13 +156,7 @@ export async function POST(request: NextRequest) {
       if (unifiedWhatsApp.isConfigured()) {
         const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255715727085';
         
-        const cancelMessage = `❌ *BOOKING CANCELLED*
-
-Customer: ${invitee.name}
-Service: ${eventDetails.name}
-Time: ${new Date(eventDetails.start_time).toLocaleString('en-TZ')}
-
-_Cancelled via Calendly_`;
+        const cancelMessage = `❌ *BOOKING CANCELLED*\n\nCustomer: ${invitee.name}\nService: ${eventDetails.name}\nTime: ${new Date(eventDetails.start_time).toLocaleString('en-TZ')}\n\n_Cancelled via Calendly_`;
 
         await unifiedWhatsApp.sendTextMessage(recipientNumber, cancelMessage);
       }
