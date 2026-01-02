@@ -21,6 +21,7 @@ export default function Home() {
           priority
           quality={95}
           className="object-cover"
+          sizes="100vw"
           onError={(e) => {
             e.currentTarget.style.display = 'none';
           }}
@@ -179,7 +180,14 @@ export default function Home() {
                 <div key={service.id} className="bg-white border border-gray-200 rounded-2xl shadow-md p-10 flex flex-col hover:shadow-2xl transition-all duration-300 min-h-[600px]">
                   {/* Service Image - Clean */}
                   <div className="w-full h-64 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl mb-8">
-                    <div className="w-full h-full bg-[var(--champagne)]/30 rounded-xl"></div>
+                    <Image
+                      src={service.image}
+                      alt={service.name}
+                      width={400}
+                      height={256}
+                      className="w-full h-full object-cover rounded-xl"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
                   </div>
                   
                   {/* Service Info - Perfectly Centered */}
@@ -202,12 +210,26 @@ export default function Home() {
                       </div>
                     </div>
                     
-                    <button
-                      onClick={() => window.open(`https://wa.me/255657120151?text=Hello!%20I%20want%20to%20book%20${encodeURIComponent(service.name)}`, '_blank')}
-                      className="w-full bg-[var(--rose-gold)] hover:bg-[var(--accent-gold)] text-white py-5 px-8 text-sm uppercase tracking-wider transition-all duration-300 rounded-xl font-bold shadow-lg hover:shadow-2xl mt-auto"
-                    >
-                      Book on WhatsApp
-                    </button>
+                    <div className="flex flex-col gap-3 mt-auto">
+                      <button
+                        onClick={() => window.open(`https://wa.me/255657120151?text=Hello!%20I%20want%20to%20book%20${encodeURIComponent(service.name)}`, '_blank')}
+                        className="w-full bg-[var(--rose-gold)] hover:bg-[var(--accent-gold)] text-white py-3 px-4 text-sm uppercase tracking-wider transition-all duration-300 rounded-xl font-bold shadow-lg hover:shadow-2xl"
+                      >
+                        WhatsApp
+                      </button>
+                      <button
+                        onClick={() => window.open(`tel:+255657120151`, '_self')}
+                        className="w-full bg-[var(--deep-charcoal)] hover:bg-[var(--espresso)] text-white py-3 px-4 text-sm uppercase tracking-wider transition-all duration-300 rounded-xl font-bold shadow-lg hover:shadow-2xl"
+                      >
+                        Call Us
+                      </button>
+                      <button
+                        onClick={() => window.open('https://calendly.com/your-booking-link', '_blank')}
+                        className="w-full bg-[var(--sage-green)] hover:bg-[var(--terracotta)] text-white py-3 px-4 text-sm uppercase tracking-wider transition-all duration-300 rounded-xl font-bold shadow-lg hover:shadow-2xl"
+                      >
+                        Book Online
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

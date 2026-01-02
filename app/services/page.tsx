@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import { services } from '@/data/products';
 
@@ -41,7 +42,14 @@ export default function ServicesPage() {
                 <div key={service.id} className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col hover:shadow-lg transition-all duration-300">
                   {/* Service Image - Clean */}
                   <div className="w-full h-48 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg mb-4">
-                    <div className="w-full h-full bg-[var(--champagne)]/30"></div>
+                    <Image
+                      src={service.image}
+                      alt={service.name}
+                      width={400}
+                      height={192}
+                      className="w-full h-full object-cover rounded-lg"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
                   </div>
                   
                   {/* Service Info */}
@@ -80,12 +88,26 @@ export default function ServicesPage() {
                       </div>
                     </div>
                     
-                    <button
-                      onClick={() => window.open(`https://wa.me/255715727085?text=Hello!%20I%20want%20to%20book%20${encodeURIComponent(service.name)}`, '_blank')}
-                      className="w-full bg-[var(--rose-gold)] hover:bg-[var(--accent-gold)] text-white py-2.5 px-4 text-xs uppercase tracking-wider transition-all duration-300 rounded-lg font-medium mt-auto"
-                    >
-                      Book Now
-                    </button>
+                    <div className="flex flex-col gap-2 mt-auto">
+                      <button
+                        onClick={() => window.open(`https://wa.me/255657120151?text=Hello!%20I%20want%20to%20book%20${encodeURIComponent(service.name)}`, '_blank')}
+                        className="w-full bg-[var(--rose-gold)] hover:bg-[var(--accent-gold)] text-white py-2.5 px-4 text-xs uppercase tracking-wider transition-all duration-300 rounded-lg font-medium"
+                      >
+                        WhatsApp
+                      </button>
+                      <button
+                        onClick={() => window.open(`tel:+255657120151`, '_self')}
+                        className="w-full bg-[var(--deep-charcoal)] hover:bg-[var(--espresso)] text-white py-2.5 px-4 text-xs uppercase tracking-wider transition-all duration-300 rounded-lg font-medium"
+                      >
+                        Call Us
+                      </button>
+                      <button
+                        onClick={() => window.open('https://calendly.com/your-booking-link', '_blank')}
+                        className="w-full bg-[var(--sage-green)] hover:bg-[var(--terracotta)] text-white py-2.5 px-4 text-xs uppercase tracking-wider transition-all duration-300 rounded-lg font-medium"
+                      >
+                        Book Online
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

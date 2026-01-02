@@ -55,9 +55,16 @@ export default function ProductCard({ product }: ProductCardProps) {
           </h3>
         </Link>
         
-        <p className="text-gray-600 text-xs mt-2 text-center line-clamp-2 px-2">
-          {product.shortDescription}
-        </p>
+        <div className="flex flex-col items-center mt-2">
+          <p className="text-gray-600 text-xs text-center line-clamp-2 px-2">
+            {product.shortDescription}
+          </p>
+          {product.packageSize && (
+            <span className="bg-[var(--sage-green)] text-white px-2 py-1 rounded-full text-xs font-semibold mt-1 whitespace-nowrap">
+              {product.packageSize}
+            </span>
+          )}
+        </div>
         
         {/* Price Section - Bold & Clear */}
         <div className="flex items-center justify-center gap-2 mt-3">

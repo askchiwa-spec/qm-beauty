@@ -15,6 +15,7 @@ export interface Product {
   benefits?: string[];
   skinTypes?: string[];
   howToUse?: string;
+  packageSize?: string;
 }
 
 export interface CartItem {
@@ -30,8 +31,9 @@ export interface Service {
   duration: string;
   price: number;
   image: string;
-  category: 'facial' | 'spa' | 'haircare' | 'body';
+  category: 'facial' | 'spa' | 'haircare' | 'body' | 'beauty';
   benefits: string[];
+  packageSize?: string;
 }
 
 export interface Testimonial {

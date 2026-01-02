@@ -2,6 +2,7 @@
 
 import { useState, use } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { products } from '@/data/products';
@@ -36,7 +37,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
           {/* Images */}
           <div>
             <div className="aspect-square bg-[var(--soft-beige)] rounded-2xl mb-4 flex items-center justify-center overflow-hidden">
-              <span className="text-8xl">🌿</span>
+              <Image
+                src={product.image}
+                alt={product.name}
+                width={600}
+                height={600}
+                className="w-full h-full object-cover"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
             </div>
             {product.images && product.images.length > 1 && (
               <div className="flex gap-4">
@@ -48,7 +56,13 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                       selectedImage === index ? 'ring-2 ring-[var(--sage-green)]' : ''
                     }`}
                   >
-                    <span className="text-2xl">🌿</span>
+                    <Image
+                      src={product.images[index]}
+                      alt={`${product.name} ${index + 1}`}
+                      width={80}
+                      height={80}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
                   </button>
                 ))}
               </div>
@@ -81,9 +95,16 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
               )}
             </div>
             
-            <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-              {product.description}
-            </p>
+            <div className="flex items-center gap-4 mb-4">
+              <p className="text-lg text-gray-700 leading-relaxed">
+                {product.description}
+              </p>
+              {product.packageSize && (
+                <span className="bg-[var(--sage-green)] text-white px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap">
+                  {product.packageSize}
+                </span>
+              )}
+            </div>
             
             {/* Stock Status */}
             <div className="mb-6">
@@ -203,7 +224,14 @@ export default function ProductPage({ params }: { params: Promise<{ slug: string
                 <Link key={relProd.id} href={`/product/${relProd.slug}`}>
                   <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-4">
                     <div className="aspect-square bg-[var(--soft-beige)] rounded-lg mb-3 flex items-center justify-center">
-                      <span className="text-4xl">🌿</span>
+                      <Image
+                        src={relProd.image}
+                        alt={relProd.name}
+                        width={300}
+                        height={300}
+                        className="w-full h-full object-cover rounded-lg"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
                     </div>
                     <h4 className="font-semibold mb-2">{relProd.name}</h4>
                     <p className="text-[var(--sage-green)] font-bold">

@@ -23,6 +23,7 @@ export const products: Product[] = [
     ],
     inStock: true,
     featured: true,
+    packageSize: '200g',
   },
   {
     id: '2',
@@ -45,6 +46,7 @@ export const products: Product[] = [
     ],
     inStock: true,
     featured: true,
+    packageSize: '100ml',
   },
   {
     id: '3',
@@ -66,6 +68,7 @@ export const products: Product[] = [
     ],
     inStock: true,
     featured: true,
+    packageSize: '150ml',
   },
   {
     id: '4',
@@ -86,6 +89,7 @@ export const products: Product[] = [
     ],
     inStock: true,
     featured: true,
+    packageSize: '200ml',
   },
   {
     id: '5',
@@ -105,6 +109,7 @@ export const products: Product[] = [
       'Fresh and radiant look'
     ],
     inStock: true,
+    packageSize: '200ml',
   },
   {
     id: '6',
@@ -124,6 +129,7 @@ export const products: Product[] = [
       'Lightens complexion'
     ],
     inStock: true,
+    packageSize: '100ml',
   },
   {
     id: '7',
@@ -143,6 +149,7 @@ export const products: Product[] = [
       'Moisturizes & smoothens skin'
     ],
     inStock: true,
+    packageSize: '200ml',
   },
   {
     id: '8',
@@ -164,6 +171,7 @@ export const products: Product[] = [
     ],
     inStock: true,
     featured: true,
+    packageSize: '200g',
   },
   {
     id: '9',
@@ -185,7 +193,135 @@ export const products: Product[] = [
       'Keeps skin supple'
     ],
     inStock: true,
+    packageSize: '50g',
   },
+  {
+    id: '10',
+    name: 'Waxing Kit',
+    slug: 'waxing-kit',
+    price: 35000,
+    category: 'skincare',
+    image: '/images/products/waxing-kit.jpg',
+    images: ['/images/products/waxing-kit.jpg'],
+    shortDescription: 'Professional waxing kit for smooth, long-lasting results at home.',
+    description: 'QM Beauty Professional Waxing Kit provides salon-quality results at home. This complete kit includes everything you need for effective hair removal, leaving your skin smooth and silky for weeks.',
+    ingredients: ['Natural Resins', 'Essential Oils', 'Beeswax', 'Plant-based Ingredients'],
+    benefits: [
+      'Long-lasting smooth skin',
+      'Reduces hair regrowth over time',
+      'Exfoliates the skin, removing dead skin cells',
+      'Prevents ingrown hairs',
+      'Easy to use at home'
+    ],
+    inStock: true,
+    packageSize: '200g',
+  },
+  {
+    id: '11',
+    name: 'Coffee Body Scrub',
+    slug: 'coffee-body-scrub',
+    price: 45000,
+    category: 'skincare',
+    image: '/images/products/coffee-scrub.png',
+    images: ['/images/products/coffee-scrub.png'],
+    shortDescription: 'Deep exfoliating scrub with coffee, honey, and turmeric for glowing skin.',
+    description: 'Our Coffee Body Scrub combines the power of natural Arabica coffee, nourishing honey, and rejuvenating turmeric to deeply exfoliate and revitalize your skin. This luxurious scrub removes dead skin cells, stimulates circulation, and leaves your skin feeling smooth and glowing.',
+    ingredients: ['Natural Arabica Coffee', 'Natural Honey', 'Turmeric', 'Essential Oils'],
+    benefits: [
+      'Deep exfoliation removes dead skin cells',
+      'Coffee stimulates blood circulation and reduces cellulite appearance',
+      'Honey hydrates and nourishes the skin, providing natural antibacterial properties',
+      'Turmeric brightens the skin and reduces inflammation',
+      'Leaves skin feeling smooth, rejuvenated, and glowing'
+    ],
+    inStock: true,
+    featured: true,
+    packageSize: '200g',
+  },
+  {
+    id: '12',
+    name: 'Hair Relaxer & Treatment',
+    slug: 'hair-relaxer-treatment',
+    price: 55000,
+    category: 'haircare',
+    image: '/images/products/hair-relaxer.jpg',
+    images: ['/images/products/hair-relaxer.jpg'],
+    shortDescription: 'Professional hair relaxer and treatment for smooth, manageable hair.',
+    description: 'QM Beauty Hair Relaxer & Treatment provides professional results at home. This specially formulated system strengthens and nourishes your hair while smoothing and straightening frizzy or curly hair.',
+    ingredients: ['Keratin Complex', 'Natural Oils', 'Proteins', 'Moisturizing Agents'],
+    benefits: [
+      'Strengthens and nourishes hair',
+      'Smoothens and straightens frizzy or curly hair',
+      'Reduces hair breakage and split ends',
+      'Promotes healthy hair growth',
+      'Long-lasting results'
+    ],
+    inStock: true,
+    packageSize: '300ml',
+  },
+  {
+    id: '13',
+    name: 'Nail Care Set',
+    slug: 'nail-care-set',
+    price: 30000,
+    category: 'skincare',
+    image: '/images/products/nail-set.jpg',
+    images: ['/images/products/nail-set.jpg'],
+    shortDescription: 'Complete nail care set for professional manicure and pedicure at home.',
+    description: 'QM Beauty Complete Nail Care Set includes all the tools and products needed for a professional-quality manicure and pedicure at home. Maintain healthy, beautiful nails with this comprehensive set.',
+    ingredients: ['Nail Strengtheners', 'Cuticle Oils', 'Natural Polish', 'Essential Tools'],
+    benefits: [
+      'Maintains healthy nails and cuticles',
+      'Prevents nail damage and infections',
+      'Enhances the appearance of hands and feet',
+      'Provides relaxation and stress relief',
+      'Complete solution for nail care'
+    ],
+    inStock: true,
+    packageSize: 'Set',
+  },
+  {
+    id: '14',
+    name: 'Professional Makeup Kit',
+    slug: 'professional-makeup-kit',
+    price: 80000,
+    category: 'skincare',
+    image: '/images/products/makeup-kit.jpg',
+    images: ['/images/products/makeup-kit.jpg'],
+    shortDescription: 'Complete professional makeup kit for flawless looks.',
+    description: 'QM Beauty Professional Makeup Kit contains everything needed for stunning makeup looks. This premium collection includes foundations, eyeshadows, lip colors, and tools for professional application.',
+    ingredients: ['High-quality pigments', 'Skin-nourishing ingredients', 'Long-lasting formulas'],
+    benefits: [
+      'Enhances natural beauty',
+      'Boosts confidence for special occasions',
+      'Professional application ensures long-lasting results',
+      'Tailored looks to suit individual preferences and styles',
+      'Complete solution for all makeup needs'
+    ],
+    inStock: true,
+    packageSize: 'Kit',
+  },
+  {
+    id: '15',
+    name: 'Henna Art Kit',
+    slug: 'henna-art-kit',
+    price: 25000,
+    category: 'skincare',
+    image: '/images/products/henna-kit.jpg',
+    images: ['/images/products/henna-kit.jpg'],
+    shortDescription: 'Premium henna kit for beautiful body art designs.',
+    description: 'QM Beauty Henna Art Kit provides everything needed to create beautiful, intricate henna designs. This natural, safe henna paste creates long-lasting, stunning body art.',
+    ingredients: ['Natural Henna Powder', 'Essential Oils', 'Natural Binding Agents'],
+    benefits: [
+      'Natural and temporary body art',
+      'Safe for all skin types',
+      'Beautiful and intricate designs for special occasions',
+      'Long-lasting and fades naturally',
+      'Easy application with included tools'
+    ],
+    inStock: true,
+    packageSize: 'Kit',
+  }
 ];
 
 export const services: Service[] = [
@@ -221,6 +357,138 @@ export const services: Service[] = [
     image: '/services/massage.jpg',
     category: 'spa',
     benefits: ['Stress relief', 'Muscle relaxation', 'Improved circulation', 'Tension release']
+  },
+  {
+    id: '4',
+    name: 'QM Waxing',
+    slug: 'qm-waxing',
+    description: 'Professional waxing service for long-lasting smooth skin.',
+    duration: '45 minutes',
+    price: 25000,
+    image: '/services/waxing.jpg',
+    category: 'spa',
+    benefits: ['Long-lasting smooth skin', 'Reduces hair regrowth over time', 'Exfoliates the skin, removing dead skin cells', 'Prevents ingrown hairs']
+  },
+  {
+    id: '5',
+    name: 'QM Full Body Coffee Scrub',
+    slug: 'qm-full-body-coffee-scrub',
+    description: 'Deep exfoliation treatment using coffee, honey, and turmeric for smooth, glowing skin.',
+    duration: '60 minutes',
+    price: 65000,
+    image: '/services/coffee-scrub.jpg',
+    category: 'spa',
+    benefits: ['Deep exfoliation removes dead skin cells', 'Coffee stimulates blood circulation and reduces cellulite appearance', 'Honey hydrates and nourishes the skin, providing natural antibacterial properties', 'Turmeric brightens the skin and reduces inflammation', 'Leaves skin feeling smooth, rejuvenated, and glowing']
+  },
+  {
+    id: '6',
+    name: 'Hair Treatments & Relaxer',
+    slug: 'hair-treatments-relaxer',
+    description: 'Professional hair treatment and relaxer service to strengthen and nourish your hair.',
+    duration: '90 minutes',
+    price: 45000,
+    image: '/services/hair-treatment.jpg',
+    category: 'haircare',
+    benefits: ['Strengthens and nourishes hair', 'Smoothens and straightens frizzy or curly hair', 'Reduces hair breakage and split ends', 'Promotes healthy hair growth']
+  },
+  {
+    id: '7',
+    name: 'Hair Braiding',
+    slug: 'hair-braiding',
+    description: 'Professional hair braiding service for stylish and protective styling.',
+    duration: '180 minutes',
+    price: 50000,
+    image: '/services/hair-braiding.jpg',
+    category: 'haircare',
+    benefits: ['Protective styling to prevent hair damage', 'Versatile and stylish looks', 'Low maintenance and easy to manage', 'Promotes hair growth by reducing manipulation']
+  },
+  {
+    id: '8',
+    name: 'Hair Plaiting',
+    slug: 'hair-plaiting',
+    description: 'Professional hair plaiting service for neat and stylish looks.',
+    duration: '150 minutes',
+    price: 40000,
+    image: '/services/hair-plaiting.jpg',
+    category: 'haircare',
+    benefits: ['Stylish and neat appearance', 'Protects natural hair from damage', 'Reduces daily styling time', 'Encourages hair growth']
+  },
+  {
+    id: '9',
+    name: 'Nails (Manicure & Pedicure)',
+    slug: 'nails-manicure-pedicure',
+    description: 'Professional nail care service including manicure and pedicure.',
+    duration: '75 minutes',
+    price: 30000,
+    image: '/services/nails.jpg',
+    category: 'spa',
+    benefits: ['Maintains healthy nails and cuticles', 'Prevents nail damage and infections', 'Enhances the appearance of hands and feet', 'Provides relaxation and stress relief']
+  },
+  {
+    id: '10',
+    name: 'Make Up',
+    slug: 'make-up',
+    description: 'Professional makeup application for special occasions and events.',
+    duration: '60 minutes',
+    price: 40000,
+    image: '/services/makeup.jpg',
+    category: 'beauty',
+    benefits: ['Enhances natural beauty', 'Boosts confidence for special occasions', 'Professional application ensures long-lasting results', 'Tailored looks to suit individual preferences and styles']
+  },
+  {
+    id: '11',
+    name: 'Heena',
+    slug: 'heena',
+    description: 'Professional henna art service for beautiful designs on special occasions.',
+    duration: '90 minutes',
+    price: 35000,
+    image: '/services/heena.jpg',
+    category: 'beauty',
+    benefits: ['Natural and temporary body art', 'Safe for all skin types', 'Beautiful and intricate designs for special occasions', 'Long-lasting and fades naturally']
+  },
+  {
+    id: '12',
+    name: 'Foot Massage',
+    slug: 'foot-massage',
+    description: 'Relaxing foot massage to soothe tired and achy feet.',
+    duration: '45 minutes',
+    price: 20000,
+    image: '/services/foot-massage.jpg',
+    category: 'spa',
+    benefits: ['Soothes tired and achy feet', 'Exfoliates and softens the skin', 'Improves circulation and reduces swelling', 'Provides relaxation and stress relief']
+  },
+  {
+    id: '13',
+    name: 'Skin Diagnosis Machine',
+    slug: 'skin-diagnosis-machine',
+    description: 'Advanced skin diagnosis using specialized equipment to assess skin health.',
+    duration: '30 minutes',
+    price: 15000,
+    image: '/services/skin-diagnosis.jpg',
+    category: 'facial',
+    benefits: ['Accurate assessment of skin health and concerns', 'Personalized treatment plans based on diagnosis', 'Early detection of skin issues', 'Ensures effective and targeted treatments']
+  },
+  {
+    id: '14',
+    name: 'Eyebrows / Upper Lip / Chin Threading',
+    slug: 'threading',
+    description: 'Precision threading service for eyebrows, upper lip, and chin.',
+    duration: '30 minutes',
+    price: 15000,
+    image: '/services/threading.jpg',
+    category: 'beauty',
+    benefits: ['Precise hair removal for a clean and defined look', 'Gentle on the skin, suitable for sensitive areas', 'Long-lasting results compared to other methods', 'Reduces hair regrowth over time']
+  },
+  {
+    id: '15',
+    name: 'Special Packages',
+    slug: 'special-packages',
+    description: 'Customized service packages tailored to meet individual needs.',
+    duration: 'Varies',
+    price: 100000,
+    image: '/services/packages.jpg',
+    category: 'spa',
+    benefits: ['Customized services to meet individual needs', 'Offers a comprehensive beauty and relaxation experience', 'Value for money with bundled services', 'Ideal for gifting or special occasions']
   }
 ];
 
