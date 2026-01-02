@@ -86,7 +86,8 @@ class SelcomClient {
       };
 
       // Generate signed digest
-      const digest = this.generateDigest(payload);
+      const timestamp = new Date().toISOString();
+      const digest = this.generateDigest(payload, timestamp);
 
       // Make API call
       const response = await fetch(`${this.config.baseUrl}/checkout/create-order`, {
@@ -96,6 +97,8 @@ class SelcomClient {
           'Authorization': `SELCOM ${this.config.apiKey}`,
           'Digest-Method': 'HS256',
           'Digest': digest,
+          'Timestamp': timestamp,
+          'Signed-Fields': this.extractSignedFields(payload).join(','),
         },
         body: JSON.stringify(payload),
       });
@@ -153,7 +156,8 @@ class SelcomClient {
         webhook: `${process.env.NEXT_PUBLIC_APP_URL}/api/payment/webhook`,
       };
 
-      const digest = this.generateDigest(payload);
+      const timestamp = new Date().toISOString();
+      const digest = this.generateDigest(payload, timestamp);
 
       const response = await fetch(`${this.config.baseUrl}/checkout/wallet-push`, {
         method: 'POST',
@@ -162,6 +166,8 @@ class SelcomClient {
           'Authorization': `SELCOM ${this.config.apiKey}`,
           'Digest-Method': 'HS256',
           'Digest': digest,
+          'Timestamp': timestamp,
+          'Signed-Fields': this.extractSignedFields(payload).join(','),
         },
         body: JSON.stringify(payload),
       });
@@ -200,7 +206,8 @@ class SelcomClient {
         order_id: orderId,
       };
 
-      const digest = this.generateDigest(payload);
+      const timestamp = new Date().toISOString();
+      const digest = this.generateDigest(payload, timestamp);
 
       const response = await fetch(`${this.config.baseUrl}/checkout/order-status`, {
         method: 'POST',
@@ -209,6 +216,8 @@ class SelcomClient {
           'Authorization': `SELCOM ${this.config.apiKey}`,
           'Digest-Method': 'HS256',
           'Digest': digest,
+          'Timestamp': timestamp,
+          'Signed-Fields': this.extractSignedFields(payload).join(','),
         },
         body: JSON.stringify(payload),
       });
@@ -244,32 +253,25 @@ class SelcomClient {
   }
 
   /**
-   * Generate HMAC digest for authentication
+   * Generate HMAC digest for authentication following Selcom API specification
    */
-  private generateDigest(payload: any): string {
+  private generateDigest(payload: any, timestamp: string): string {
     const signedFields = this.extractSignedFields(payload);
-    const message = signedFields.join('');
+    const message = `timestamp=${timestamp}&${signedFields.map(field => `${field}=${payload[field]}`).join('&')}`;
     
     return crypto
       .createHmac('sha256', this.config.apiSecret)
       .update(message)
-      .digest('hex');
+      .digest('base64');
   }
 
   /**
-   * Extract and sort fields for signing
+   * Extract field names for Signed-Fields header
    */
   private extractSignedFields(payload: any): string[] {
-    const fields: string[] = [];
     const keys = Object.keys(payload).sort();
 
-    for (const key of keys) {
-      if (payload[key] !== null && payload[key] !== undefined) {
-        fields.push(String(payload[key]));
-      }
-    }
-
-    return fields;
+    return keys.filter(key => payload[key] !== null && payload[key] !== undefined);
   }
 
   /**

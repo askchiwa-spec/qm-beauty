@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
           orderId,
           transactionId: paymentResult.transactionId,
           reference: paymentResult.reference,
-          paymentMethod: paymentResult.paymentMethod,
+          paymentMethod: (paymentResult as any).paymentMethod,
           type: 'push',
         },
       });

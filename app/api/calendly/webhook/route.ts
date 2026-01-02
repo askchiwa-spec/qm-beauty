@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
-import { whatsappClient } from '@/lib/whatsapp';
+import { unifiedWhatsApp } from '@/lib/unified-whatsapp';
 import { generateBookingMessage } from '@/lib/templates/order-message';
 
 interface CalendlyWebhook {
@@ -110,16 +110,14 @@ export async function POST(request: NextRequest) {
       const bookingMessage = generateBookingMessage({
         customerName: invitee.name,
         customerPhone: phoneNumber,
-        customerEmail: invitee.email,
         serviceName: eventDetails.name,
-        startTime: new Date(eventDetails.start_time),
-        endTime: new Date(eventDetails.end_time),
+        bookingTime: new Date(eventDetails.start_time),
       });
 
-      if (whatsappClient.isConfigured()) {
+      if (unifiedWhatsApp.isConfigured()) {
         const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255715727085';
         
-        const result = await whatsappClient.sendTextMessage(
+        const result = await unifiedWhatsApp.sendTextMessage(
           recipientNumber,
           bookingMessage
         );
@@ -147,7 +145,7 @@ export async function POST(request: NextRequest) {
       // TODO: Update booking status in database to 'cancelled'
 
       // Notify team
-      if (whatsappClient.isConfigured()) {
+      if (unifiedWhatsApp.isConfigured()) {
         const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255715727085';
         
         const cancelMessage = `❌ *BOOKING CANCELLED*
@@ -158,7 +156,7 @@ Time: ${new Date(eventDetails.start_time).toLocaleString('en-TZ')}
 
 _Cancelled via Calendly_`;
 
-        await whatsappClient.sendTextMessage(recipientNumber, cancelMessage);
+        await unifiedWhatsApp.sendTextMessage(recipientNumber, cancelMessage);
       }
 
       return NextResponse.json({
