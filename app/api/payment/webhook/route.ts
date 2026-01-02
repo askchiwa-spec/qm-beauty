@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { selcomClient } from '@/lib/selcom';
-import { whatsappClient } from '@/lib/whatsapp';
+import { unifiedWhatsApp } from '@/lib/unified-whatsapp';
 import { generatePaymentConfirmation } from '@/lib/templates/order-message';
 
 interface SelcomWebhook {
@@ -75,13 +75,13 @@ export async function POST(request: NextRequest) {
       // Send WhatsApp confirmation to customer
       const confirmationMessage = generatePaymentConfirmation({
         orderCode: order_id,
+        customerName: 'Customer', // Using default name since not available in webhook
         amount,
         paymentMethod: payment_method,
-        transactionId: transaction_id,
       });
 
-      if (whatsappClient.isConfigured()) {
-        await whatsappClient.sendTextMessage(
+      if (unifiedWhatsApp.isConfigured()) {
+        await unifiedWhatsApp.sendTextMessage(
           payment_phone,
           confirmationMessage
         );
@@ -97,7 +97,7 @@ Transaction: ${transaction_id}
 📦 *Action Required:* Process order for delivery`;
         
         const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255715727085';
-        await whatsappClient.sendTextMessage(recipientNumber, teamMessage);
+        await unifiedWhatsApp.sendTextMessage(recipientNumber, teamMessage);
       }
 
       return NextResponse.json({

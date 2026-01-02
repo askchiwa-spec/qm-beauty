@@ -1,7 +1,6 @@
 // Unified WhatsApp Client
 // Automatically uses Evolution API or Meta Business API based on configuration
 
-import { whatsappClient } from './whatsapp';
 import { evolutionWhatsApp } from './evolution-whatsapp';
 
 interface UnifiedWhatsAppResponse {
@@ -28,20 +27,13 @@ class UnifiedWhatsAppClient {
     }
 
     // Fallback to Meta Business API
-    if (whatsappClient.isConfigured()) {
-      console.log('Using Meta Business API for WhatsApp');
-      const result = await whatsappClient.sendTextMessage(to, message);
-      return {
-        ...result,
-        provider: 'meta',
-      };
-    }
-
+    // Meta Business API client has been removed
+    
     // No provider configured
     console.warn('No WhatsApp provider configured');
     return {
       success: false,
-      error: 'No WhatsApp provider configured. Please set up Evolution API or Meta Business API.',
+      error: 'No WhatsApp provider configured. Please set up Evolution API.',
       provider: 'none',
     };
   }
@@ -101,9 +93,10 @@ class UnifiedWhatsAppClient {
     if (evolutionWhatsApp.isEnabled()) {
       return 'evolution';
     }
-    if (whatsappClient.isConfigured()) {
-      return 'meta';
-    }
+    // Meta Business API client has been removed
+    // if (whatsappClient.isConfigured()) {
+    //   return 'meta';
+    // }
     return 'none';
   }
 
@@ -111,7 +104,7 @@ class UnifiedWhatsAppClient {
    * Check if any WhatsApp provider is configured
    */
   isConfigured(): boolean {
-    return evolutionWhatsApp.isEnabled() || whatsappClient.isConfigured();
+    return evolutionWhatsApp.isEnabled();
   }
 }
 
