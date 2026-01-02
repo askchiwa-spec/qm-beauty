@@ -5,6 +5,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
 import { unifiedWhatsApp } from '@/lib/unified-whatsapp';
 import { generateBookingMessage } from '@/lib/templates/order-message';
+import {
+  sanitizeInput,
+  isValidEmail,
+  isValidTanzaniaPhone,
+} from '@/lib/security/validation';
 
 interface CalendlyWebhook {
   event: string;
@@ -74,10 +79,23 @@ export async function POST(request: NextRequest) {
       invitee: payload.invitee.name,
     });
 
+    // Validate webhook payload
+    if (!event || !payload || !payload.invitee || !payload.event) {
+      console.error('Invalid webhook payload');
+      return NextResponse.json(
+        { error: 'Invalid webhook payload' },
+        { status: 400 }
+      );
+    }
+    
     // Handle booking created/rescheduled
     if (event === 'invitee.created' || event === 'invitee.rescheduled') {
       const { invitee, event: eventDetails } = payload;
-
+      
+      // Sanitize input data
+      const sanitizedCustomerName = sanitizeInput(invitee.name);
+      const sanitizedServiceName = sanitizeInput(eventDetails.name);
+      
       // Extract phone number from questions if available
       let phoneNumber = invitee.text_reminder_number || '';
       
@@ -88,6 +106,24 @@ export async function POST(request: NextRequest) {
         if (phoneQuestion) {
           phoneNumber = phoneQuestion.answer;
         }
+      }
+      
+      // Validate phone number if provided
+      if (phoneNumber && !isValidTanzaniaPhone(phoneNumber)) {
+        console.error('Invalid phone number:', phoneNumber);
+        return NextResponse.json(
+          { error: 'Invalid phone number' },
+          { status: 400 }
+        );
+      }
+      
+      // Validate email if provided
+      if (invitee.email && !isValidEmail(invitee.email)) {
+        console.error('Invalid email:', invitee.email);
+        return NextResponse.json(
+          { error: 'Invalid email' },
+          { status: 400 }
+        );
       }
 
       // TODO: Store booking in database
@@ -111,9 +147,9 @@ export async function POST(request: NextRequest) {
       const duration = Math.round((new Date(eventDetails.end_time).getTime() - bookingTime.getTime()) / 60000);
 
       const bookingMessage = generateBookingMessage({
-        customerName: invitee.name,
+        customerName: sanitizedCustomerName,
         customerPhone: phoneNumber,
-        serviceName: eventDetails.name,
+        serviceName: sanitizedServiceName,
         bookingTime,
         duration,
       });
@@ -177,10 +213,11 @@ _Cancelled via Calendly_`;
   } catch (error: any) {
     console.error('Calendly Webhook Error:', error);
     
+    // Don't expose internal error details to prevent information disclosure
     // Return 200 to prevent webhook retries
     return NextResponse.json({
       error: 'Webhook processing error',
-      details: error.message,
+      // details: error.message, // Commented out to prevent information disclosure
     }, { status: 200 });
   }
 }

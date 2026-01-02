@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { evolutionWhatsApp } from '@/lib/evolution-whatsapp';
+import { isSuspiciousUserAgent } from '@/lib/security/validation';
 
 /**
  * GET - Get instance status and QR code
@@ -11,6 +12,16 @@ import { evolutionWhatsApp } from '@/lib/evolution-whatsapp';
  */
 
 export async function GET(request: NextRequest) {
+  // Security checks
+  const userAgent = request.headers.get('user-agent') || '';
+  
+  if (isSuspiciousUserAgent(userAgent)) {
+    return NextResponse.json(
+      { error: 'Forbidden' },
+      { status: 403 }
+    );
+  }
+  
   try {
     // Check if Evolution API is enabled
     if (!evolutionWhatsApp.isEnabled()) {
@@ -56,7 +67,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to get instance status',
+        error: 'Failed to get instance status', // Don't expose internal error details
       },
       { status: 500 }
     );
@@ -64,6 +75,16 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Security checks
+  const userAgent = request.headers.get('user-agent') || '';
+  
+  if (isSuspiciousUserAgent(userAgent)) {
+    return NextResponse.json(
+      { error: 'Forbidden' },
+      { status: 403 }
+    );
+  }
+  
   try {
     if (!evolutionWhatsApp.isEnabled()) {
       return NextResponse.json(
@@ -102,7 +123,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to create instance',
+        error: 'Failed to create instance', // Don't expose internal error details
       },
       { status: 500 }
     );
@@ -110,6 +131,16 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  // Security checks
+  const userAgent = request.headers.get('user-agent') || '';
+  
+  if (isSuspiciousUserAgent(userAgent)) {
+    return NextResponse.json(
+      { error: 'Forbidden' },
+      { status: 403 }
+    );
+  }
+  
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action') || 'logout'; // 'logout' or 'delete'
@@ -150,7 +181,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error.message || 'Failed to delete instance',
+        error: 'Failed to delete instance', // Don't expose internal error details
       },
       { status: 500 }
     );

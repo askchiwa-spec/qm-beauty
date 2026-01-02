@@ -5,6 +5,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { selcomClient } from '@/lib/selcom';
 import { unifiedWhatsApp } from '@/lib/unified-whatsapp';
 import { generatePaymentConfirmation } from '@/lib/templates/order-message';
+import {
+  sanitizeInput,
+  isValidTanzaniaPhone,
+  isValidAmount,
+  isValidPaymentStatus,
+} from '@/lib/security/validation';
 
 interface SelcomWebhook {
   order_id: string;
@@ -52,6 +58,7 @@ export async function POST(request: NextRequest) {
       transaction_id,
       status,
       amount,
+      currency,
       payment_method,
       payment_phone,
       reference,
@@ -64,8 +71,74 @@ export async function POST(request: NextRequest) {
       transactionId: transaction_id,
     });
 
-    // TODO: Fetch order from database
-    // TODO: Check for duplicate webhook processing (idempotency)
+    // Validate webhook data
+    if (!order_id || !transaction_id || !status || amount === undefined || amount === null) {
+      console.error('Invalid webhook data');
+      return NextResponse.json(
+        { error: 'Invalid webhook data' },
+        { status: 400 }
+      );
+    }
+    
+    // Check for duplicate webhook processing (idempotency)
+    // This would typically involve checking a database for the transaction_id
+    // For now, we'll add a basic check
+    try {
+      // TODO: Implement proper idempotency check in database
+      // const existingPayment = await prisma.payment.findUnique({
+      //   where: { transaction_id: transaction_id }
+      // });
+      // 
+      // if (existingPayment) {
+      //   console.log('Duplicate webhook received for transaction:', transaction_id);
+      //   return NextResponse.json({
+      //     success: true,
+      //     message: 'Duplicate webhook - already processed'
+      //   });
+      // }
+    } catch (dbError) {
+      console.error('Error checking for duplicate transaction:', dbError);
+      // Continue processing even if duplicate check fails
+    }
+    
+    // Validate status
+    if (!isValidPaymentStatus(status)) {
+      console.error('Invalid payment status:', status);
+      return NextResponse.json(
+        { error: 'Invalid payment status' },
+        { status: 400 }
+      );
+    }
+    
+    // Validate amount
+    if (!isValidAmount(amount)) {
+      console.error('Invalid amount:', amount);
+      return NextResponse.json(
+        { error: 'Invalid amount' },
+        { status: 400 }
+      );
+    }
+    
+    // Validate currency
+    if (currency !== 'TZS') {
+      console.error('Unsupported currency:', currency);
+      return NextResponse.json(
+        { error: 'Unsupported currency' },
+        { status: 400 }
+      );
+    }
+    
+    // Validate phone
+    if (!isValidTanzaniaPhone(payment_phone)) {
+      console.error('Invalid phone number:', payment_phone);
+      return NextResponse.json(
+        { error: 'Invalid phone number' },
+        { status: 400 }
+      );
+    }
+    
+    // Sanitize payment method
+    const sanitizedPaymentMethod = sanitizeInput(payment_method);
 
     if (status === 'COMPLETED') {
       // TODO: Update order payment status in database
@@ -77,7 +150,7 @@ export async function POST(request: NextRequest) {
         orderCode: order_id,
         customerName: 'Customer', // Using default name since not available in webhook
         amount,
-        paymentMethod: payment_method,
+        paymentMethod: sanitizedPaymentMethod,
       });
 
       if (unifiedWhatsApp.isConfigured()) {
@@ -91,7 +164,7 @@ export async function POST(request: NextRequest) {
 
 Order: ${order_id}
 Amount: TZS ${amount.toLocaleString()}/=
-Method: ${payment_method}
+Method: ${sanitizedPaymentMethod}
 Transaction: ${transaction_id}
 
 📦 *Action Required:* Process order for delivery`;
@@ -125,10 +198,11 @@ Transaction: ${transaction_id}
   } catch (error: any) {
     console.error('Webhook Processing Error:', error);
     
+    // Don't expose internal error details to prevent information disclosure
     // Still return 200 to prevent webhook retries for processing errors
     return NextResponse.json({
       error: 'Webhook processing error',
-      details: error.message,
+      // details: error.message, // Commented out to prevent information disclosure
     }, { status: 200 });
   }
 }

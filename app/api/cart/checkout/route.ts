@@ -5,6 +5,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma, generateOrderCode } from '@/lib/prisma';
 import { generateOrderMessage, generateCustomerConfirmation } from '@/lib/templates/order-message';
 import { unifiedWhatsApp } from '@/lib/unified-whatsapp';
+import {
+  sanitizeInput,
+  isValidEmail,
+  isValidTanzaniaPhone,
+  isValidAmount,
+  isValidQuantity,
+  isValidProductName
+} from '@/lib/security/validation';
 
 interface CheckoutRequest {
   cartId: string;
@@ -40,8 +48,13 @@ export async function POST(request: NextRequest) {
       totalAmount 
     } = body;
 
+    // Input sanitization
+    const sanitizedCustomerName = sanitizeInput(customerName);
+    const sanitizedCustomerEmail = customerEmail ? sanitizeInput(customerEmail) : undefined;
+    const sanitizedDeliveryAddress = deliveryAddress ? sanitizeInput(deliveryAddress) : undefined;
+    
     // Validation
-    if (!cartId || !customerName || !customerPhone || !items || !totalAmount) {
+    if (!cartId || !sanitizedCustomerName || !customerPhone || !items || !totalAmount) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -54,6 +67,48 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    
+    // Additional validation
+    if (!isValidAmount(totalAmount)) {
+      return NextResponse.json(
+        { error: 'Invalid total amount' },
+        { status: 400 }
+      );
+    }
+    
+    if (!isValidTanzaniaPhone(customerPhone)) {
+      return NextResponse.json(
+        { error: 'Invalid phone number format' },
+        { status: 400 }
+      );
+    }
+    
+    if (sanitizedCustomerEmail && !isValidEmail(sanitizedCustomerEmail)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+    
+    // Validate items
+    for (const item of items) {
+      if (typeof item.name !== 'string' || 
+          typeof item.quantity !== 'number' || 
+          typeof item.price !== 'number' ||
+          typeof item.subtotal !== 'number' ||
+          !isValidQuantity(item.quantity) ||
+          !isValidAmount(item.price) ||
+          !isValidAmount(item.subtotal) ||
+          !isValidProductName(item.name)) {
+        return NextResponse.json(
+          { error: 'Invalid item data' },
+          { status: 400 }
+        );
+      }
+      
+      // Sanitize item name
+      item.name = sanitizeInput(item.name);
+    }
 
     // Generate order code
     const orderCode = generateOrderCode();
@@ -64,10 +119,10 @@ export async function POST(request: NextRequest) {
         data: {
           orderCode,
           cartId,
-          customerName,
+          customerName: sanitizedCustomerName,
           customerPhone,
-          customerEmail: customerEmail || null,
-          deliveryAddress: deliveryAddress || null,
+          customerEmail: sanitizedCustomerEmail || null,
+          deliveryAddress: sanitizedDeliveryAddress || null,
           totalAmount,
           paymentStatus: 'pending',
           fulfillmentStatus: 'new',
@@ -150,8 +205,9 @@ export async function POST(request: NextRequest) {
     }
   } catch (error: any) {
     console.error('Checkout Error:', error);
+    // Don't expose internal error details to client
     return NextResponse.json(
-      { error: 'Failed to process checkout', details: error.message },
+      { error: 'Failed to process checkout' },
       { status: 500 }
     );
   }
