@@ -21,10 +21,10 @@ export default function ServicesPage() {
             </h1>
             <div className="w-20 h-[1px] bg-gradient-to-r from-transparent via-[var(--rose-gold)] to-transparent mx-auto mb-6"></div>
             <p className="text-lg text-[var(--espresso)] max-w-3xl mx-auto font-light leading-relaxed mb-8">
-              Experience premium treatments at our spa at 59 Ali Hassan Mwinyi Road, Masaki, Dar es Salaam. Natural products, professional care.
+              Experience premium treatments at our spa at 59 Ali Hassan Mwinyi Road, Oysterbay, Dar es Salaam. Natural products, professional care.
             </p>
             <button
-              onClick={() => window.open('https://wa.me/255715727085?text=Hello!%20I%20want%20to%20book%20a%20spa%20appointment', '_blank')}
+              onClick={() => window.open('https://wa.me/255657120151?text=Hello!%20I%20want%20to%20book%20a%20spa%20appointment', '_blank')}
               className="bg-[var(--rose-gold)] hover:bg-[var(--accent-gold)] text-white px-12 py-4 text-xs uppercase tracking-[0.15em] transition-all duration-300 shadow-lg hover:shadow-xl inline-flex items-center justify-center gap-3 min-h-[48px]"
             >
               <span>Book Appointment</span>
@@ -42,14 +42,29 @@ export default function ServicesPage() {
                 <div key={service.id} className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col hover:shadow-lg transition-all duration-300">
                   {/* Service Image - Clean */}
                   <div className="w-full h-48 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg mb-4">
-                    <Image
-                      src={service.image}
-                      alt={service.name}
-                      width={400}
-                      height={192}
-                      className="w-full h-full object-cover rounded-lg"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
+                    {service.image && !service.image.startsWith('data:image') ? (
+                      <Image
+                        src={service.image}
+                        alt={service.name}
+                        width={400}
+                        height={192}
+                        className="w-full h-full object-cover rounded-lg"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center p-4">
+                        <div className="bg-gradient-to-br from-[var(--sage-green)]/20 to-[var(--rose-gold)]/20 w-full h-full rounded-lg flex flex-col items-center justify-center p-2">
+                          <div className="text-3xl mb-2">💆</div>
+                          <div className="text-center text-xs font-medium text-[var(--charcoal)] truncate max-w-[80%]">
+                            {service.name}
+                          </div>
+                          <div className="text-[8px] text-gray-500 mt-1">QM Beauty</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Service Info */}
@@ -169,7 +184,7 @@ export default function ServicesPage() {
                   </svg>
                 </div>
                 <h3 className="font-serif text-lg mb-3 text-[var(--deep-charcoal)] font-medium">Prime Location</h3>
-                <p className="text-[var(--espresso)] text-sm leading-relaxed">59 Ali Hassan Mwinyi Road, Masaki, Dar es Salaam</p>
+                <p className="text-[var(--espresso)] text-sm leading-relaxed">59 Ali Hassan Mwinyi Road, Oysterbay, Dar es Salaam</p>
               </div>
             </div>
           </div>

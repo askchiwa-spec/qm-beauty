@@ -159,17 +159,28 @@ export default function Cart() {
               <Button
                 variant="outline"
                 size="md"
-                className="w-full"
+                className="w-full flex items-center justify-center gap-2"
                 onClick={() => {
-                  const message = items.map(item => 
-                    `${item.quantity}x ${item.product.name}`
-                  ).join('%0A');
+                  const cartItemsMessage = items.map(item => 
+                    `${item.quantity}x ${item.product.name} - ${(item.product.salePrice || item.product.price).toLocaleString()} Tsh each`
+                  ).join('\n');
+                  const total = getTotalPrice();
+                  const message = `Hello! I would like to place an order for the following items:
+
+${cartItemsMessage}
+
+Total: ${total.toLocaleString()} Tsh
+
+Please confirm the order and let me know about delivery options.`;
                   window.open(
-                    `https://wa.me/255715727085?text=Hello!%20I%20want%20to%20order:%0A${message}%0A%0ATotal:%20${formatPrice(getTotalPrice())}`,
+                    `https://wa.me/255657120151?text=${encodeURIComponent(message)}`,
                     '_blank'
                   );
                 }}
               >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004c-2.906 0-5.269-2.377-5.273-5.298 0-2.909 2.363-5.298 5.272-5.298 2.909 0 5.273 2.389 5.273 5.298 0 2.921-2.364 5.298-5.273 5.298m4.214-9.771c-.268-.578-.731-.803-1.329-.986-.598-.186-1.327-.278-2.194-.281-1.562-.005-3.302.798-4.194 1.691-1.074 1.075-1.677 2.456-1.681 3.907 0 .179.008.357.024.535.034.356.179.7.428 1.001l.79 1.006 1.006.79c.301.249.645.394.999.429.177.016.356.024.535.024 1.451-.004 2.832-.607 3.907-1.681.892-.893 1.696-2.633 1.691-4.194-.003-.868-.096-1.597-.281-2.194-.183-.598-.408-1.062-.986-1.329"/>
+                </svg>
                 Order via WhatsApp
               </Button>
             </div>

@@ -192,6 +192,10 @@ export async function POST(request: NextRequest) {
       // WhatsApp not configured, just return order data
       console.warn('WhatsApp not configured. Order created but notifications not sent.');
       
+      // Include the messages in the response so business can manually send them
+      const businessWhatsAppLink = `https://wa.me/${process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151'}?text=${encodeURIComponent(orderMessage)}`;
+      const customerWhatsAppLink = `https://wa.me/${customerPhone}?text=${encodeURIComponent(customerMessage)}`;
+      
       return NextResponse.json({
         success: true,
         message: 'Order placed successfully (WhatsApp not configured)',
@@ -200,6 +204,13 @@ export async function POST(request: NextRequest) {
           totalAmount,
           whatsappSent: false,
           customerNotified: false,
+          // Provide links for manual notification
+          manualNotification: {
+            businessLink: businessWhatsAppLink,
+            customerLink: customerWhatsAppLink,
+            businessMessage: orderMessage,
+            customerMessage: customerMessage,
+          }
         },
       });
     }

@@ -69,7 +69,16 @@ export default function CheckoutPage() {
       } else {
         // WhatsApp or COD - show success message
         clearCart();
-        router.push(`/order-confirmation?order=${result.data?.orderCode}`);
+        
+        // If manual notification links are provided (when WhatsApp API is not available),
+        // pass them to the order confirmation page
+        if (result.data?.manualNotification) {
+          router.push(`/order-confirmation?order=${result.data?.orderCode}&manualNotification=true`);
+          // Store the manual notification data in localStorage for the confirmation page
+          localStorage.setItem('manualNotificationData', JSON.stringify(result.data.manualNotification));
+        } else {
+          router.push(`/order-confirmation?order=${result.data?.orderCode}`);
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Something went wrong. Please try again.');
@@ -190,7 +199,7 @@ export default function CheckoutPage() {
                         required
                         value={formData.city}
                         onChange={(e) => setFormData({...formData, city: e.target.value})}
-                        placeholder="e.g., Masaki, Mikocheni"
+                        placeholder="e.g., Oysterbay, Mikocheni"
                       />
                     </>
                   )}

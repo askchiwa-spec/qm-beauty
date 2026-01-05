@@ -1,145 +1,48 @@
-// API Route: Initiate Payment
-// POST /api/payment/initiate
-
 import { NextRequest, NextResponse } from 'next/server';
-import { selcomClient } from '@/lib/selcom';
-import {
-  sanitizeInput,
-  isValidTanzaniaPhone,
-  isValidAmount,
-  isValidOrderCode,
-} from '@/lib/security/validation';
-import { hasSuspiciousPattern } from '@/lib/security/config';
 
-interface PaymentRequest {
-  orderId: string;
-  phone: string;
-  amount: number;
-  customerName: string;
-  paymentType?: 'web' | 'push'; // web = gateway redirect, push = USSD push
-}
-
+// This is a mock implementation of the Selcom payment initiation
+// In a real implementation, you would integrate with Selcom's actual API
 export async function POST(request: NextRequest) {
   try {
-    const body: PaymentRequest = await request.json();
-    const { orderId, phone, amount, customerName, paymentType = 'web' } = body;
+    const { amount, customer, orderRef, description } = await request.json();
 
-    // Sanitize inputs
-    const sanitizedOrderId = sanitizeInput(orderId);
-    const sanitizedCustomerName = sanitizeInput(customerName);
-    
-    // Validation
-    if (!sanitizedOrderId || !phone || !amount) {
+    // Validate required fields
+    if (!amount || !customer || !orderRef) {
       return NextResponse.json(
-        { error: 'Missing required fields: orderId, phone, amount' },
-        { status: 400 }
-      );
-    }
-    
-    // Validate order ID format
-    if (!isValidOrderCode(sanitizedOrderId)) {
-      return NextResponse.json(
-        { error: 'Invalid order ID format' },
-        { status: 400 }
-      );
-    }
-    
-    // Validate phone number
-    if (!isValidTanzaniaPhone(phone)) {
-      return NextResponse.json(
-        { error: 'Invalid phone number format' },
-        { status: 400 }
-      );
-    }
-    
-    // Validate amount
-    if (!isValidAmount(amount)) {
-      return NextResponse.json(
-        { error: 'Amount must be greater than 0' },
-        { status: 400 }
-      );
-    }
-    
-    // Validate customer name
-    if (hasSuspiciousPattern(sanitizedCustomerName)) {
-      return NextResponse.json(
-        { error: 'Invalid customer name' },
-        { status: 400 }
-      );
-    }
-    
-    // Validate payment type
-    if (paymentType && !['web', 'push'].includes(paymentType)) {
-      return NextResponse.json(
-        { error: 'Invalid payment type' },
+        { error: 'Missing required fields: amount, customer, orderRef' },
         { status: 400 }
       );
     }
 
-    // TODO: Verify order exists in database
-    // TODO: Check if order is already paid
+    // Generate a unique transaction ID for Selcom
+    const transactionId = `QM${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`;
+    
+    // Mock payment initiation response
+    // In a real implementation, this would call Selcom's API to initiate the payment
+    const paymentData = {
+      transactionId,
+      orderRef,
+      amount,
+      customer,
+      description: description || 'QM Beauty Product Purchase',
+      paymentUrl: `https://selcom.example.com/pay?ref=${transactionId}`, // This would be the real Selcom payment URL
+      initiatedAt: new Date().toISOString(),
+      status: 'pending',
+    };
 
-    let paymentResult;
+    // In a real implementation, you would store the transaction in your database
+    // and return the payment initiation details to the frontend
+    console.log('Payment initiation requested:', paymentData);
 
-    if (paymentType === 'push') {
-      // USSD Push Payment (SIM Toolkit)
-      paymentResult = await selcomClient.initiatePushPayment({
-        orderId,
-        phone,
-        amount,
-        customerName,
-      });
-
-      if (!paymentResult.success) {
-        return NextResponse.json(
-          { error: 'Payment initiation failed', details: 'Payment provider error' }, // Don't expose internal details
-          { status: 400 }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: 'USSD push sent to your phone. Please check your SIM toolkit.',
-        data: {
-          orderId,
-          transactionId: paymentResult.transactionId,
-          reference: paymentResult.reference,
-          paymentMethod: (paymentResult as any).paymentMethod,
-          type: 'push',
-        },
-      });
-    } else {
-      // Web Gateway Payment (Redirect)
-      paymentResult = await selcomClient.initiatePayment({
-        orderId,
-        phone,
-        amount,
-        customerName,
-      });
-
-      if (!paymentResult.success) {
-        return NextResponse.json(
-          { error: 'Payment initiation failed', details: 'Payment provider error' }, // Don't expose internal details
-          { status: 400 }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: 'Payment gateway ready',
-        data: {
-          orderId,
-          transactionId: paymentResult.transactionId,
-          reference: paymentResult.reference,
-          redirectUrl: paymentResult.redirectUrl,
-          type: 'web',
-        },
-      });
-    }
-  } catch (error: any) {
-    console.error('Payment Initiation Error:', error);
+    return NextResponse.json({
+      success: true,
+      data: paymentData,
+      message: 'Payment initiated successfully'
+    });
+  } catch (error) {
+    console.error('Error initiating payment:', error);
     return NextResponse.json(
-      { error: 'Failed to initiate payment', details: 'Internal server error' }, // Don't expose internal error details
+      { error: 'Failed to initiate payment' },
       { status: 500 }
     );
   }

@@ -8,7 +8,13 @@ export const products: Product[] = [
     price: 20000,
     category: 'skincare',
     image: '/images/products/coffee-scrub.png',
-    images: ['/images/products/coffee-scrub.png'],
+    images: [
+      '/images/products/coffee-scrub.png',
+      '/images/products/coffee-scrub-1.png',
+      '/images/products/coffee-scrub-2.png',
+      '/images/products/coffee-scrub-3.png',
+      '/images/products/coffee-scrub-4.png'
+    ],
     shortDescription: 'Reveal glowing, soft, and youthful skin—a powerhouse of Arabica coffee, honey, and turmeric!',
     description: 'Transform your skincare routine with the QM Beauty Natural Coffee Scrub. Crafted from premium Arabica coffee, nourishing honey, and rejuvenating turmeric, this scrub deeply exfoliates to remove dead skin cells, clears acne, and diminishes signs of aging. Beyond skincare, it doubles as a scalp treatment, effectively combating dandruff and invigorating your hair.',
     ingredients: ['Natural Arabica Coffee', 'Natural Honey', 'Turmeric'],
@@ -32,7 +38,13 @@ export const products: Product[] = [
     price: 20000,
     category: 'skincare',
     image: '/images/products/body-oil.png',
-    images: ['/images/products/body-oil.png'],
+    images: [
+      '/images/products/body-oil.png',
+      '/images/products/body-oil-1.png',
+      '/images/products/body-oil-2.png',
+      '/images/products/body-oil-3.png',
+      '/images/products/body-oil-4.png'
+    ],
     shortDescription: 'Experience radiant, hydrated skin—your ultimate skin elixir!',
     description: 'Indulge in the luxurious hydration of QM Beauty Carrots & Turmeric Body Oil. Enriched with carrot oil, coconut oil, turmeric, and essential oils, this body oil soothes sunburn, smoothens wrinkles, and enhances your skin tone. Perfect for deep moisturization.',
     ingredients: ['Carrot Oil', 'Coconut Oil', 'Turmeric', 'Essential Oil'],
@@ -55,7 +67,13 @@ export const products: Product[] = [
     price: 20000,
     category: 'haircare',
     image: '/images/products/hair-gel.png',
-    images: ['/images/products/hair-gel.png'],
+    images: [
+      '/images/products/hair-gel.png',
+      '/images/products/hair-gel-1.png',
+      '/images/products/hair-gel-2.png',
+      '/images/products/hair-gel-3.png',
+      '/images/products/hair-gel-4.png'
+    ],
     shortDescription: 'Style meets care—strengthens, nourishes, and promotes rapid hair growth!',
     description: 'Achieve perfect hair styling with health benefits using QM Beauty Hair Gel. Infused with castor oil, turmeric, and essential oils, this gel not only holds your hairstyle in place but also prevents hair fall, promotes growth, and maintains a healthy scalp. Say goodbye to dandruff and hello to luscious, thick hair!',
     ingredients: ['Castor Oil', 'Turmeric', 'Essential Oil'],
@@ -77,7 +95,13 @@ export const products: Product[] = [
     price: 25000,
     category: 'haircare',
     image: '/images/products/hair-oil.png',
-    images: ['/images/products/hair-oil.png'],
+    images: [
+      '/images/products/hair-oil.png',
+      '/images/products/hair-oil-1.png',
+      '/images/products/hair-oil-2.png',
+      '/images/products/hair-oil-3.png',
+      '/images/products/hair-oil-4.png'
+    ],
     shortDescription: 'Unrefined and pure—nourish your beauty naturally.',
     description: 'Discover the unmatched purity of QM Beauty Virgin Coconut Oil. Extracted through cold pressing, this premium oil provides intense hydration, revitalizing your skin and hair. A head-to-toe treatment for a vibrant and moisturized appearance, perfect for everyday care.',
     ingredients: ['Cold Pressed Coconut Oil'],
@@ -321,6 +345,234 @@ export const products: Product[] = [
     ],
     inStock: true,
     packageSize: 'Kit',
+  },
+  {
+    id: '16',
+    name: 'Shampoo',
+    slug: 'shampoo',
+    price: 25000,
+    category: 'haircare',
+    image: '', // Placeholder - will use generated image
+    images: [], // Placeholder - will use generated images
+    shortDescription: 'Premium shampoo for healthy, nourished hair.',
+    description: 'QM Beauty Premium Shampoo gently cleanses and nourishes your hair, leaving it soft, smooth, and manageable. Formulated with natural ingredients to maintain scalp health and promote hair growth.',
+    ingredients: ['Natural Cleansing Agents', 'Essential Oils', 'Vitamins', 'Plant Extracts'],
+    benefits: [
+      'Gentle cleansing without stripping natural oils',
+      'Nourishes and strengthens hair',
+      'Maintains healthy scalp',
+      'Promotes hair growth',
+      'Adds shine and manageability'
+    ],
+    inStock: true,
+    packageSize: '300ml',
+  },
+  {
+    id: '17',
+    name: 'Hair Treatment',
+    slug: 'hair-treatment',
+    price: 30000,
+    category: 'haircare',
+    image: '', // Placeholder - will use generated image
+    images: [], // Placeholder - will use generated images
+    shortDescription: 'Deep conditioning treatment for damaged hair.',
+    description: 'QM Beauty Hair Treatment is a deep conditioning formula that repairs and restores damaged hair. Enriched with natural oils and proteins, this treatment penetrates deep into the hair shaft to strengthen and nourish from within.',
+    ingredients: ['Natural Oils', 'Keratin', 'Proteins', 'Vitamins', 'Plant Extracts'],
+    benefits: [
+      'Repairs damaged hair',
+      'Strengthens hair from within',
+      'Restores natural shine',
+      'Reduces breakage and split ends',
+      'Improves hair texture and manageability'
+    ],
+    inStock: true,
+    packageSize: '200ml',
+  },
+  {
+    id: '18',
+    name: 'Virgin Oil',
+    slug: 'virgin-oil',
+    price: 28000,
+    category: 'haircare',
+    image: '', // Placeholder - will use generated image
+    images: [], // Placeholder - will use generated images
+    shortDescription: 'Pure, unrefined oil for hair and skin care.',
+    description: 'QM Beauty Virgin Oil is extracted using cold-pressing methods to preserve all the natural nutrients. This pure, unrefined oil provides intense nourishment for both hair and skin.',
+    ingredients: ['Cold-Pressed Natural Oil'],
+    benefits: [
+      'Intense nourishment for hair and skin',
+      'Preserves natural nutrients',
+      'Cold-pressed for purity',
+      'Suitable for all skin types',
+      'Promotes healthy hair growth'
+    ],
+    inStock: true,
+    packageSize: '200ml',
+  },
+  {
+    id: '19',
+    name: 'Pure Oil',
+    slug: 'pure-oil',
+    price: 25000,
+    category: 'skincare',
+    image: '', // Placeholder - will use generated image
+    images: [], // Placeholder - will use generated images
+    shortDescription: 'Pure, natural oil for skin hydration.',
+    description: 'QM Beauty Pure Oil is a premium blend of natural oils carefully selected for their skin-nourishing properties. This pure formula deeply moisturizes and rejuvenates your skin.',
+    ingredients: ['Natural Plant Oils'],
+    benefits: [
+      'Deep moisturization',
+      'Rejuvenates skin',
+      'Natural skin conditioning',
+      'Non-greasy formula',
+      'Suitable for sensitive skin'
+    ],
+    inStock: true,
+    packageSize: '100ml',
+  },
+  {
+    id: '20',
+    name: 'Regular Oil',
+    slug: 'regular-oil',
+    price: 20000,
+    category: 'skincare',
+    image: '', // Placeholder - will use generated image
+    images: [], // Placeholder - will use generated images
+    shortDescription: 'Everyday oil for general skin care.',
+    description: 'QM Beauty Regular Oil is a versatile, everyday oil perfect for general skin care. Lightweight and easily absorbed, it provides essential nourishment for healthy-looking skin.',
+    ingredients: ['Natural Oils', 'Essential Vitamins'],
+    benefits: [
+      'Lightweight moisturization',
+      'Easily absorbed',
+      'Essential skin nourishment',
+      'Perfect for daily use',
+      'Promotes healthy skin appearance'
+    ],
+    inStock: true,
+    packageSize: '150ml',
+  },
+  {
+    id: '21',
+    name: 'Orange Oil',
+    slug: 'orange-oil',
+    price: 35000,
+    category: 'skincare',
+    image: '', // Placeholder - will use generated image
+    images: [], // Placeholder - will use generated images
+    shortDescription: 'Citrus-infused oil for revitalizing skin care.',
+    description: 'QM Beauty Orange Oil combines the revitalizing properties of citrus with nourishing oils. This uplifting formula helps brighten the skin and provides a refreshing sensory experience.',
+    ingredients: ['Orange Essential Oil', 'Carrier Oils', 'Natural Vitamin C'],
+    benefits: [
+      'Brightens skin tone',
+      'Uplifting citrus scent',
+      'Natural Vitamin C content',
+      'Revitalizing properties',
+      'Antioxidant-rich formula'
+    ],
+    inStock: true,
+    packageSize: '50ml',
+  },
+  {
+    id: '22',
+    name: 'Carrot Oil',
+    slug: 'carrot-oil',
+    price: 30000,
+    category: 'skincare',
+    image: '', // Placeholder - will use generated image
+    images: [], // Placeholder - will use generated images
+    shortDescription: 'Pure carrot oil for nourishing skin care.',
+    description: 'QM Beauty Pure Carrot Oil is extracted from premium carrots, rich in beta-carotene and vitamins. This nourishing oil helps rejuvenate the skin, reduce signs of aging, and promote a healthy, glowing complexion.',
+    ingredients: ['Pure Carrot Oil', 'Natural Vitamin A', 'Beta-Carotene'],
+    benefits: [
+      'Rich in beta-carotene and vitamins',
+      'Rejuvenates the skin',
+      'Reduces signs of aging',
+      'Promotes glowing complexion',
+      'Natural skin nourishment'
+    ],
+    inStock: true,
+    packageSize: '100ml',
+  },
+  {
+    id: '23',
+    name: 'Skincare Essentials Bundle',
+    slug: 'skincare-essentials-bundle',
+    price: 45000,
+    category: 'bundle',
+    image: '/images/products/bundle-skincare.png',
+    images: [
+      '/images/products/bundle-skincare.png',
+      '/images/products/bundle-skincare-1.png',
+      '/images/products/bundle-skincare-2.png',
+      '/images/products/bundle-skincare-3.png',
+      '/images/products/bundle-skincare-4.png'
+    ],
+    shortDescription: 'Complete skincare routine with our premium products.',
+    description: 'The Skincare Essentials Bundle includes our best-selling products for a complete daily skincare routine. Perfect for all skin types, this bundle includes our face cream, coffee scrub, and body oil for a radiant complexion.',
+    ingredients: ['Natural Face Cream', 'Coffee Scrub', 'Body Oil'],
+    benefits: [
+      'Complete daily skincare routine',
+      'Suitable for all skin types',
+      'Natural and organic ingredients',
+      'Promotes radiant complexion',
+      'Deep moisturization and nourishment'
+    ],
+    inStock: true,
+    packageSize: 'Bundle of 3 products',
+  },
+  {
+    id: '24',
+    name: 'Hair Care Complete Bundle',
+    slug: 'hair-care-complete-bundle',
+    price: 50000,
+    category: 'bundle',
+    image: '/images/products/bundle-haircare.png',
+    images: [
+      '/images/products/bundle-haircare.png',
+      '/images/products/bundle-haircare-1.png',
+      '/images/products/bundle-haircare-2.png',
+      '/images/products/bundle-haircare-3.png',
+      '/images/products/bundle-haircare-4.png'
+    ],
+    shortDescription: 'Complete hair care routine with premium products.',
+    description: 'The Hair Care Complete Bundle features our most effective hair products for a complete hair care routine. Includes our hair gel, hair oil, and shampoo for healthy, strong, and beautiful hair.',
+    ingredients: ['Hair Gel', 'Hair Oil', 'Shampoo'],
+    benefits: [
+      'Complete hair care routine',
+      'Strengthens and nourishes hair',
+      'Promotes hair growth',
+      'Prevents hair fall',
+      'Maintains healthy scalp'
+    ],
+    inStock: true,
+    packageSize: 'Bundle of 3 products',
+  },
+  {
+    id: '25',
+    name: 'Deluxe Spa Experience Bundle',
+    slug: 'deluxe-spa-experience-bundle',
+    price: 80000,
+    category: 'bundle',
+    image: '/images/products/bundle-spa.png',
+    images: [
+      '/images/products/bundle-spa.png',
+      '/images/products/bundle-spa-1.png',
+      '/images/products/bundle-spa-2.png',
+      '/images/products/bundle-spa-3.png',
+      '/images/products/bundle-spa-4.png'
+    ],
+    shortDescription: 'Complete spa experience with premium products.',
+    description: 'The Deluxe Spa Experience Bundle includes our premium products for a complete spa-like experience at home. Features our best products for skin and hair care.',
+    ingredients: ['Coffee Scrub', 'Body Oil', 'Face Cream', 'Hair Oil', 'Body Butter'],
+    benefits: [
+      'Complete spa experience at home',
+      'Premium product selection',
+      'Deep nourishment for skin and hair',
+      'Luxurious self-care routine',
+      'Professional spa results'
+    ],
+    inStock: true,
+    packageSize: 'Bundle of 5 products',
   }
 ];
 
@@ -353,8 +605,8 @@ export const services: Service[] = [
     slug: 'body-massage',
     description: 'Relax and unwind with our therapeutic full body massage. Using natural oils and expert techniques to relieve tension and improve circulation.',
     duration: '120 minutes',
-    price: 95000,
-    image: '/services/massage.jpg',
+    price: 85000,
+    image: '/services/full-body-massage.jpg',
     category: 'spa',
     benefits: ['Stress relief', 'Muscle relaxation', 'Improved circulation', 'Tension release']
   },

@@ -45,15 +45,19 @@ export default function QuickViewModal({ product, onClose }: QuickViewModalProps
           <div className="grid md:grid-cols-2 gap-8">
             {/* Product Image */}
             <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden">
-              {product.image ? (
+              {product.image && !product.image.startsWith('data:image') ? (
                 <img 
                   src={product.image} 
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-6xl">🌿</span>
+                <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-br from-[var(--sage-green)]/10 to-[var(--rose-gold)]/10 rounded-xl">
+                  <div className="text-center">
+                    <div className="text-6xl mb-4">🌿</div>
+                    <div className="text-xl font-semibold text-[var(--charcoal)] mb-2">{product.name}</div>
+                    <div className="text-sm text-gray-600">QM Beauty Premium Product</div>
+                  </div>
                 </div>
               )}
             </div>

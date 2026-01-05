@@ -7,7 +7,16 @@ import ProductCard from '@/components/product/ProductCard';
 import { products, services, testimonials } from '@/data/products';
 
 export default function Home() {
-  const featuredProducts = products.filter(p => p.featured);
+  // Define most loved products - these are products that are featured, have good ratings, or are popular
+  const mostLovedProducts = products
+    .filter(p => p.category !== 'bundle') // Exclude bundles from this section
+    .sort((a, b) => {
+      // Sort by: featured first, then by price (to prioritize premium products)
+      if (a.featured && !b.featured) return -1;
+      if (!a.featured && b.featured) return 1;
+      return b.price - a.price; // Higher price first
+    })
+    .slice(0, 8); // Take top 8 products
   
   return (
     <div className="min-h-screen">
@@ -126,20 +135,20 @@ export default function Home() {
             {/* Section Header */}
             <div className="text-center mb-12">
               <p className="text-[var(--rose-gold)] uppercase tracking-[0.2em] text-xs font-medium mb-3">
-                New Arrivals
+                Most Loved Products
               </p>
               <h2 className="text-[var(--deep-charcoal)] mb-4">
-                Natural Beauty Products
+                Our Customers' Favorites
               </h2>
               <div className="w-20 h-[1px] bg-gradient-to-r from-transparent via-[var(--rose-gold)] to-transparent mx-auto mb-6"></div>
               <p className="text-sm sm:text-base text-gray-700 font-light leading-relaxed px-4 max-w-3xl mx-auto">
-                Meticulously crafted with premium natural ingredients for radiant, healthy skin
+                Discover our most cherished natural beauty products loved by thousands of customers
               </p>
             </div>
             
             {/* Premium Grid - Luxury Breathing Space */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 mb-8">
-              {featuredProducts.map((product) => (
+              {mostLovedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
@@ -313,7 +322,7 @@ export default function Home() {
             </h2>
             <div className="w-20 h-[1px] bg-gradient-to-r from-transparent via-[var(--rose-gold)] to-transparent mx-auto mb-8"></div>
             <p className="text-lg text-white/80 mb-12 font-light leading-relaxed max-w-2xl mx-auto">
-              Visit our luxury boutique at 59 Ali Hassan Mwinyi Road, Masaki, Dar es Salaam. Experience our products firsthand and consult with our beauty experts.
+              Visit our luxury boutique at 59 Ali Hassan Mwinyi Road, Oysterbay, Dar es Salaam. Experience our products firsthand and consult with our beauty experts.
             </p>
             
             {/* CTAs */}

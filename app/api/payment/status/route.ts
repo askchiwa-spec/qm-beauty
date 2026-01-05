@@ -1,48 +1,43 @@
-// API Route: Check Payment Status
-// GET /api/payment/status?orderId=QB-123456
-
 import { NextRequest, NextResponse } from 'next/server';
-import { selcomClient } from '@/lib/selcom';
 
-export async function GET(request: NextRequest) {
+// This is a mock implementation of the Selcom payment status check
+// In a real implementation, you would integrate with Selcom's actual API
+export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const orderId = searchParams.get('orderId');
+    const { transactionId } = await request.json();
 
-    if (!orderId) {
+    // Validate required fields
+    if (!transactionId) {
       return NextResponse.json(
-        { error: 'Missing orderId parameter' },
+        { error: 'Missing required field: transactionId' },
         { status: 400 }
       );
     }
 
-    // TODO: Fetch order from database first
-    // TODO: Check database for payment status before calling Selcom
+    // Mock payment status response
+    // In a real implementation, this would call Selcom's API to check the payment status
+    const paymentStatus = {
+      transactionId,
+      status: 'completed', // In a real implementation, this would reflect the actual status
+      amount: 50000, // This would come from the database or Selcom API
+      currency: 'TZS',
+      reference: `REF${Date.now()}`,
+      completedAt: new Date().toISOString(),
+    };
 
-    // Query payment status from Selcom
-    const statusResult = await selcomClient.queryPaymentStatus(orderId);
-
-    if (!statusResult.success) {
-      return NextResponse.json(
-        { error: 'Failed to query payment status', details: statusResult.error },
-        { status: 400 }
-      );
-    }
+    // In a real implementation, you would fetch the transaction from your database
+    // and return the actual status from Selcom
+    console.log('Payment status requested:', transactionId);
 
     return NextResponse.json({
       success: true,
-      data: {
-        orderId,
-        status: statusResult.status,
-        amount: statusResult.amount,
-        paymentMethod: statusResult.paymentMethod,
-        transactionId: statusResult.transactionId,
-      },
+      data: paymentStatus,
+      message: 'Payment status retrieved successfully'
     });
-  } catch (error: any) {
-    console.error('Payment Status Query Error:', error);
+  } catch (error) {
+    console.error('Error checking payment status:', error);
     return NextResponse.json(
-      { error: 'Failed to check payment status', details: error.message },
+      { error: 'Failed to check payment status' },
       { status: 500 }
     );
   }

@@ -2,6 +2,26 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Prerequisites
+
+Make sure you have the following installed:
+- Node.js (v18 or higher)
+- npm or yarn
+- Docker Desktop (required for WhatsApp integration)
+
+### WhatsApp Integration Setup
+
+QM Beauty uses Evolution API for WhatsApp messaging. To fully enable WhatsApp functionality:
+
+1. Install Docker Desktop
+2. Run the Evolution API: `./start-evolution.bat`
+3. Connect your WhatsApp number by scanning the QR code
+4. Follow the detailed instructions in [WHATSAPP_SETUP_INSTRUCTIONS.md](./WHATSAPP_SETUP_INSTRUCTIONS.md)
+
+If Docker is not available, direct WhatsApp links will still work, but automated order notifications will not function.
+
+## Getting Started
+
 First, run the development server:
 
 ```bash

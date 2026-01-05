@@ -1,7 +1,20 @@
 // Cart API utilities
+export interface ManualNotificationData {
+  businessLink: string;
+  customerLink: string;
+  businessMessage: string;
+  customerMessage: string;
+}
+
 export interface CartResponse {
   success: boolean;
-  data?: any;
+  data?: {
+    orderCode?: string;
+    totalAmount?: number;
+    whatsappSent?: boolean;
+    customerNotified?: boolean;
+    manualNotification?: ManualNotificationData;
+  };
   error?: string;
 }
 

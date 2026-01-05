@@ -116,7 +116,7 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-serif text-lg mb-2 text-[var(--deep-charcoal)] font-medium">Location</h3>
                     <p className="text-[var(--espresso)] font-light leading-relaxed">
-                      59 Ali Hassan Mwinyi Road, Masaki<br />
+                      59 Ali Hassan Mwinyi Road, Oysterbay<br />
                       Dar es Salaam, Tanzania
                     </p>
                   </div>
@@ -149,8 +149,7 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-serif text-lg mb-2 text-[var(--deep-charcoal)] font-medium">Opening Hours</h3>
                     <p className="text-[var(--espresso)] font-light leading-relaxed">
-                      Monday - Friday: 9:00 AM - 7:00 PM<br />
-                      Saturday: 9:00 AM - 5:00 PM<br />
+                      Monday - Saturday: 9:00 AM - 7:00 PM<br />
                       Sunday: 10:00 AM - 4:00 PM
                     </p>
                   </div>
@@ -230,6 +229,42 @@ export default function ContactPage() {
                 </summary>
                 <p className="mt-4 text-[var(--espresso)] font-light leading-relaxed">
                   We accept cash, mobile money (M-Pesa, Tigo Pesa, Airtel Money), and bank transfers.
+                </p>
+              </details>
+              
+              <details className="bg-white p-8 shadow-md elegant-hover">
+                <summary className="font-serif text-lg cursor-pointer text-[var(--deep-charcoal)] font-medium">
+                  How long do your products last?
+                </summary>
+                <p className="mt-4 text-[var(--espresso)] font-light leading-relaxed">
+                  Our natural products typically last 6-12 months when stored properly. We recommend using them within 6 months of opening for best results.
+                </p>
+              </details>
+              
+              <details className="bg-white p-8 shadow-md elegant-hover">
+                <summary className="font-serif text-lg cursor-pointer text-[var(--deep-charcoal)] font-medium">
+                  Are your products suitable for sensitive skin?
+                </summary>
+                <p className="mt-4 text-[var(--espresso)] font-light leading-relaxed">
+                  Yes! Our products are made with natural ingredients and are suitable for most skin types, including sensitive skin. We recommend doing a patch test before first use.
+                </p>
+              </details>
+              
+              <details className="bg-white p-8 shadow-md elegant-hover">
+                <summary className="font-serif text-lg cursor-pointer text-[var(--deep-charcoal)] font-medium">
+                  Do you offer wholesale or bulk discounts?
+                </summary>
+                <p className="mt-4 text-[var(--espresso)] font-light leading-relaxed">
+                  Yes! We offer special pricing for bulk orders. Contact us for our wholesale pricing and minimum order requirements.
+                </p>
+              </details>
+              
+              <details className="bg-white p-8 shadow-md elegant-hover">
+                <summary className="font-serif text-lg cursor-pointer text-[var(--deep-charcoal)] font-medium">
+                  How often should I use the coffee scrub?
+                </summary>
+                <p className="mt-4 text-[var(--espresso)] font-light leading-relaxed">
+                  For best results, we recommend using our coffee scrub 2-3 times per week. Over-exfoliation can irritate the skin, so moderation is key.
                 </p>
               </details>
             </div>

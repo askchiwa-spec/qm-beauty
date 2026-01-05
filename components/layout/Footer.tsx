@@ -60,7 +60,7 @@ export default function Footer() {
               <div className="space-y-3 text-sm">
                 <div>
                   <p className="text-xs text-white/60 uppercase tracking-wider mb-1">Location</p>
-                  <p className="text-white/80 leading-relaxed">59 Ali Hassan Mwinyi Road<br />Masaki, Dar es Salaam</p>
+                  <p className="text-white/80 leading-relaxed">59 Ali Hassan Mwinyi Road<br />Oysterbay, Dar es Salaam</p>
                   <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="text-[var(--rose-gold)] hover:underline text-xs mt-1 inline-block">View Map</a>
                 </div>
                 <div>
@@ -70,7 +70,7 @@ export default function Footer() {
                 </div>
                 <div>
                   <p className="text-xs text-white/60 uppercase tracking-wider mb-1">Hours</p>
-                  <p className="text-white/80">Mon-Sat: 9AM-7PM</p>
+                  <p className="text-white/80">Mon-Sat: 9AM-7PM<br />Sun: 10AM-4PM</p>
                 </div>
               </div>
             </div>

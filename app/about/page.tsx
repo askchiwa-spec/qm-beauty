@@ -47,27 +47,29 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* 2️⃣ BRAND STORY SECTION - Premium Magazine Layout */}
+      {/* 2️⃣ FOUNDER STORY SECTION - Premium Magazine Layout */}
       <section className="py-20 sm:py-24 md:py-28 bg-white">
         <div className="w-full flex justify-center px-4">
           <div className="w-full max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <p className="text-[var(--rose-gold)] uppercase tracking-[0.25em] text-xs font-medium mb-4">
+                Our Story
+              </p>
+              <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[var(--deep-charcoal)] mb-6">
+                The Visionary Behind QM Beauty
+              </h2>
+              <div className="w-24 h-[2px] bg-[var(--rose-gold)] mx-auto"></div>
+            </div>
+            
             <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
               {/* Text Content */}
               <div className="space-y-6">
-                <p className="text-[var(--rose-gold)] uppercase tracking-[0.25em] text-xs font-medium">
-                  Our Journey
-                </p>
-                <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[var(--deep-charcoal)] leading-tight">
-                  Born From a Vision of African Beauty Excellence
-                </h2>
-                <div className="w-16 h-[2px] bg-[var(--rose-gold)]"></div>
-                
                 <div className="space-y-4 text-base sm:text-lg text-[var(--espresso)] leading-relaxed font-light">
                   <p>
-                    QM Beauty was created to celebrate the unique, radiant beauty of African women. We recognized that luxury wellness shouldn't be exclusive — it should embrace every woman who desires to feel confident and beautiful.
+                    QM Beauty was founded with a clear mission: to celebrate the unique, radiant beauty of African women. Our founder recognized that luxury wellness shouldn't be exclusive — it should embrace every woman who desires to feel confident and beautiful.
                   </p>
                   <p>
-                    Based in the prestigious Masaki area at 59 Ali Hassan Mwinyi Road, Dar es Salaam, we provide luxurious spa treatments, premium skincare products, and expert beauty services meticulously designed for African, Asian, and European skin types.
+                    What started as a vision has grown into a premium beauty destination in the prestigious Oysterbay area at 59 Ali Hassan Mwinyi Road, Dar es Salaam. We provide luxurious spa treatments, premium skincare products, and expert beauty services meticulously designed for African, Asian, and European skin types.
                   </p>
                   <p className="font-medium text-[var(--deep-charcoal)]">
                     From everyday women seeking natural beauty solutions to high-end clients desiring world-class spa experiences — we make luxury wellness accessible, professional, and deeply personal.
@@ -274,7 +276,7 @@ export default function AboutPage() {
                   Prime Location
                 </h3>
                 <p className="text-sm text-[var(--espresso)] leading-relaxed font-light">
-                  Located in Masaki, 59 Ali Hassan Mwinyi Road — elite environment with easy access and premium ambiance.
+                  Located in Oysterbay, 59 Ali Hassan Mwinyi Road — elite environment with easy access and premium ambiance.
                 </p>
               </div>
             </div>

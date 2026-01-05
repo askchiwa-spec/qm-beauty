@@ -1,7 +1,7 @@
 'use client';
 
 export default function WhatsAppButton() {
-  const phoneNumber = '255715727085'; // QM Beauty primary WhatsApp
+  const phoneNumber = '255657120151'; // QM Beauty primary WhatsApp
   const message = 'Hello! I want to inquire about QM Beauty products and services';
   
   const handleWhatsAppClick = () => {

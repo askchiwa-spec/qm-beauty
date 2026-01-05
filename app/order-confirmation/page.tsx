@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { useEffect, Suspense, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
@@ -9,6 +9,23 @@ function OrderConfirmationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderCode = searchParams.get('order');
+  const manualNotification = searchParams.get('manualNotification') === 'true';
+  
+  // Get manual notification data from localStorage if available
+  const [manualNotificationData, setManualNotificationData] = useState<any>(null);
+  
+  useEffect(() => {
+    if (manualNotification) {
+      const storedData = localStorage.getItem('manualNotificationData');
+      if (storedData) {
+        try {
+          setManualNotificationData(JSON.parse(storedData));
+        } catch (e) {
+          console.error('Error parsing manual notification data:', e);
+        }
+      }
+    }
+  }, [manualNotification]);
 
   useEffect(() => {
     if (!orderCode) {
@@ -43,22 +60,62 @@ function OrderConfirmationContent() {
           </p>
 
           {/* WhatsApp Notification */}
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
-            <div className="flex items-start gap-4">
-              <span className="text-4xl">💬</span>
-              <div className="text-left flex-1">
-                <h3 className="font-semibold text-[var(--charcoal)] mb-2">
-                  We've sent your order to WhatsApp!
-                </h3>
-                <p className="text-sm text-gray-600 mb-3">
-                  Our team will contact you shortly on WhatsApp to confirm your order details and arrange delivery.
-                </p>
-                <p className="text-sm text-gray-600">
-                  You'll also receive a confirmation message with your order details.
-                </p>
+          {manualNotification && manualNotificationData ? (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
+              <div className="flex items-start gap-4">
+                <span className="text-4xl">⚠️</span>
+                <div className="text-left flex-1">
+                  <h3 className="font-semibold text-[var(--charcoal)] mb-2">
+                    WhatsApp Notifications Pending
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Our system couldn't send automatic notifications. Please send the following messages manually:
+                  </p>
+                  <div className="space-y-3 mt-4">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 mb-1">TO BUSINESS:</p>
+                      <a 
+                        href={manualNotificationData.businessLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-block bg-[var(--sage-green)] hover:bg-[var(--sage-green)] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full text-center"
+                      >
+                        Send Order to Business
+                      </a>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 mb-1">TO CUSTOMER:</p>
+                      <a 
+                        href={manualNotificationData.customerLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-block bg-[var(--sage-green)] hover:bg-[var(--sage-green)] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors w-full text-center"
+                      >
+                        Send Confirmation to Customer
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
+              <div className="flex items-start gap-4">
+                <span className="text-4xl">💬</span>
+                <div className="text-left flex-1">
+                  <h3 className="font-semibold text-[var(--charcoal)] mb-2">
+                    We've sent your order to WhatsApp!
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Our team will contact you shortly on WhatsApp to confirm your order details and arrange delivery.
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    You'll also receive a confirmation message with your order details.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* What's Next */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8 text-left">
@@ -90,7 +147,7 @@ function OrderConfirmationContent() {
           <div className="border-t pt-6 mb-6">
             <p className="text-sm text-gray-600 mb-2">Need help with your order?</p>
             <a 
-              href="https://wa.me/255715727085" 
+              href="https://wa.me/255657120151" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-[var(--sage-green)] hover:underline font-semibold"
