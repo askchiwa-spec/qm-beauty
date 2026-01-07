@@ -24,7 +24,7 @@ export default function Home() {
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Hero Background Image with Next.js optimization */}
         <Image
-          src="/images/hero/home-hero.jpg"
+          src="/images/hero/home-hero.png"
           alt="QM Beauty Luxury Spa and Natural Cosmetics"
           fill
           priority

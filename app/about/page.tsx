@@ -66,13 +66,19 @@ export default function AboutPage() {
               <div className="space-y-6">
                 <div className="space-y-4 text-base sm:text-lg text-[var(--espresso)] leading-relaxed font-light">
                   <p>
-                    QM Beauty was founded with a clear mission: to celebrate the unique, radiant beauty of African women. Our founder recognized that luxury wellness shouldn't be exclusive — it should embrace every woman who desires to feel confident and beautiful.
+                    My name is Saida Bandawe, a mother of two and a passionate entrepreneur. I am the founder of QM Beauty, a company dedicated to producing and supplying high-quality natural beauty products, including our well-known carrot and turmeric oils, among many other effective formulations.
                   </p>
                   <p>
-                    What started as a vision has grown into a premium beauty destination in the prestigious Oysterbay area at 59 Ali Hassan Mwinyi Road, Dar es Salaam. We provide luxurious spa treatments, premium skincare products, and expert beauty services meticulously designed for African, Asian, and European skin types.
+                    With a degree in Business, I am committed to adding value in everything I do. Through QM Beauty, I have contributed to the growth of natural cosmetic production in Tanzania, created employment opportunities for young people, and helped address widespread challenges in the beauty industry—especially concerns related to skin and hair damage caused by harmful products.
+                  </p>
+                  <p>
+                    At QM Beauty, our mission is to provide safe, natural solutions that restore confidence, promote healthier skin and hair, and inspire self-love. We strongly advocate for people to embrace their natural beauty and avoid products that compromise their wellbeing. That is why we say, “LUVurself.”
+                  </p>
+                  <p>
+                    Beyond beauty, I am also a professional home-cooked meals chef, offering catering services for weddings, celebrations, and special events.
                   </p>
                   <p className="font-medium text-[var(--deep-charcoal)]">
-                    From everyday women seeking natural beauty solutions to high-end clients desiring world-class spa experiences — we make luxury wellness accessible, professional, and deeply personal.
+                    You can connect with us on social media via @qmbeautytz or reach out directly at +255 715 727 085.
                   </p>
                 </div>
               </div>
