@@ -9,6 +9,7 @@ export interface ManualNotificationData {
 export interface CartResponse {
   success: boolean;
   data?: {
+    cartId?: string;
     orderCode?: string;
     totalAmount?: number;
     whatsappSent?: boolean;
