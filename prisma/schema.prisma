@@ -1,0 +1,239 @@
+// QM Beauty Database Schema
+// Optimized for Tanzania market with WhatsApp + Selcom + Calendly integration
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+model User {
+  id        String   @id @default(uuid())
+  phone     String   @unique // Tanzania format: +255...
+  name      String?
+  email     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  carts     Cart[]
+  orders    Order[]
+  
+  @@index([phone]) // For quick user lookups
+  @@map("users")
+}
+
+// ============================================
+// PRODUCTS & INVENTORY
+// ============================================
+
+model Product {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  name        String
+  description String?  @db.Text
+  price       Int      // Store in cents: 20000 = 20k TZS
+  salePrice   Int?     @map("sale_price")
+  category    String
+  stock       Int      @default(0)
+  inStock     Boolean  @default(true) @map("in_stock")
+  imageUrl    String?  @map("image_url") @db.Text
+  images      String[] // Array of image URLs
+  featured    Boolean  @default(false)
+  status      String   @default("active") // active, inactive, discontinued
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  cartItems   CartItem[]
+  
+  @@index([category])
+  @@index([status])
+  @@index([slug])
+  @@index([featured, status]) // For homepage queries
+  @@index([price]) // For price filtering
+  @@map("products")
+}
+
+// ============================================
+// CART SYSTEM (Session + User Support)
+// ============================================
+
+model Cart {
+  id          String   @id @default(uuid())
+  userId      String?  @map("user_id") // Nullable for guest carts
+  sessionId   String?  @map("session_id") // For guest identification
+  totalAmount Int      @default(0) @map("total_amount")
+  status      String   @default("active") // active, submitted, paid, abandoned
+  expiresAt   DateTime? @map("expires_at") // Auto-cleanup
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user        User?     @relation(fields: [userId], references: [id])
+  items       CartItem[]
+  order       Order?
+  
+  @@index([sessionId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt]) // For cart cleanup jobs
+  @@map("carts")
+}
+
+model CartItem {
+  id          String   @id @default(uuid())
+  cartId      String   @map("cart_id")
+  productId   String   @map("product_id")
+  quantity    Int      @default(1)
+  priceAtTime Int      @map("price_at_time") // Lock price when added
+  subtotal    Int
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  cart        Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+  
+  @@index([cartId])
+  @@index([productId])
+  @@index([cartId, productId]) // For cart item lookups
+  @@map("cart_items")
+}
+
+// ============================================
+// ORDERS (Backup + Analytics)
+// ============================================
+
+model Order {
+  id                  String   @id @default(uuid())
+  orderCode           String   @unique @map("order_code") // QB-XXXXXX
+  cartId              String   @unique @map("cart_id")
+  userId              String?  @map("user_id")
+  customerName        String   @map("customer_name")
+  customerPhone       String   @map("customer_phone")
+  customerEmail       String?  @map("customer_email")
+  totalAmount         Int      @map("total_amount")
+  paymentStatus       String   @default("pending") @map("payment_status") // pending, paid, failed, refunded
+  paymentMethod       String?  @map("payment_method") // mpesa, tigo, airtel, cash
+  fulfillmentStatus   String   @default("new") @map("fulfillment_status") // new, processing, shipped, completed, cancelled
+  whatsappStatus      String?  @map("whatsapp_status") // sent, delivered, read, failed
+  whatsappMessageId   String?  @map("whatsapp_message_id")
+  deliveryAddress     String?  @map("delivery_address") @db.Text
+  notes               String?  @db.Text
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  cart                Cart     @relation(fields: [cartId], references: [id])
+  user                User?    @relation(fields: [userId], references: [id])
+  payments            Payment[]
+  
+  @@index([customerPhone])
+  @@index([orderCode])
+  @@index([paymentStatus, fulfillmentStatus])
+  @@index([createdAt])
+  @@index([userId]) // For user order history
+  @@map("orders")
+}
+
+// ============================================
+// PAYMENTS (Selcom Integration)
+// ============================================
+
+model Payment {
+  id                    String   @id @default(uuid())
+  orderId               String   @map("order_id")
+  selcomReference       String?  @unique @map("selcom_reference")
+  selcomTransactionId   String?  @map("selcom_transaction_id")
+  amount                Int
+  phone                 String?
+  paymentMethod         String?  @map("payment_method") // MPESA, TIGOPESA, AIRTELMONEY
+  status                String   @default("pending") // pending, completed, failed, cancelled
+  gatewayResponse       Json?    @map("gateway_response") // Store full Selcom response
+  webhookReceivedAt     DateTime? @map("webhook_received_at")
+  createdAt             DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  order                 Order    @relation(fields: [orderId], references: [id])
+  booking               Booking?
+  
+  @@index([selcomReference])
+  @@index([orderId])
+  @@index([status])
+  @@index([createdAt]) // For payment history
+  @@map("payments")
+}
+
+// ============================================
+// SERVICE BOOKINGS (Calendly Integration)
+// ============================================
+
+model Booking {
+  id                String   @id @default(uuid())
+  calendlyEventId   String?  @unique @map("calendly_event_id")
+  calendlyEventUri  String?  @map("calendly_event_uri") @db.Text
+  customerName      String   @map("customer_name")
+  customerEmail     String   @map("customer_email")
+  customerPhone     String?  @map("customer_phone")
+  serviceName       String   @map("service_name")
+  bookingTime       DateTime @map("booking_time")
+  duration          Int?     // in minutes
+  status            String   @default("confirmed") // confirmed, cancelled, completed, no_show
+  depositPaid       Boolean  @default(false) @map("deposit_paid")
+  depositAmount     Int?     @map("deposit_amount")
+  paymentId         String?  @unique @map("payment_id")
+  notes             String?  @db.Text
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  payment           Payment? @relation(fields: [paymentId], references: [id])
+  
+  @@index([calendlyEventId])
+  @@index([customerPhone])
+  @@index([bookingTime])
+  @@index([status])
+  @@index([customerEmail]) // For booking lookups
+  @@map("bookings")
+}
+
+// ============================================
+// WHATSAPP CONFIGURATION (Multi-number Support)
+// ============================================
+
+model WhatsAppNumber {
+  id          String   @id @default(uuid())
+  phone       String   @unique
+  displayName String?  @map("display_name")
+  department  String?  // orders, support, bookings
+  isActive    Boolean  @default(true) @map("is_active")
+  priority    Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  @@index([isActive])
+  @@map("whatsapp_numbers")
+}
+
+// ============================================
+// ADMIN & LOGS (Future Enhancement)
+// ============================================
+
+model ActivityLog {
+  id          String   @id @default(uuid())
+  entityType  String   @map("entity_type") // order, payment, booking
+  entityId    String   @map("entity_id")
+  action      String   // created, updated, status_changed
+  description String   @db.Text
+  metadata    Json?    // Additional data
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
