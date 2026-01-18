@@ -166,16 +166,6 @@ class RedisManager {
     return await this.client!.incr(key);
   }
 
-  /**
-   * Set with expiration (seconds)
-   */
-  public async expire(key: string, seconds: number): Promise<boolean> {
-    if (!this.isReady()) {
-      throw new Error('Redis not ready');
-    }
-    const result = await this.client!.expire(key, seconds);
-    return result === 1;
-  }
 }
 
 // Singleton Redis manager instance

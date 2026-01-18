@@ -156,7 +156,7 @@ function PaymentStatusContent() {
                   Try Again
                 </Button>
                 <a 
-                  href="https://wa.me/255715727085" 
+                  href="https://wa.me/255657120151"
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex-1"

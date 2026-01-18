@@ -126,7 +126,7 @@ export default function WhatsAppTestPage() {
                 type="text"
                 value={testPhone}
                 onChange={(e) => setTestPhone(e.target.value)}
-                placeholder="255715727085"
+                placeholder="255657120151"
                 className="w-full border border-gray-300 rounded px-4 py-2"
               />
               <p className="text-xs text-gray-500 mt-1">

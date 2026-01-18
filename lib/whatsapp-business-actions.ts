@@ -336,9 +336,13 @@ class WhatsAppBusinessActions {
           customerPhone: action.phoneNumber
         },
         include: {
-          items: {
+          cart: {
             include: {
-              product: true
+              items: {
+                include: {
+                  product: true
+                }
+              }
             }
           }
         }
@@ -351,9 +355,9 @@ class WhatsAppBusinessActions {
         };
       }
 
-      const itemsList = order.items.map(item => 
+      const itemsList = order.cart?.items.map((item: any) => 
         `• ${item.product.name} (Qty: ${item.quantity})`
-      ).join('\n');
+      ).join('\n') || 'No items found';
 
       const statusMessage = `📦 *Order Status: ${order.orderCode}*\n\n` +
         `*Status*: ${this.formatStatus(order.fulfillmentStatus)}\n` +
@@ -361,7 +365,6 @@ class WhatsAppBusinessActions {
         `*Total*: TZS ${order.totalAmount.toLocaleString()}/=\n\n` +
         `*Items ordered*:\n${itemsList}\n\n` +
         `*Created*: ${order.createdAt.toLocaleDateString('en-US')}\n` +
-        (order.trackingNumber ? `\n*Tracking*: ${order.trackingNumber}` : '') +
         `\n\nFor more details, call: +255 657 120 151`;
 
       await evolutionWhatsApp.sendTextMessage(action.phoneNumber, statusMessage);

@@ -169,7 +169,7 @@ Transaction: ${transaction_id}
 
 📦 *Action Required:* Process order for delivery`;
         
-        const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255715727085';
+        const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151';
         await unifiedWhatsApp.sendTextMessage(recipientNumber, teamMessage);
       }
 

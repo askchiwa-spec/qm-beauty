@@ -13,13 +13,8 @@ export const prisma =
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     datasources: {
       db: {
-        url: process.env.DATABASE_URL!,
+        url: process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/test', // Fallback URL for build
       },
-    },
-    // Connection pooling configuration for production
-    __internal: {
-      // Connection pool settings
-      adapter: undefined,
     },
   });
 

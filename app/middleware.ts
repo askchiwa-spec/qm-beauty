@@ -45,10 +45,15 @@ export function middleware(request: NextRequest) {
     if (rateLimitResult) {
       return rateLimitResult;
     }
+    
+    // CSRF protection for API routes that modify data
+    if (request.method === 'POST' || request.method === 'PUT' || request.method === 'DELETE' || request.method === 'PATCH') {
+      const csrfValid = validateCsrfInApiRoute(request);
+      if (!csrfValid) {
+        return new NextResponse('Unauthorized', { status: 401 });
+      }
+    }
   }
-
-  // Import CSRF protection
-import { validateCsrfInApiRoute } from '@/lib/csrf';
 
 // Additional security checks
   const userAgent = request.headers.get('user-agent') || '';
