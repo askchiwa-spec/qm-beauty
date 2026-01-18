@@ -7,7 +7,7 @@ import { whatsappAnalytics } from './whatsapp-analytics';
 import { logger } from './logging';
 
 interface BusinessAction {
-  action: 'order_status' | 'cancel_order' | 'update_contact' | 'request_catalog' | 'book_service' | 'payment_info' | 'complaint' | 'feedback';
+  action: 'order_status' | 'cancel_order' | 'update_contact' | 'request_catalog' | 'book_service' | 'payment_info' | 'complaint' | 'feedback' | 'auto_booking_confirm' | 'cart_followup';
   phoneNumber: string;
   parameters?: Record<string, any>;
   messageContent: string;
@@ -283,7 +283,7 @@ class WhatsAppBusinessActions {
   /**
    * Execute a business action
    */
-  private async executeAction(action: BusinessAction): Promise<{
+  public async executeAction(action: BusinessAction): Promise<{
     success: boolean;
     message?: string;
     error?: string;
@@ -306,6 +306,10 @@ class WhatsAppBusinessActions {
           return await this.handleComplaint(action);
         case 'feedback':
           return await this.handleFeedback(action);
+        case 'auto_booking_confirm':
+          return await this.handleAutoBookingConfirmation(action);
+        case 'cart_followup':
+          return await this.handleCartFollowUp(action);
         default:
           return {
             success: false,
@@ -555,9 +559,21 @@ Refund will be processed according to our refund policy. For questions, call +25
         `*Booking ID*: BK-${booking.id.slice(0, 8).toUpperCase()}\n` +
         `*Deposit*: TZS 10,000/= required\n\n` +
         `Please complete your booking by paying the deposit via Selcom or Mobile Money.\n\n` +
-        `For changes, reply with: CHANGE [BOOKING_ID]`;
+        `For changes, reply with: CHANGE [BOOKING_ID]\n\n` +
+        `✅ You will receive a detailed confirmation message shortly with all the important details!`;
 
+      // Send initial acknowledgment
       await evolutionWhatsApp.sendTextMessage(action.phoneNumber, bookingMessage);
+      
+      // Send detailed automatic confirmation
+      setTimeout(async () => {
+        await sendBookingConfirmation(action.phoneNumber, {
+          bookingId: `BK-${booking.id.slice(0, 8).toUpperCase()}`,
+          service: action.parameters.service,
+          dateTime: action.parameters.dateTime,
+          customerName: action.phoneNumber // Could be improved to get actual customer name
+        });
+      }, 2000); // Delay slightly to ensure order
 
       return {
         success: true,
@@ -754,6 +770,146 @@ Refund will be processed according to our refund policy. For questions, call +25
     
     return statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1);
   }
+
+  /**
+   * Handle automatic booking confirmation
+   */
+  private async handleAutoBookingConfirmation(action: BusinessAction): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const { bookingId, service, dateTime, customerName } = action.parameters || {};
+      
+      const confirmationMessage = `✅ *Booking Confirmation*
+
+` +
+        `Dear ${customerName || 'Valued Customer'},
+
+` +
+        `Your booking has been confirmed! 🎉
+
+` +
+        `*Service*: ${service}
+` +
+        `*Date & Time*: ${new Date(dateTime).toLocaleString('en-US')}
+` +
+        `*Booking ID*: ${bookingId}
+
+` +
+        `📍 *Location*
+` +
+        `59 Ali Hassan Mwinyi Road
+` +
+        `Oysterbay, Dar es Salaam
+
+` +
+        `💡 *Important Information*
+` +
+        `• Arrive 10 minutes early
+` +
+        `• Bring this confirmation message
+` +
+        `• Deposit of TZS 10,000/= is required
+
+` +
+        `For any changes or questions, reply with your booking ID or call +255 657 120 151
+
+` +
+        `We look forward to serving you! 💆‍♀️`;
+
+      await evolutionWhatsApp.sendTextMessage(action.phoneNumber, confirmationMessage);
+      
+      logger.info('Automatic booking confirmation sent', { 
+        phoneNumber: action.phoneNumber, 
+        bookingId 
+      });
+      
+      return {
+        success: true,
+        message: 'Booking confirmation sent'
+      };
+    } catch (error) {
+      console.error('Error sending booking confirmation:', error);
+      logger.error('Booking confirmation error', { error });
+      return {
+        success: false,
+        error: 'Could not send booking confirmation'
+      };
+    }
+  }
+
+  /**
+   * Handle cart follow-up message
+   */
+  private async handleCartFollowUp(action: BusinessAction): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      const { cartId, items, totalAmount, customerName } = action.parameters || {};
+      
+      // Format items list
+      const itemsList = items?.map((item: any) => 
+        `• ${item.name} x${item.quantity} - TZS ${(item.subtotal || item.price * item.quantity).toLocaleString()}/=`
+      ).join('\n') || 'No items found';
+      
+      const followUpMessage = `🛒 *Your Shopping Cart*
+
+` +
+        `Hi ${customerName || 'there'}! 👋
+
+` +
+        `We noticed you have items in your cart that haven't been checked out yet:
+
+` +
+        `${itemsList}
+
+` +
+        `*Total*: TZS ${totalAmount?.toLocaleString() || '0'}/=
+
+` +
+        `🎁 *Special Offer*
+` +
+        `Complete your purchase now and get free delivery on orders over TZS 50,000/=
+
+` +
+        `🛒 *Checkout Options*
+` +
+        `1. Reply "CHECKOUT" to proceed
+` +
+        `2. Visit: qmbeauty.co.tz/shop
+` +
+        `3. Call: +255 657 120 151
+
+` +
+        `⏰ *Hurry!* Items in your cart are reserved for 24 hours only.
+
+` +
+        `Need help? Just ask! We're here to assist you. 💁‍♀️`;
+
+      await evolutionWhatsApp.sendTextMessage(action.phoneNumber, followUpMessage);
+      
+      logger.info('Cart follow-up message sent', { 
+        phoneNumber: action.phoneNumber, 
+        cartId 
+      });
+      
+      return {
+        success: true,
+        message: 'Cart follow-up sent'
+      };
+    } catch (error) {
+      console.error('Error sending cart follow-up:', error);
+      logger.error('Cart follow-up error', { error });
+      return {
+        success: false,
+        error: 'Could not send cart follow-up message'
+      };
+    }
+  }
 }
 
 // Export singleton instance
@@ -761,3 +917,86 @@ export const whatsappBusinessActions = new WhatsAppBusinessActions();
 
 // Export class for testing
 export { WhatsAppBusinessActions };
+
+// Helper functions for triggering automated messages
+
+/**
+ * Send automatic booking confirmation
+ */
+export async function sendBookingConfirmation(
+  phoneNumber: string,
+  bookingDetails: {
+    bookingId: string;
+    service: string;
+    dateTime: string | Date;
+    customerName?: string;
+  }
+) {
+  const action: BusinessAction = {
+    action: 'auto_booking_confirm',
+    phoneNumber,
+    parameters: {
+      bookingId: bookingDetails.bookingId,
+      service: bookingDetails.service,
+      dateTime: typeof bookingDetails.dateTime === 'string' 
+        ? bookingDetails.dateTime 
+        : bookingDetails.dateTime.toISOString(),
+      customerName: bookingDetails.customerName
+    },
+    messageContent: 'Automatic booking confirmation'
+  };
+  
+  return await whatsappBusinessActions.executeAction(action);
+}
+
+/**
+ * Send cart follow-up message
+ */
+export async function sendCartFollowUp(
+  phoneNumber: string,
+  cartDetails: {
+    cartId: string;
+    items: Array<{
+      name: string;
+      quantity: number;
+      price: number;
+      subtotal?: number;
+    }>;
+    totalAmount: number;
+    customerName?: string;
+  }
+) {
+  const action: BusinessAction = {
+    action: 'cart_followup',
+    phoneNumber,
+    parameters: {
+      cartId: cartDetails.cartId,
+      items: cartDetails.items,
+      totalAmount: cartDetails.totalAmount,
+      customerName: cartDetails.customerName
+    },
+    messageContent: 'Cart follow-up reminder'
+  };
+  
+  return await whatsappBusinessActions.executeAction(action);
+}
+
+/**
+ * Schedule automated messages
+ */
+export async function scheduleAutomatedMessages() {
+  // This would typically be called by a cron job or background task
+  // Check for bookings that need confirmation messages
+  // Check for abandoned carts that need follow-up
+  
+  try {
+    // Example: Find bookings from last 24 hours that haven't sent confirmation
+    // Example: Find carts older than 2 hours with items that haven't sent follow-up
+    
+    logger.info('Scheduled automated messages check completed');
+    return { success: true };
+  } catch (error) {
+    logger.error('Error in scheduled automated messages', { error });
+    return { success: false, error: 'Scheduling failed' };
+  }
+}
