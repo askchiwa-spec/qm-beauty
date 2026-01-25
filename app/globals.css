@@ -1,4 +1,9 @@
 @import "tailwindcss";
+@import "./design-fixes.css";
+@import "./service-fixes.css";
+@import "./shop-fixes.css";
+@import "./image-card-fixes.css";
+@import "./appointment-spacing-fixes.css";
 
 :root {
   /* Premium Luxury Color Palette - QM Beauty Design System */

@@ -5,15 +5,15 @@ export const products: Product[] = [
     id: '1',
     name: 'Natural Coffee Scrub',
     slug: 'natural-coffee-scrub',
-    price: 20000,
+    price: 25000,
     category: 'skincare',
-    image: '/images/products/coffee-scrub.png',
+    image: '/images/products/natural-coffee-scrub.png',
     images: [
-      '/images/products/coffee-scrub.png',
-      '/images/products/coffee-scrub-1.png',
-      '/images/products/coffee-scrub-2.png',
-      '/images/products/coffee-scrub-3.png',
-      '/images/products/coffee-scrub-4.png'
+      '/images/products/natural-coffee-scrub.png',
+      '/images/products/natural-coffee-scrub-1.png',
+      '/images/products/natural-coffee-scrub-2.png',
+      '/images/products/natural-coffee-scrub-3.png',
+      '/images/products/natural-coffee-scrub-4.png'
     ],
     shortDescription: 'Reveal glowing, soft, and youthful skin—a powerhouse of Arabica coffee, honey, and turmeric!',
     description: 'Transform your skincare routine with the QM Beauty Natural Coffee Scrub. Crafted from premium Arabica coffee, nourishing honey, and rejuvenating turmeric, this scrub deeply exfoliates to remove dead skin cells, clears acne, and diminishes signs of aging. Beyond skincare, it doubles as a scalp treatment, effectively combating dandruff and invigorating your hair.',
@@ -37,13 +37,13 @@ export const products: Product[] = [
     slug: 'carrots-turmeric-body-oil',
     price: 20000,
     category: 'skincare',
-    image: '/images/products/body-oil.png',
+    image: '/images/products/carrots-turmeric-body-oil.png',
     images: [
-      '/images/products/body-oil.png',
-      '/images/products/body-oil-1.png',
-      '/images/products/body-oil-2.png',
-      '/images/products/body-oil-3.png',
-      '/images/products/body-oil-4.png'
+      '/images/products/carrots-turmeric-body-oil.png',
+      '/images/products/carrots-turmeric-body-oil-1.png',
+      '/images/products/carrots-turmeric-body-oil-2.png',
+      '/images/products/carrots-turmeric-body-oil-3.png',
+      '/images/products/carrots-turmeric-body-oil-4.png'
     ],
     shortDescription: 'Experience radiant, hydrated skin—your ultimate skin elixir!',
     description: 'Indulge in the luxurious hydration of QM Beauty Carrots & Turmeric Body Oil. Enriched with carrot oil, coconut oil, turmeric, and essential oils, this body oil soothes sunburn, smoothens wrinkles, and enhances your skin tone. Perfect for deep moisturization.',
@@ -64,7 +64,7 @@ export const products: Product[] = [
     id: '3',
     name: 'Hair Gel',
     slug: 'hair-gel',
-    price: 20000,
+    price: 25000,
     category: 'haircare',
     image: '/images/products/hair-gel.png',
     images: [
@@ -94,13 +94,13 @@ export const products: Product[] = [
     slug: 'virgin-coconut-oil',
     price: 25000,
     category: 'haircare',
-    image: '/images/products/hair-oil.png',
+    image: '/images/products/virgin-coconut-oil.png',
     images: [
-      '/images/products/hair-oil.png',
-      '/images/products/hair-oil-1.png',
-      '/images/products/hair-oil-2.png',
-      '/images/products/hair-oil-3.png',
-      '/images/products/hair-oil-4.png'
+      '/images/products/virgin-coconut-oil.png',
+      '/images/products/virgin-coconut-oil-1.png',
+      '/images/products/virgin-coconut-oil-2.png',
+      '/images/products/virgin-coconut-oil-3.png',
+      '/images/products/virgin-coconut-oil-4.png'
     ],
     shortDescription: 'Unrefined and pure—nourish your beauty naturally.',
     description: 'Discover the unmatched purity of QM Beauty Virgin Coconut Oil. Extracted through cold pressing, this premium oil provides intense hydration, revitalizing your skin and hair. A head-to-toe treatment for a vibrant and moisturized appearance, perfect for everyday care.',
@@ -121,8 +121,8 @@ export const products: Product[] = [
     slug: 'regular-coconut-oil',
     price: 15000,
     category: 'haircare',
-    image: '/images/products/hair-oil.png',
-    images: ['/images/products/hair-oil.png'],
+    image: '/images/products/regular-coconut-oil.png',
+    images: ['/images/products/regular-coconut-oil.png'],
     shortDescription: 'Head-to-toe hydration—nourish your skin and hair naturally.',
     description: 'QM Beauty Regular Coconut Oil is your all-in-one beauty solution. This lightweight, aromatic oil moisturizes dry skin, nourishes the scalp, and softens hair. Enriched with essential oils, ideal for daily use, giving you a fresh, radiant look effortlessly.',
     ingredients: ['Coconut Oil', 'Essential Oil'],
@@ -161,8 +161,8 @@ export const products: Product[] = [
     slug: 'baby-oil',
     price: 20000,
     category: 'skincare',
-    image: '/images/products/hair-oil.png',
-    images: ['/images/products/hair-oil.png'],
+    image: '/images/products/baby-oil.png',
+    images: ['/images/products/baby-oil.png'],
     shortDescription: 'Gentle care for delicate skin—soothe, moisturize, and protect with ease.',
     description: 'Pamper your baby with QM Beauty Baby Oil, a blend of coconut oil, turmeric, shea butter, and carrot oil. This nourishing formula smoothens and moisturizes skin, improves skin tone, and maintains healthy hair. Gentle and safe, the perfect choice for your little one.',
     ingredients: ['Coconut Oil', 'Turmeric', 'Essential Oil', 'Shea Butter', 'Carrots'],
@@ -246,8 +246,8 @@ export const products: Product[] = [
     slug: 'coffee-body-scrub',
     price: 45000,
     category: 'skincare',
-    image: '/images/products/coffee-scrub.png',
-    images: ['/images/products/coffee-scrub.png'],
+    image: '/images/products/coffee-body-scrub.png',
+    images: ['/images/products/coffee-body-scrub.png'],
     shortDescription: 'Deep exfoliating scrub with coffee, honey, and turmeric for glowing skin.',
     description: 'Our Coffee Body Scrub combines the power of natural Arabica coffee, nourishing honey, and rejuvenating turmeric to deeply exfoliate and revitalize your skin. This luxurious scrub removes dead skin cells, stimulates circulation, and leaves your skin feeling smooth and glowing.',
     ingredients: ['Natural Arabica Coffee', 'Natural Honey', 'Turmeric', 'Essential Oils'],
@@ -352,8 +352,8 @@ export const products: Product[] = [
     slug: 'shampoo',
     price: 25000,
     category: 'haircare',
-    image: '', // Placeholder - will use generated image
-    images: [], // Placeholder - will use generated images
+    image: '/images/products/shampoo.png',
+    images: ['/images/products/shampoo.png'],
     shortDescription: 'Premium shampoo for healthy, nourished hair.',
     description: 'QM Beauty Premium Shampoo gently cleanses and nourishes your hair, leaving it soft, smooth, and manageable. Formulated with natural ingredients to maintain scalp health and promote hair growth.',
     ingredients: ['Natural Cleansing Agents', 'Essential Oils', 'Vitamins', 'Plant Extracts'],
@@ -373,8 +373,8 @@ export const products: Product[] = [
     slug: 'hair-treatment',
     price: 30000,
     category: 'haircare',
-    image: '', // Placeholder - will use generated image
-    images: [], // Placeholder - will use generated images
+    image: '/images/products/hair-treatment.png',
+    images: ['/images/products/hair-treatment.png'],
     shortDescription: 'Deep conditioning treatment for damaged hair.',
     description: 'QM Beauty Hair Treatment is a deep conditioning formula that repairs and restores damaged hair. Enriched with natural oils and proteins, this treatment penetrates deep into the hair shaft to strengthen and nourish from within.',
     ingredients: ['Natural Oils', 'Keratin', 'Proteins', 'Vitamins', 'Plant Extracts'],
@@ -394,8 +394,8 @@ export const products: Product[] = [
     slug: 'virgin-oil',
     price: 28000,
     category: 'haircare',
-    image: '', // Placeholder - will use generated image
-    images: [], // Placeholder - will use generated images
+    image: '/images/products/virgin-oil.png',
+    images: ['/images/products/virgin-oil.png'],
     shortDescription: 'Pure, unrefined oil for hair and skin care.',
     description: 'QM Beauty Virgin Oil is extracted using cold-pressing methods to preserve all the natural nutrients. This pure, unrefined oil provides intense nourishment for both hair and skin.',
     ingredients: ['Cold-Pressed Natural Oil'],
@@ -415,8 +415,8 @@ export const products: Product[] = [
     slug: 'pure-oil',
     price: 25000,
     category: 'skincare',
-    image: '', // Placeholder - will use generated image
-    images: [], // Placeholder - will use generated images
+    image: '/images/products/pure-oil.png',
+    images: ['/images/products/pure-oil.png'],
     shortDescription: 'Pure, natural oil for skin hydration.',
     description: 'QM Beauty Pure Oil is a premium blend of natural oils carefully selected for their skin-nourishing properties. This pure formula deeply moisturizes and rejuvenates your skin.',
     ingredients: ['Natural Plant Oils'],
@@ -430,35 +430,15 @@ export const products: Product[] = [
     inStock: true,
     packageSize: '100ml',
   },
-  {
-    id: '20',
-    name: 'Regular Oil',
-    slug: 'regular-oil',
-    price: 20000,
-    category: 'skincare',
-    image: '', // Placeholder - will use generated image
-    images: [], // Placeholder - will use generated images
-    shortDescription: 'Everyday oil for general skin care.',
-    description: 'QM Beauty Regular Oil is a versatile, everyday oil perfect for general skin care. Lightweight and easily absorbed, it provides essential nourishment for healthy-looking skin.',
-    ingredients: ['Natural Oils', 'Essential Vitamins'],
-    benefits: [
-      'Lightweight moisturization',
-      'Easily absorbed',
-      'Essential skin nourishment',
-      'Perfect for daily use',
-      'Promotes healthy skin appearance'
-    ],
-    inStock: true,
-    packageSize: '150ml',
-  },
+
   {
     id: '21',
     name: 'Orange Oil',
     slug: 'orange-oil',
     price: 35000,
     category: 'skincare',
-    image: '', // Placeholder - will use generated image
-    images: [], // Placeholder - will use generated images
+    image: '/images/products/orange-oil.png',
+    images: ['/images/products/orange-oil.png'],
     shortDescription: 'Citrus-infused oil for revitalizing skin care.',
     description: 'QM Beauty Orange Oil combines the revitalizing properties of citrus with nourishing oils. This uplifting formula helps brighten the skin and provides a refreshing sensory experience.',
     ingredients: ['Orange Essential Oil', 'Carrier Oils', 'Natural Vitamin C'],
@@ -478,8 +458,8 @@ export const products: Product[] = [
     slug: 'carrot-oil',
     price: 30000,
     category: 'skincare',
-    image: '', // Placeholder - will use generated image
-    images: [], // Placeholder - will use generated images
+    image: '/images/products/carrot-oil.png',
+    images: ['/images/products/carrot-oil.png'],
     shortDescription: 'Pure carrot oil for nourishing skin care.',
     description: 'QM Beauty Pure Carrot Oil is extracted from premium carrots, rich in beta-carotene and vitamins. This nourishing oil helps rejuvenate the skin, reduce signs of aging, and promote a healthy, glowing complexion.',
     ingredients: ['Pure Carrot Oil', 'Natural Vitamin A', 'Beta-Carotene'],
@@ -595,7 +575,7 @@ export const services: Service[] = [
     description: 'Pamper yourself with our premium facial treatment using QM Beauty natural products. Deep cleansing, exfoliation, and hydration for glowing, radiant skin.',
     duration: '75 minutes',
     price: 70000,
-    image: '/services/facial.jpg',
+    image: '/services/facial.png',
     category: 'facial',
     benefits: ['Deep cleansing', 'Brightens skin', 'Reduces dark spots', 'Hydrating', 'Anti-aging']
   },
@@ -606,7 +586,7 @@ export const services: Service[] = [
     description: 'Relax and unwind with our therapeutic full body massage. Using natural oils and expert techniques to relieve tension and improve circulation.',
     duration: '120 minutes',
     price: 85000,
-    image: '/services/full-body-massage.jpg',
+    image: '/services/foot-massage.jpg',
     category: 'spa',
     benefits: ['Stress relief', 'Muscle relaxation', 'Improved circulation', 'Tension release']
   },
@@ -617,7 +597,7 @@ export const services: Service[] = [
     description: 'Professional waxing service for long-lasting smooth skin.',
     duration: '45 minutes',
     price: 25000,
-    image: '/services/waxing.jpg',
+    image: '/services/waxing.png',
     category: 'spa',
     benefits: ['Long-lasting smooth skin', 'Reduces hair regrowth over time', 'Exfoliates the skin, removing dead skin cells', 'Prevents ingrown hairs']
   },
@@ -639,7 +619,7 @@ export const services: Service[] = [
     description: 'Professional hair treatment and relaxer service to strengthen and nourish your hair.',
     duration: '90 minutes',
     price: 45000,
-    image: '/services/hair-treatment.jpg',
+    image: '/services/hair-braiding.png',
     category: 'haircare',
     benefits: ['Strengthens and nourishes hair', 'Smoothens and straightens frizzy or curly hair', 'Reduces hair breakage and split ends', 'Promotes healthy hair growth']
   },
@@ -650,7 +630,7 @@ export const services: Service[] = [
     description: 'Professional hair braiding service for stylish and protective styling.',
     duration: '180 minutes',
     price: 50000,
-    image: '/services/hair-braiding.jpg',
+    image: '/services/hair-braiding.png',
     category: 'haircare',
     benefits: ['Protective styling to prevent hair damage', 'Versatile and stylish looks', 'Low maintenance and easy to manage', 'Promotes hair growth by reducing manipulation']
   },
@@ -661,7 +641,7 @@ export const services: Service[] = [
     description: 'Professional hair plaiting service for neat and stylish looks.',
     duration: '150 minutes',
     price: 40000,
-    image: '/services/hair-plaiting.jpg',
+    image: '/services/hair-plaiting.png',
     category: 'haircare',
     benefits: ['Stylish and neat appearance', 'Protects natural hair from damage', 'Reduces daily styling time', 'Encourages hair growth']
   },
@@ -672,7 +652,7 @@ export const services: Service[] = [
     description: 'Professional nail care service including manicure and pedicure.',
     duration: '75 minutes',
     price: 30000,
-    image: '/services/nails.jpg',
+    image: '/services/nails.png',
     category: 'spa',
     benefits: ['Maintains healthy nails and cuticles', 'Prevents nail damage and infections', 'Enhances the appearance of hands and feet', 'Provides relaxation and stress relief']
   },
@@ -683,7 +663,7 @@ export const services: Service[] = [
     description: 'Professional makeup application for special occasions and events.',
     duration: '60 minutes',
     price: 40000,
-    image: '/services/makeup.jpg',
+    image: '/services/makeup.png',
     category: 'beauty',
     benefits: ['Enhances natural beauty', 'Boosts confidence for special occasions', 'Professional application ensures long-lasting results', 'Tailored looks to suit individual preferences and styles']
   },
@@ -694,7 +674,7 @@ export const services: Service[] = [
     description: 'Professional henna art service for beautiful designs on special occasions.',
     duration: '90 minutes',
     price: 35000,
-    image: '/services/heena.jpg',
+    image: '/services/heena.png',
     category: 'beauty',
     benefits: ['Natural and temporary body art', 'Safe for all skin types', 'Beautiful and intricate designs for special occasions', 'Long-lasting and fades naturally']
   },
@@ -704,22 +684,12 @@ export const services: Service[] = [
     slug: 'foot-massage',
     description: 'Relaxing foot massage to soothe tired and achy feet.',
     duration: '45 minutes',
-    price: 20000,
+    price: 50000,
     image: '/services/foot-massage.jpg',
     category: 'spa',
     benefits: ['Soothes tired and achy feet', 'Exfoliates and softens the skin', 'Improves circulation and reduces swelling', 'Provides relaxation and stress relief']
   },
-  {
-    id: '13',
-    name: 'Skin Diagnosis Machine',
-    slug: 'skin-diagnosis-machine',
-    description: 'Advanced skin diagnosis using specialized equipment to assess skin health.',
-    duration: '30 minutes',
-    price: 15000,
-    image: '/services/skin-diagnosis.jpg',
-    category: 'facial',
-    benefits: ['Accurate assessment of skin health and concerns', 'Personalized treatment plans based on diagnosis', 'Early detection of skin issues', 'Ensures effective and targeted treatments']
-  },
+
   {
     id: '14',
     name: 'Eyebrows / Upper Lip / Chin Threading',
@@ -727,7 +697,7 @@ export const services: Service[] = [
     description: 'Precision threading service for eyebrows, upper lip, and chin.',
     duration: '30 minutes',
     price: 15000,
-    image: '/services/threading.jpg',
+    image: '/services/heena.png',
     category: 'beauty',
     benefits: ['Precise hair removal for a clean and defined look', 'Gentle on the skin, suitable for sensitive areas', 'Long-lasting results compared to other methods', 'Reduces hair regrowth over time']
   },
@@ -738,7 +708,7 @@ export const services: Service[] = [
     description: 'Customized service packages tailored to meet individual needs.',
     duration: 'Varies',
     price: 100000,
-    image: '/services/packages.jpg',
+    image: '/services/head-spa.jpg',
     category: 'spa',
     benefits: ['Customized services to meet individual needs', 'Offers a comprehensive beauty and relaxation experience', 'Value for money with bundled services', 'Ideal for gifting or special occasions']
   }

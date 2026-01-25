@@ -1,0 +1,175 @@
+/* 
+Design fixes for QM Beauty to match the mockup
+Fixes: centering, spacing, alignment
+*/
+
+/* 1. Fix overall centering */
+main, .main-content, .container {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+/* 2. Fix text centering */
+h1, h2, h3, h4, h5, h6, 
+.hero-title, .section-title, .heading {
+  text-align: center !important;
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* 3. Fix paragraph/text centering */
+p, .text, .description, .content {
+  text-align: center !important;
+  max-width: 800px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* 4. Fix card/grid alignment */
+.card, .product-card, .service-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  padding: 1.5rem !important;
+  margin: 1rem !important;
+}
+
+/* 5. Fix grid spacing */
+.grid, .products-grid, .services-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+  gap: 2rem !important;
+  justify-items: center !important;
+  width: 100% !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+}
+
+/* 6. Fix button alignment */
+.button-group, .cta-buttons {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 1rem !important;
+  margin: 2rem auto !important;
+  flex-wrap: wrap !important;
+}
+
+/* 7. Fix footer grid alignment */
+footer .grid, footer .footer-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
+  gap: 2rem !important;
+  text-align: left !important;
+}
+
+/* 8. Fix spacing between sections */
+section {
+  margin: 3rem 0 !important;
+  padding: 2rem 0 !important;
+}
+
+/* 9. Fix navigation alignment */
+nav, .navigation {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 2rem !important;
+  flex-wrap: wrap !important;
+}
+
+/* 10. Fix hero section alignment */
+.hero, .banner {
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* 11. Fix image alignment */
+img, .image-container {
+  display: block !important;
+  margin: 0 auto !important;
+  max-width: 100% !important;
+}
+
+/* 12. Fix form alignment */
+form, .contact-form, .booking-form {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  max-width: 500px !important;
+  margin: 0 auto !important;
+}
+
+/* 13. Fix mobile responsiveness */
+@media (max-width: 768px) {
+  .grid, .products-grid, .services-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+  
+  .button-group, .cta-buttons {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  
+  nav, .navigation {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 1rem !important;
+  }
+  
+  footer .grid, footer .footer-grid {
+    grid-template-columns: 1fr !important;
+    text-align: center !important;
+  }
+}
+
+/* 14. Fix specific spacing issues */
+.spacing-fix {
+  margin: 1rem 0 !important;
+  padding: 1rem 0 !important;
+}
+
+/* 15. Ensure consistent line heights */
+p, li, .text {
+  line-height: 1.6 !important;
+}
+
+/* 16. Fix list alignment */
+ul, ol {
+  padding-left: 1.5rem !important;
+  margin: 1rem 0 !important;
+}
+
+/* 17. Fix contact info alignment */
+.contact-info, .location-info {
+  text-align: center !important;
+  margin: 1rem auto !important;
+}
+
+/* 18. Fix payment methods alignment */
+.payment-methods {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 1rem !important;
+  flex-wrap: wrap !important;
+}
+
+/* 19. Fix quality promise section */
+.quality-promise, .features {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+  gap: 1.5rem !important;
+  justify-items: center !important;
+  text-align: center !important;
+}
+
+/* 20. Fix hours/location alignment */
+.hours, .location {
+  text-align: center !important;
+  margin: 1rem auto !important;
+}

@@ -183,60 +183,66 @@ export default function Home() {
               </p>
             </div>
             
-            {/* Premium Service Grid - Equal Cards with Perfect Spacing */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-12 mb-16">
+            {/* Premium Service Grid - Match ProductCard Style */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 md:gap-8 mb-16">
               {services.map((service) => (
-                <div key={service.id} className="bg-white border border-gray-200 rounded-2xl shadow-md p-10 flex flex-col hover:shadow-2xl transition-all duration-300 min-h-[600px]">
-                  {/* Service Image - Clean */}
-                  <div className="w-full h-64 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl mb-8">
+                <div key={service.id} className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col items-center justify-between hover:shadow-lg transition-all duration-300">
+                  {/* Service Image - Match ProductCard style */}
+                  <div className="w-full h-56 flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg">
                     <Image
                       src={service.image}
                       alt={service.name}
-                      width={400}
-                      height={256}
-                      className="w-full h-full object-cover rounded-xl"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      fill
+                      className="object-contain p-4"
+                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
+                    
+                    {/* Overlay effect on hover */}
+                    <div className="absolute inset-0 bg-white/0 hover:bg-white/30 transition-all duration-500"></div>
                   </div>
                   
-                  {/* Service Info - Perfectly Centered */}
-                  <div className="flex flex-col flex-grow text-center">
-                    <h3 className="text-gray-900 font-bold text-2xl mb-5 leading-tight">{service.name}</h3>
-                    <p className="text-gray-600 text-base mb-8 leading-relaxed">{service.description}</p>
+                  {/* Service Info - Centered & Clean like ProductCard */}
+                  <div className="w-full flex flex-col items-center">
+                    <h3 className="text-gray-800 font-medium text-sm mt-4 mb-2 text-center hover:text-[var(--rose-gold)] transition-colors">
+                      {service.name}
+                    </h3>
                     
-                    {/* Price & Duration - Centered with Divider */}
-                    <div className="flex justify-center items-center gap-10 pb-8 mb-8 border-b-2 border-gray-200">
+                    <div className="flex flex-col items-center mb-3">
+                      <p className="text-gray-600 text-xs text-center line-clamp-2 px-2 mb-2">
+                        {service.description}
+                      </p>
+                    </div>
+                    
+                    {/* Price & Duration - Match ProductCard style */}
+                    <div className="flex items-center justify-center gap-4 mb-3">
                       <div className="text-center">
-                        <p className="text-xs text-gray-500 uppercase tracking-widest mb-3 font-medium">Duration</p>
-                        <p className="text-lg font-bold text-gray-900">{service.duration}</p>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Duration</p>
+                        <p className="text-sm font-medium text-gray-800">{service.duration}</p>
                       </div>
-                      <div className="w-px h-16 bg-gray-300"></div>
                       <div className="text-center">
-                        <p className="text-xs text-gray-500 uppercase tracking-widest mb-3 font-medium">From</p>
-                        <p className="text-black font-extrabold text-3xl">
+                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">From</p>
+                        <p className="text-black font-bold text-lg">
                           Tsh {(service.price / 1000).toFixed(0)}k
                         </p>
                       </div>
                     </div>
                     
-                    <div className="flex flex-col gap-3 mt-auto">
+                    {/* Action Buttons - Match ProductCard style */}
+                    <div className="flex flex-col gap-2 w-full mt-2">
                       <button
                         onClick={() => window.open(`https://wa.me/255657120151?text=Hello!%20I%20want%20to%20book%20${encodeURIComponent(service.name)}`, '_blank')}
-                        className="w-full bg-[var(--rose-gold)] hover:bg-[var(--accent-gold)] text-white py-3 px-4 text-sm uppercase tracking-wider transition-all duration-300 rounded-xl font-bold shadow-lg hover:shadow-2xl"
+                        className="w-full bg-[var(--rose-gold)] hover:bg-[var(--accent-gold)] text-white py-2.5 px-4 text-xs uppercase tracking-wider transition-all duration-300 rounded-lg font-medium"
                       >
                         WhatsApp
                       </button>
                       <button
                         onClick={() => window.open(`tel:+255657120151`, '_self')}
-                        className="w-full bg-[var(--deep-charcoal)] hover:bg-[var(--espresso)] text-white py-3 px-4 text-sm uppercase tracking-wider transition-all duration-300 rounded-xl font-bold shadow-lg hover:shadow-2xl"
+                        className="w-full bg-[var(--deep-charcoal)] hover:bg-[var(--espresso)] text-white py-2.5 px-4 text-xs uppercase tracking-wider transition-all duration-300 rounded-lg font-medium"
                       >
                         Call Us
-                      </button>
-                      <button
-                        onClick={() => window.open('https://calendly.com/your-booking-link', '_blank')}
-                        className="w-full bg-[var(--sage-green)] hover:bg-[var(--terracotta)] text-white py-3 px-4 text-sm uppercase tracking-wider transition-all duration-300 rounded-xl font-bold shadow-lg hover:shadow-2xl"
-                      >
-                        Book Online
                       </button>
                     </div>
                   </div>

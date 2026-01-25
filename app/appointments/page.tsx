@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { services } from '@/data/products';
+import { useToast } from '@/lib/useToast';
 
 export default function AppointmentsPage() {
   const [selectedService, setSelectedService] = useState('');
@@ -12,41 +13,139 @@ export default function AppointmentsPage() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [notes, setNotes] = useState('');
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Format the appointment details
-    const appointmentDetails = `
-      New Appointment Request:
-      Service: ${services.find(s => s.id === selectedService)?.name || 'N/A'}
-      Date: ${selectedDate}
-      Time: ${selectedTime}
-      Customer: ${customerName}
-      Phone: ${customerPhone}
-      Email: ${customerEmail}
-      Notes: ${notes}
-    `;
-
-    // Send to WhatsApp
-    const message = `Hello! I would like to book an appointment.${appointmentDetails}`;
-    window.open(`https://wa.me/255657120151?text=${encodeURIComponent(message)}`, '_blank');
-  };
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showToast } = useToast();
 
   // Generate time slots (every 30 minutes from 9 AM to 6 PM)
-  const timeSlots = [];
-  for (let hour = 9; hour <= 18; hour++) {
-    for (let minute = 0; minute < 60; minute += 30) {
-      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-      timeSlots.push(timeString);
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 9; hour <= 18; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push(timeString);
+      }
     }
-  }
+    return slots;
+  };
+
+  // Filter available times based on selected date (exclude past times on current date)
+  useEffect(() => {
+    const allSlots = generateTimeSlots();
+    
+    if (selectedDate) {
+      const today = new Date().toISOString().split('T')[0];
+      if (selectedDate === today) {
+        const currentHour = new Date().getHours();
+        const currentMinute = new Date().getMinutes();
+        const currentTimeString = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+        
+        const filteredSlots = allSlots.filter(slot => {
+          return slot > currentTimeString;
+        });
+        setAvailableTimes(filteredSlots);
+        
+        // Reset selected time if it's no longer available
+        if (!filteredSlots.includes(selectedTime)) {
+          setSelectedTime('');
+        }
+      } else {
+        setAvailableTimes(allSlots);
+      }
+    } else {
+      setAvailableTimes(allSlots);
+    }
+  }, [selectedDate]);
+
+  const validateForm = () => {
+    if (!selectedService) {
+      showToast('Please select a service', 'error');
+      return false;
+    }
+    if (!selectedDate) {
+      showToast('Please select a date', 'error');
+      return false;
+    }
+    if (!selectedTime) {
+      showToast('Please select a time', 'error');
+      return false;
+    }
+    if (!customerName.trim()) {
+      showToast('Please enter your name', 'error');
+      return false;
+    }
+    if (!customerPhone.trim()) {
+      showToast('Please enter your phone number', 'error');
+      return false;
+    }
+    // Basic phone validation
+    if (!/^\d{9,15}$/.test(customerPhone.replace(/[\s+\-()]/g, ''))) {
+      showToast('Please enter a valid phone number', 'error');
+      return false;
+    }
+    if (customerEmail && customerEmail.trim() && !/\S+@\S+\.\S+/.test(customerEmail)) {
+      showToast('Please enter a valid email address', 'error');
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Format the appointment details
+      const selectedServiceObj = services.find(s => s.id === selectedService);
+      const serviceName = selectedServiceObj?.name || 'N/A';
+      const servicePrice = selectedServiceObj?.price ? `Tsh ${selectedServiceObj.price.toLocaleString()}` : '';
+      
+      const appointmentDetails = encodeURIComponent(`
+New Appointment Request:
+Service: ${serviceName} ${servicePrice ? `- ${servicePrice}` : ''}
+Date: ${selectedDate}
+Time: ${selectedTime}
+Customer: ${customerName}
+Phone: ${customerPhone}
+Email: ${customerEmail || 'N/A'}
+Notes: ${notes || 'None'}
+      `.trim());
+
+      // Send to WhatsApp using the business number
+      const message = `Hello! I would like to book an appointment.%0A%0A${appointmentDetails}`;
+      window.open(`https://wa.me/255657120151?text=${message}`, '_blank');
+      
+      showToast('Appointment request sent successfully! We will contact you shortly.', 'success');
+      
+      // Reset form
+      setTimeout(() => {
+        setSelectedService('');
+        setSelectedDate('');
+        setSelectedTime('');
+        setCustomerName('');
+        setCustomerPhone('');
+        setCustomerEmail('');
+        setNotes('');
+      }, 1000);
+    } catch (error) {
+      console.error('Error submitting appointment:', error);
+      showToast('Failed to submit appointment. Please try again.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen appointment-page-container">
       {/* Elegant Hero - Full Width */}
       <section className="py-16 sm:py-20 md:py-24 lg:py-28 bg-gradient-to-br from-[var(--pearl-white)] via-[var(--champagne)] to-[var(--soft-beige)] relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23000000\" fill-opacity=\"0.05\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }}></div>
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23000000" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }}></div>
         <div className="w-full flex justify-center px-4">
           <div className="w-full max-w-7xl mx-auto text-center relative z-10">
             <p className="text-[var(--rose-gold)] uppercase tracking-[0.25em] text-xs font-medium mb-4">
@@ -75,7 +174,7 @@ export default function AppointmentsPage() {
           <div className="w-full max-w-7xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
               {/* Booking Form */}
-              <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 md:p-8">
+              <div className="appointment-form-section bg-white border border-gray-200 rounded-xl shadow-sm p-6 md:p-8">
                 <h2 className="text-2xl font-medium text-[var(--deep-charcoal)] mb-6 text-center">Schedule Your Appointment</h2>
                 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -111,19 +210,25 @@ export default function AppointmentsPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
-                      <select
-                        value={selectedTime}
-                        onChange={(e) => setSelectedTime(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--rose-gold)]"
-                        required
-                      >
-                        <option value="">Choose a time</option>
-                        {timeSlots.map(time => (
-                          <option key={time} value={time}>
-                            {time}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="time-selection-container">
+                        <select
+                          value={selectedTime}
+                          onChange={(e) => setSelectedTime(e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--rose-gold)]"
+                          required
+                          disabled={!selectedDate}
+                        >
+                          <option value="">Choose a time</option>
+                          {availableTimes.map(time => (
+                            <option key={time} value={time}>
+                              {time}
+                            </option>
+                          ))}
+                        </select>
+                        {!selectedDate && (
+                          <p className="date-required-message text-xs text-gray-500">Select a date first</p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -152,7 +257,7 @@ export default function AppointmentsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email (Optional)</label>
                     <input
                       type="email"
                       value={customerEmail}
@@ -175,20 +280,21 @@ export default function AppointmentsPage() {
 
                   <button
                     type="submit"
-                    className="w-full bg-[var(--rose-gold)] hover:bg-[var(--accent-gold)] text-white py-4 rounded-lg font-medium transition-colors uppercase tracking-wider text-xs"
+                    disabled={isSubmitting}
+                    className="w-full bg-[var(--rose-gold)] hover:bg-[var(--accent-gold)] disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-lg font-medium transition-colors uppercase tracking-wider text-xs"
                   >
-                    Confirm Appointment
+                    {isSubmitting ? 'Processing...' : 'Confirm Appointment'}
                   </button>
                 </form>
               </div>
 
               {/* Services Info */}
-              <div>
+              <div className="services-section">
                 <h2 className="text-2xl font-medium text-[var(--deep-charcoal)] mb-6">Our Popular Services</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {services.slice(0, 5).map(service => (
-                    <div key={service.id} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                    <div key={service.id} className="service-item bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                       <h3 className="font-medium text-[var(--deep-charcoal)] mb-2 text-center">{service.name}</h3>
                       <p className="text-gray-600 text-sm mb-3 text-center px-2">{service.description}</p>
                       <div className="flex justify-between items-center pt-2">

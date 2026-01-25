@@ -11,7 +11,7 @@ export default function AboutPage() {
       <section className="relative w-full h-[70vh] overflow-hidden">
         {/* Hero Background Image - Next.js Optimized */}
         <Image
-          src="/images/hero/about-hero.jpg"
+          src="/images/hero/home-hero.png"
           alt="QM Beauty Luxury Spa - About Us"
           fill
           className="object-cover"
@@ -88,7 +88,7 @@ export default function AboutPage() {
                 <div className="aspect-[4/5] bg-gradient-to-br from-[var(--champagne)] to-[var(--soft-beige)] rounded-2xl overflow-hidden shadow-2xl">
                   {/* Next.js optimized image - Replace with your actual spa image */}
                   <Image
-                    src="/images/spa/brand-story.jpg"
+                    src="/images/spa/brand-story.png"
                     alt="QM Beauty Luxury Spa Experience"
                     fill
                     className="object-cover"
@@ -136,7 +136,7 @@ export default function AboutPage() {
               {/* Image 1 - Expert Therapist */}
               <div className="group relative overflow-hidden rounded-2xl shadow-xl aspect-[3/4] bg-gradient-to-br from-[var(--champagne)] to-[var(--soft-beige)]">
                 <Image
-                  src="/images/team/therapist-1.jpg"
+                  src="/services/head-spa.jpg"
                   alt="Expert QM Beauty Therapist"
                   fill
                   className="object-cover"
@@ -159,7 +159,7 @@ export default function AboutPage() {
               {/* Image 2 - Spa Treatment */}
               <div className="group relative overflow-hidden rounded-2xl shadow-xl aspect-[3/4] bg-gradient-to-br from-[var(--soft-beige)] to-[var(--pearl-white)]">
                 <Image
-                  src="/images/spa/treatment-1.jpg"
+                  src="/services/foot-massage.jpg"
                   alt="Luxury Spa Treatment at QM Beauty"
                   fill
                   className="object-cover"
@@ -182,7 +182,7 @@ export default function AboutPage() {
               {/* Image 3 - Happy Client */}
               <div className="group relative overflow-hidden rounded-2xl shadow-xl aspect-[3/4] bg-gradient-to-br from-[var(--pearl-white)] to-[var(--champagne)] sm:col-span-2 lg:col-span-1">
                 <Image
-                  src="/images/team/client-happy.jpg"
+                  src="/services/coffee-scrub.jpg"
                   alt="Happy QM Beauty Client"
                   fill
                   className="object-cover"

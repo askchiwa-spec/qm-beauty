@@ -1,0 +1,88 @@
+/* Shop page fixes for search and sort alignment */
+
+/* Improve search container styling */
+div[class*="mb-6"] input[placeholder="Search products..."] {
+  border: 2px solid #e5e7eb !important;
+  border-radius: 2rem !important;
+  padding-left: 3rem !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+div[class*="mb-6"] input[placeholder="Search products..."]:focus {
+  outline: none !important;
+  border-color: var(--rose-gold) !important;
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2) !important;
+}
+
+/* Improve search icon positioning */
+div[class*="left-4"][class*="top-1/2"] {
+  left: 1rem !important;
+  z-index: 10 !important;
+}
+
+/* Improve clear button styling */
+button[class*="right-3"][class*="top-1/2"] {
+  right: 1rem !important;
+  z-index: 10 !important;
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  padding: 0.125rem !important;
+  border-radius: 50% !important;
+}
+
+/* Improve sort select styling */
+select[class*="w-full"][class*="border-gray-200"] {
+  border: 2px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+  padding: 0.75rem !important;
+  font-size: 0.875rem !important;
+  background-color: white !important;
+  color: #374151 !important;
+  transition: all 0.2s ease-in-out !important;
+  appearance: none !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") !important;
+  background-position: right 0.5rem center !important;
+  background-repeat: no-repeat !important;
+  background-size: 1.5em !important;
+  padding-right: 2.5rem !important;
+}
+
+select[class*="w-full"][class*="border-gray-200"]:focus {
+  outline: none !important;
+  border-color: var(--rose-gold) !important;
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2) !important;
+}
+
+/* Improve category filter alignment */
+div[class*="flex-wrap"][class*="gap-3"] {
+  justify-content: center !important;
+  gap: 0.75rem !important;
+}
+
+/* Improve category button active state */
+button[class*="bg-[var(--rose-gold)]"][class*="text-white"] {
+  background-color: var(--rose-gold) !important;
+  color: white !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  div[class*="flex-col"][class*="md:flex-row"] {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+  }
+  
+  div[class*="flex-1"] {
+    flex: 1 !important;
+  }
+  
+  div[class*="md:w-72"] {
+    width: 18rem !important;
+  }
+  
+  div[class*="flex-wrap"][class*="gap-3"] {
+    justify-content: flex-start !important;
+  }
+}

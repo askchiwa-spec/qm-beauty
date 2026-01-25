@@ -1,0 +1,164 @@
+/* Fixes for service cards based on screenshot */
+
+/* 1. Fix service card container */
+.service-card, .card[class*="service"], div[class*="service"] {
+  width: 100% !important;
+  max-width: 350px !important;
+  margin: 1rem auto !important;
+  text-align: center !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.75rem !important;
+  padding: 1.5rem !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* 2. Fix card headings */
+.service-card h2, .service-card h3, 
+.card[class*="service"] h2, .card[class*="service"] h3 {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 1rem !important;
+  text-align: center !important;
+  color: #1f2937 !important;
+}
+
+/* 3. Fix service description */
+.service-description, .service-card p:first-of-type {
+  color: #6b7280 !important;
+  line-height: 1.6 !important;
+  margin-bottom: 1.5rem !important;
+  text-align: center !important;
+}
+
+/* 4. Fix duration/price sections */
+.service-details, .duration-price {
+  display: flex !important;
+  justify-content: space-between !important;
+  margin: 1rem 0 !important;
+  padding: 0.75rem 0 !important;
+  border-top: 1px solid #f3f4f6 !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+}
+
+.duration, .price {
+  text-align: center !important;
+  flex: 1 !important;
+}
+
+.duration strong, .price strong {
+  display: block !important;
+  font-size: 0.875rem !important;
+  color: #9ca3af !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.duration span, .price span {
+  font-weight: 600 !important;
+  color: #1f2937 !important;
+}
+
+/* 5. Fix button alignment */
+.service-actions, .card-actions {
+  display: flex !important;
+  gap: 0.75rem !important;
+  margin-top: 1.5rem !important;
+  justify-content: center !important;
+}
+
+.whatsapp-btn, .call-btn {
+  flex: 1 !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 0.5rem !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  text-align: center !important;
+  transition: all 0.2s !important;
+}
+
+.whatsapp-btn {
+  background-color: #25D366 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.call-btn {
+  background-color: #3b82f6 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.whatsapp-btn:hover, .call-btn:hover {
+  opacity: 0.9 !important;
+  transform: translateY(-1px) !important;
+}
+
+/* 6. Fix service grid */
+.services-grid, .grid[class*="service"] {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)) !important;
+  gap: 2rem !important;
+  justify-items: center !important;
+  margin: 2rem auto !important;
+  max-width: 1200px !important;
+}
+
+/* 7. Fix testimonial section */
+.testimonial, .review {
+  max-width: 800px !important;
+  margin: 3rem auto !important;
+  padding: 2rem !important;
+  background-color: #f9fafb !important;
+  border-radius: 1rem !important;
+  text-align: center !important;
+  font-style: italic !important;
+  color: #4b5563 !important;
+  line-height: 1.8 !important;
+  font-size: 1.125rem !important;
+}
+
+/* 8. Fix "Trusted by" section */
+.trusted-by {
+  text-align: center !important;
+  margin: 2rem auto !important;
+  padding: 1rem !important;
+  color: #6b7280 !important;
+  font-size: 0.875rem !important;
+  border-top: 1px solid #e5e7eb !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+/* 9. Fix mobile responsiveness */
+@media (max-width: 768px) {
+  .services-grid, .grid[class*="service"] {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+    padding: 0 1rem !important;
+  }
+  
+  .service-card, .card[class*="service"] {
+    max-width: 100% !important;
+    margin: 0.5rem auto !important;
+  }
+  
+  .service-actions, .card-actions {
+    flex-direction: column !important;
+  }
+  
+  .whatsapp-btn, .call-btn {
+    width: 100% !important;
+  }
+}
+
+/* 10. Fix section headings */
+.section-title {
+  text-align: center !important;
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  margin: 3rem 0 2rem 0 !important;
+  color: #1f2937 !important;
+}
+
+/* 11. Fix all text alignment in services */
+.service-card * {
+  text-align: center !important;
+}
