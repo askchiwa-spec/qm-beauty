@@ -207,9 +207,6 @@ class AuditLogger {
   /**
    * Get audit logs for a user
    */
-  /**
-   * Get audit logs for a user
-   */
   public async getUserLogs(userId: string): Promise<AuditLog[]> {
     try {
       // Fix for TypeScript/Prisma JSON filtering issue
@@ -225,12 +222,6 @@ class AuditLogger {
         const metadata = log.metadata as any;
         return metadata && metadata.userId === userId;
       }).slice(0, 100); // Limit results
-    } catch (error) {
-      logger.error('Failed to fetch user audit logs', { error, userId });
-      return [];
-    }
-  }
-      });
     } catch (error) {
       logger.error('Failed to fetch user audit logs', { error, userId });
       return [];

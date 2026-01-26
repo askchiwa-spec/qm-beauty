@@ -641,10 +641,7 @@ Refund will be processed according to our refund policy. For questions, call +25
           entityId: action.phoneNumber,
           action: 'created',
           description: action.messageContent,
-          metadata: {
-            phoneNumber: action.phoneNumber,
-            timestamp: action.messageContent // In real scenario, this would be proper timestamp
-          }
+          metadata: `{"phoneNumber": "${action.phoneNumber}", "timestamp": "${new Date().toISOString()}"}`
         }
       });
 
@@ -685,9 +682,7 @@ Refund will be processed according to our refund policy. For questions, call +25
           entityId: action.phoneNumber,
           action: 'submitted',
           description: action.messageContent,
-          metadata: {
-            phoneNumber: action.phoneNumber
-          }
+          metadata: `{"phoneNumber": "${action.phoneNumber}"}`
         }
       });
 
