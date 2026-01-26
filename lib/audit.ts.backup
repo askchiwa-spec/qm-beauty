@@ -207,29 +207,20 @@ class AuditLogger {
   /**
    * Get audit logs for a user
    */
-  /**
-   * Get audit logs for a user
-   */
   public async getUserLogs(userId: string): Promise<AuditLog[]> {
     try {
-      // Fix for TypeScript/Prisma JSON filtering issue
-      // Using string search as a workaround
-      const allLogs = await prisma.activityLog.findMany({
+      // Note: The current schema doesn't have a direct user field in activityLog
+      // This would require schema changes to properly link to users
+      return await prisma.activityLog.findMany({
+        where: {
+          metadata: {
+            path: ['userId'],
+            equals: userId,
+          },
+        },
         orderBy: {
           createdAt: 'desc',
         },
-      });
-
-      // Filter in JavaScript for now (less efficient but works)
-      return allLogs.filter(log => {
-        const metadata = log.metadata as any;
-        return metadata && metadata.userId === userId;
-      }).slice(0, 100); // Limit results
-    } catch (error) {
-      logger.error('Failed to fetch user audit logs', { error, userId });
-      return [];
-    }
-  }
       });
     } catch (error) {
       logger.error('Failed to fetch user audit logs', { error, userId });
