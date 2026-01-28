@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { orderCode: string } }
+  { params }: { params: Promise<{ orderCode: string }> }
 ) {
   try {
-    const { orderCode } = params;
+    const { orderCode } = await params;
 
     // Fetch order with customer details
     const order = await prisma.order.findUnique({
