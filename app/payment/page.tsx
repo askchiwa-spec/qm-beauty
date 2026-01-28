@@ -31,15 +31,26 @@ function PaymentContent() {
         throw new Error('Please select a payment method');
       }
 
+      // First, get order details to get the amount and customer info
+      const orderResponse = await fetch(`/api/orders/${orderCode}`);
+      const orderData = await orderResponse.json();
+      
+      if (!orderData.success) {
+        throw new Error('Could not retrieve order details');
+      }
+      
       const response = await fetch('/api/payment/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderId: orderCode,
-          phone: phoneNumber,
-          amount: 0, // This should come from order data
-          customerName: '', // This should come from order data
-          paymentType: 'push', // USSD push payment
+          orderRef: orderCode,
+          amount: orderData.data.totalAmount,
+          customer: {
+            name: orderData.data.customerName,
+            phone: phoneNumber,
+            email: orderData.data.customerEmail || ''
+          },
+          description: `Payment for order ${orderCode}`
         }),
       });
 

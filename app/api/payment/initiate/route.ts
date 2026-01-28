@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { selcomClient } from '@/lib/selcom';
 
-// This is a mock implementation of the Selcom payment initiation
-// In a real implementation, you would integrate with Selcom's actual API
+// Selcom payment initiation implementation
 export async function POST(request: NextRequest) {
   try {
     const { amount, customer, orderRef, description } = await request.json();
@@ -14,25 +14,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate a unique transaction ID for Selcom
-    const transactionId = `QM${Date.now()}${Math.floor(1000 + Math.random() * 9000)}`;
-    
-    // Mock payment initiation response
-    // In a real implementation, this would call Selcom's API to initiate the payment
+    // Check if Selcom is configured
+    if (!selcomClient.isConfigured()) {
+      return NextResponse.json(
+        { error: 'Payment gateway not configured' },
+        { status: 503 }
+      );
+    }
+
+    // Prepare payment request
+    const paymentRequest = {
+      orderId: orderRef,
+      amount,
+      phone: customer.phone || customer.phoneNumber,
+      email: customer.email,
+      customerName: customer.name || customer.fullName,
+    };
+
+    // Initiate payment through Selcom
+    const result = await selcomClient.initiatePayment(paymentRequest);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || 'Failed to initiate payment' },
+        { status: 500 }
+      );
+    }
+
+    // Prepare response data
     const paymentData = {
-      transactionId,
+      transactionId: result.transactionId,
       orderRef,
       amount,
       customer,
       description: description || 'QM Beauty Product Purchase',
-      paymentUrl: `https://selcom.example.com/pay?ref=${transactionId}`, // This would be the real Selcom payment URL
+      paymentUrl: result.redirectUrl,
       initiatedAt: new Date().toISOString(),
       status: 'pending',
     };
 
-    // In a real implementation, you would store the transaction in your database
-    // and return the payment initiation details to the frontend
-    console.log('Payment initiation requested:', paymentData);
+    console.log('Payment initiated successfully:', paymentData);
 
     return NextResponse.json({
       success: true,

@@ -23,9 +23,18 @@ export default function Header() {
         <div className="w-full max-w-7xl mx-auto py-4 md:py-5 flex items-center justify-between">
           {/* Elegant Logo - Responsive */}
           <Link href="/" className="flex items-center z-50">
-            <div className="text-xl sm:text-2xl font-serif text-[var(--deep-charcoal)] tracking-wide">
-              <span className="font-light">QM</span>
-              <span className="font-medium ml-1">Beauty</span>
+            <div className="flex items-center space-x-2">
+              <img 
+                src="/images/logo/qm-beauty-logo.png" 
+                alt="QM Beauty Logo"
+                width={60}
+                height={50}
+                className="w-12 h-12 object-contain"
+              />
+              <div className="text-xl sm:text-2xl font-serif text-[var(--deep-charcoal)] tracking-wide">
+                <span className="font-light">QM</span>
+                <span className="font-medium ml-1">Beauty</span>
+              </div>
             </div>
           </Link>
           

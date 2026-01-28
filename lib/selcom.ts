@@ -43,7 +43,7 @@ class SelcomClient {
       apiKey: process.env.SELCOM_API_KEY || '',
       apiSecret: process.env.SELCOM_API_SECRET || '',
       vendorId: process.env.SELCOM_VENDOR_ID || '',
-      baseUrl: process.env.SELCOM_BASE_URL || 'https://apigw.selcommobile.com',
+      baseUrl: process.env.SELCOM_BASE_URL || 'https://apigw.selcommobile.com/v1',
     };
 
     if (!this.isConfigured()) {
@@ -90,7 +90,7 @@ class SelcomClient {
       const digest = this.generateDigest(payload, timestamp);
 
       // Make API call
-      const response = await fetch(`${this.config.baseUrl}/checkout/create-order`, {
+      const response = await fetch(`${this.config.baseUrl}/checkout/create-order-minimal`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -159,7 +159,7 @@ class SelcomClient {
       const timestamp = new Date().toISOString();
       const digest = this.generateDigest(payload, timestamp);
 
-      const response = await fetch(`${this.config.baseUrl}/checkout/wallet-push`, {
+      const response = await fetch(`${this.config.baseUrl}/checkout/wallet-payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -81,17 +81,11 @@ export default function ServicesPage() {
                       </p>
                     </div>
                     
-                    {/* Price & Duration - Match ProductCard style */}
-                    <div className="flex items-center justify-center gap-4 mb-3">
+                    {/* Duration Only */}
+                    <div className="flex items-center justify-center mb-3">
                       <div className="text-center">
                         <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Duration</p>
                         <p className="text-sm font-medium text-gray-800">{service.duration}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">From</p>
-                        <p className="text-black font-bold text-lg">
-                          Tsh {(service.price / 1000).toFixed(0)}k
-                        </p>
                       </div>
                     </div>
                     

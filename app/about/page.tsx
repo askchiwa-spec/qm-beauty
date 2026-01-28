@@ -87,27 +87,15 @@ export default function AboutPage() {
               <div className="relative">
                 <div className="aspect-[4/5] bg-gradient-to-br from-[var(--champagne)] to-[var(--soft-beige)] rounded-2xl overflow-hidden shadow-2xl">
                   {/* Next.js optimized image - Replace with your actual spa image */}
-                  <Image
-                    src="/images/spa/brand-story.png"
-                    alt="QM Beauty Luxury Spa Experience"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    priority
+                  <img
+                    src="/images/team/founder.png"
+                    alt="Saida Bandawe - Founder of QM Beauty"
+                    className="object-cover w-full h-full"
                     onError={(e) => {
-                      // Fallback to gradient placeholder if image not found
-                      e.currentTarget.style.display = 'none';
+                      console.error('Founder image failed to load:', e);
                     }}
                   />
-                  {/* Fallback placeholder when image not available */}
-                  <div className="w-full h-full flex items-center justify-center absolute inset-0">
-                    <div className="text-center px-6">
-                      <svg className="w-24 h-24 mx-auto mb-4 text-[var(--rose-gold)]/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                      </svg>
-                      <p className="text-sm text-[var(--espresso)]/60 italic">Add image: /images/spa/brand-story.jpg</p>
-                    </div>
-                  </div>
+
                 </div>
                 {/* Decorative Element */}
                 <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-[var(--rose-gold)]/10 rounded-2xl -z-10"></div>

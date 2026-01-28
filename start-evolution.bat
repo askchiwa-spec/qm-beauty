@@ -22,7 +22,7 @@ echo.
 echo [2/3] Creating WhatsApp instance...
 curl -X POST http://localhost:8080/instance/create ^
   -H "Content-Type: application/json" ^
-  -H "apikey: change-me-to-strong-password" ^
+  -H "apikey: qm-beauty-whatsapp-2024-secure" ^
   -d "{\"instanceName\":\"qm-beauty\",\"qrcode\":true,\"integration\":\"WHATSAPP-BAILEYS\"}"
 
 echo.

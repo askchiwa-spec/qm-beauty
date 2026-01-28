@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma, generateOrderCode } from '@/lib/prisma';
 import { generateOrderMessage, generateCustomerConfirmation } from '@/lib/templates/order-message';
 import { unifiedWhatsApp } from '@/lib/unified-whatsapp';
+import { selcomClient } from '@/lib/selcom';
 import {
   sanitizeInput,
   isValidEmail,
@@ -170,6 +171,44 @@ export async function POST(request: NextRequest) {
       totalAmount,
     });
 
+    // Check if Selcom is configured for payment processing
+    let paymentInitiated = false;
+    let paymentUrl = null;
+    
+    if (selcomClient.isConfigured()) {
+      try {
+        // Initiate payment through Selcom
+        const paymentRequest = {
+          orderId: orderCode,
+          amount: totalAmount,
+          phone: customerPhone,
+          email: sanitizedCustomerEmail,
+          customerName: sanitizedCustomerName,
+        };
+
+        const paymentResult = await selcomClient.initiatePayment(paymentRequest);
+
+        if (paymentResult.success) {
+          paymentInitiated = true;
+          paymentUrl = paymentResult.redirectUrl;
+          
+          // Update order with payment status
+          try {
+            await prisma.order.update({
+              where: { orderCode },
+              data: { paymentStatus: 'pending' },
+            });
+          } catch (dbError) {
+            console.error('Failed to update order payment status:', dbError);
+          }
+        } else {
+          console.error('Failed to initiate payment:', paymentResult.error);
+        }
+      } catch (paymentError) {
+        console.error('Payment initiation error:', paymentError);
+      }
+    }
+    
     // Send to QM Beauty team
     const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151';
     
@@ -184,9 +223,19 @@ export async function POST(request: NextRequest) {
       }
 
       // Send confirmation to customer
+      let finalCustomerMessage = customerMessage;
+      
+      // Add payment information if payment was initiated
+      if (paymentInitiated && paymentUrl) {
+        finalCustomerMessage += `
+
+💳 *Payment Required*
+Click here to pay: ${paymentUrl}`;
+      }
+      
       const customerResult = await unifiedWhatsApp.sendTextMessage(
         customerPhone,
-        customerMessage
+        finalCustomerMessage
       );
 
       if (!customerResult.success) {
@@ -201,6 +250,8 @@ export async function POST(request: NextRequest) {
           totalAmount,
           whatsappSent: teamResult.success,
           customerNotified: customerResult.success,
+          paymentInitiated,
+          paymentUrl,
           whatsappProvider: teamResult.provider,
         },
       });
@@ -212,6 +263,15 @@ export async function POST(request: NextRequest) {
       const businessWhatsAppLink = `https://wa.me/${process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151'}?text=${encodeURIComponent(orderMessage)}`;
       const customerWhatsAppLink = `https://wa.me/${customerPhone}?text=${encodeURIComponent(customerMessage)}`;
       
+      // Add payment information to messages if payment was initiated
+      let businessMessage = orderMessage;
+      let finalCustomerMessage = customerMessage;
+      
+      if (paymentInitiated && paymentUrl) {
+        businessMessage += `\n\n💳 Payment URL: ${paymentUrl}`;
+        finalCustomerMessage += `\n\n💳 *Payment Required*\nClick here to pay: ${paymentUrl}`;
+      }
+      
       return NextResponse.json({
         success: true,
         message: 'Order placed successfully (WhatsApp not configured)',
@@ -220,12 +280,14 @@ export async function POST(request: NextRequest) {
           totalAmount,
           whatsappSent: false,
           customerNotified: false,
+          paymentInitiated,
+          paymentUrl,
           // Provide links for manual notification
           manualNotification: {
             businessLink: businessWhatsAppLink,
             customerLink: customerWhatsAppLink,
-            businessMessage: orderMessage,
-            customerMessage: customerMessage,
+            businessMessage: businessMessage,
+            customerMessage: finalCustomerMessage,
           }
         },
       });

@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Disable turbopack to avoid WASM binding issues
+  reactStrictMode: false, // This helps with hydration issues
   images: {
     // Enable image optimization
     unoptimized: false,

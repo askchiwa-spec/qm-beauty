@@ -1,32 +1,62 @@
-// Test endpoint for WhatsApp functionality
 import { NextRequest, NextResponse } from 'next/server';
-import { unifiedWhatsApp } from '@/lib/unified-whatsapp';
+import { whatsappChatbot } from '@/lib/whatsapp-chatbot';
+import { whatsappBusinessActions } from '@/lib/whatsapp-business-actions';
 
 export async function POST(request: NextRequest) {
   try {
-    const { to, message } = await request.json();
+    const { message, from } = await request.json();
 
-    if (!to || !message) {
+    if (!message || !from) {
       return NextResponse.json(
-        { error: 'Missing required fields: to, message' },
+        { error: 'Missing message or from fields' },
         { status: 400 }
       );
     }
 
-    // Send test message
-    const result = await unifiedWhatsApp.sendTextMessage(to, message);
+    // Create a mock incoming message object
+    const incomingMessage = {
+      from,
+      message,
+      timestamp: new Date(),
+      messageId: `test_${Date.now()}`
+    };
 
-    return NextResponse.json({
-      ...result,
-      timestamp: new Date().toISOString(),
-    });
+    console.log('Testing WhatsApp auto-reply with:', incomingMessage);
+
+    // First try business actions
+    const businessProcessed = await whatsappBusinessActions.processBusinessAction(incomingMessage);
+
+    if (!businessProcessed) {
+      // If no business action was triggered, process through chatbot
+      const result = await whatsappChatbot.processIncomingMessage(incomingMessage);
+      
+      if (result) {
+        return NextResponse.json({
+          success: true,
+          processed: true,
+          message: 'Message processed by chatbot',
+          processedBy: 'chatbot'
+        });
+      } else {
+        return NextResponse.json({
+          success: true,
+          processed: false,
+          message: 'Message not processed by chatbot',
+          processedBy: 'none'
+        });
+      }
+    } else {
+      return NextResponse.json({
+        success: true,
+        processed: true,
+        message: 'Message processed as business action',
+        processedBy: 'business_action'
+      });
+    }
   } catch (error: any) {
-    console.error('WhatsApp Test Error:', error);
+    console.error('Error testing WhatsApp:', error);
     return NextResponse.json(
-      { 
-        success: false,
-        error: error.message || 'Failed to send test message' 
-      },
+      { error: error.message },
       { status: 500 }
     );
   }

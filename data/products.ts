@@ -304,27 +304,7 @@ export const products: Product[] = [
     inStock: true,
     packageSize: 'Set',
   },
-  {
-    id: '14',
-    name: 'Professional Makeup Kit',
-    slug: 'professional-makeup-kit',
-    price: 80000,
-    category: 'skincare',
-    image: '/images/products/makeup-kit.jpg',
-    images: ['/images/products/makeup-kit.jpg'],
-    shortDescription: 'Complete professional makeup kit for flawless looks.',
-    description: 'QM Beauty Professional Makeup Kit contains everything needed for stunning makeup looks. This premium collection includes foundations, eyeshadows, lip colors, and tools for professional application.',
-    ingredients: ['High-quality pigments', 'Skin-nourishing ingredients', 'Long-lasting formulas'],
-    benefits: [
-      'Enhances natural beauty',
-      'Boosts confidence for special occasions',
-      'Professional application ensures long-lasting results',
-      'Tailored looks to suit individual preferences and styles',
-      'Complete solution for all makeup needs'
-    ],
-    inStock: true,
-    packageSize: 'Kit',
-  },
+
   {
     id: '15',
     name: 'Henna Art Kit',

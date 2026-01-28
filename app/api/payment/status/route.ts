@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { selcomClient } from '@/lib/selcom';
 
-// This is a mock implementation of the Selcom payment status check
-// In a real implementation, you would integrate with Selcom's actual API
+// Selcom payment status check implementation
 export async function POST(request: NextRequest) {
   try {
     const { transactionId } = await request.json();
@@ -14,20 +14,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Mock payment status response
-    // In a real implementation, this would call Selcom's API to check the payment status
+    // Check if Selcom is configured
+    if (!selcomClient.isConfigured()) {
+      return NextResponse.json(
+        { error: 'Payment gateway not configured' },
+        { status: 503 }
+      );
+    }
+
+    // Query payment status from Selcom
+    const result = await selcomClient.queryPaymentStatus(transactionId);
+
+    if (!result) {
+      return NextResponse.json(
+        { error: 'Failed to retrieve payment status' },
+        { status: 500 }
+      );
+    }
+
+    // Map Selcom response to our format
     const paymentStatus = {
       transactionId,
-      status: 'completed', // In a real implementation, this would reflect the actual status
-      amount: 50000, // This would come from the database or Selcom API
-      currency: 'TZS',
-      reference: `REF${Date.now()}`,
-      completedAt: new Date().toISOString(),
+      status: result.status?.toLowerCase() || 'unknown',
+      amount: result.amount,
+      currency: result.currency || 'TZS',
+      reference: result.reference || transactionId,
+      completedAt: result.completed_at || new Date().toISOString(),
     };
 
-    // In a real implementation, you would fetch the transaction from your database
-    // and return the actual status from Selcom
-    console.log('Payment status requested:', transactionId);
+    console.log('Payment status retrieved:', paymentStatus);
 
     return NextResponse.json({
       success: true,
