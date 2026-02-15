@@ -237,3 +237,54 @@ model ActivityLog {
   @@index([createdAt])
   @@map("activity_logs")
 }
+
+// Add missing models for chatbot integrations
+model IntegrationSession {
+  id          String   @id @default(cuid())
+  instanceId  String
+  channel     String
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@map("integration_sessions")
+}
+
+model Contact {
+  id          String   @id @default(cuid())
+  remoteJid   String
+  instanceId  String
+  name        String?
+  pushName    String?
+  profilePic  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@unique([instanceId, remoteJid])
+  @@map("contacts")
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  instanceId  String
+  remoteJid   String
+  fromMe      Boolean
+  messageId   String
+  messageType String
+  content     Json?
+  timestamp   DateTime @default(now())
+  status      String   @default("sent")
+  @@index([instanceId, remoteJid])
+  @@map("messages")
+}
+
+model Proxy {
+  id          String   @id @default(cuid())
+  instanceId  String
+  host        String
+  port        Int
+  username    String?
+  password    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@map("proxies")
+}
