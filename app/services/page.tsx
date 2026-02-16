@@ -82,12 +82,7 @@ export default function ServicesPage() {
                     </div>
                     
                     {/* Duration Only */}
-                    <div className="flex items-center justify-center mb-3">
-                      <div className="text-center">
-                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Duration</p>
-                        <p className="text-sm font-medium text-gray-800">{service.duration}</p>
-                      </div>
-                    </div>
+
                     
                     {/* Action Buttons - Match ProductCard style */}
                     <div className="flex flex-col gap-2 w-full mt-2">

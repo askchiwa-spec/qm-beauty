@@ -104,11 +104,10 @@ export default function AppointmentsPage() {
       // Format the appointment details
       const selectedServiceObj = services.find(s => s.id === selectedService);
       const serviceName = selectedServiceObj?.name || 'N/A';
-      const servicePrice = selectedServiceObj?.price ? `Tsh ${selectedServiceObj.price.toLocaleString()}` : '';
       
       const appointmentDetails = encodeURIComponent(`
 New Appointment Request:
-Service: ${serviceName} ${servicePrice ? `- ${servicePrice}` : ''}
+Service: ${serviceName}
 Date: ${selectedDate}
 Time: ${selectedTime}
 Customer: ${customerName}
@@ -189,7 +188,7 @@ Notes: ${notes || 'None'}
                       <option value="">Choose a service</option>
                       {services.map(service => (
                         <option key={service.id} value={service.id}>
-                          {service.name} - Tsh {service.price.toLocaleString()}
+                          {service.name}
                         </option>
                       ))}
                     </select>
@@ -297,10 +296,7 @@ Notes: ${notes || 'None'}
                     <div key={service.id} className="service-item bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                       <h3 className="font-medium text-[var(--deep-charcoal)] mb-2 text-center">{service.name}</h3>
                       <p className="text-gray-600 text-sm mb-3 text-center px-2">{service.description}</p>
-                      <div className="flex justify-between items-center pt-2">
-                        <span className="text-[var(--rose-gold)] font-bold">Tsh {service.price.toLocaleString()}</span>
-                        <span className="text-gray-500 text-sm">{service.duration}</span>
-                      </div>
+
                     </div>
                   ))}
                 </div>
