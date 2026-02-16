@@ -11,12 +11,14 @@ const cormorant = Cormorant_Garamond({
   weight: ['300', '400', '500', '600', '700'],
   subsets: ["latin"],
   variable: "--font-serif",
+  display: "swap", // Add swap for better loading
 });
 
 const montserrat = Montserrat({
   weight: ['300', '400', '500', '600', '700'],
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap", // Add swap for better loading
 });
 
 export const metadata: Metadata = {
@@ -34,6 +36,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${cormorant.variable} ${montserrat.variable} antialiased`}
+        suppressHydrationWarning={true}
       >
         <CartProvider>
           <Header />
