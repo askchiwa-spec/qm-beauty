@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function SelcomPaymentButton({ amount, orderId }: { amount: number; orderId: string }) {
+export default function SelcomPaymentButton({ amount, orderId, customer }: { amount: number; orderId: string; customer: { name?: string; phone: string; email?: string; } }) {
   const [loading, setLoading] = useState(false);
 
   const handlePayment = async () => {
@@ -11,15 +11,28 @@ export default function SelcomPaymentButton({ amount, orderId }: { amount: numbe
       const res = await fetch('/api/payment/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, orderId })
+        body: JSON.stringify({ 
+          amount, 
+          orderId,
+          customer,
+          paymentType: 'web'  // Use web redirect method
+        })
       });
       const data = await res.json();
       
       if (data.success) {
-        alert(`✅ Payment initiated!\nTransaction: ${data.transactionId}\nAmount: TZS ${amount}`);
-        window.location.href = '/payment-status?success=true';
+        // If redirect URL is provided, redirect to it
+        if (data.data.redirectUrl) {
+          window.location.href = data.data.redirectUrl;
+        } else {
+          alert(`✅ Payment initiated!\nTransaction: ${data.data.transactionId}\nAmount: TZS ${amount}`);
+          window.location.href = '/payment-status?success=true';
+        }
+      } else {
+        alert(`❌ Payment failed: ${data.error || 'Unknown error'}`);
       }
     } catch (error) {
+      console.error('Payment error:', error);
       alert('❌ Payment failed');
     }
     setLoading(false);

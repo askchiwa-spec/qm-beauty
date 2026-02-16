@@ -97,20 +97,39 @@ async function handleIncomingMessage(payload: any) {
       'text'
     );
     
-    // Process the message through the business actions first
-    const businessProcessed = await whatsappBusinessActions.processBusinessAction(incomingMessage);
+    // First, check if this is a cart-related message that should go to chatbot first
+    const lowerMessage = messageBody.toLowerCase();
+    const isCartRelated = lowerMessage.includes('cart') || lowerMessage.includes('basket') || 
+                        lowerMessage.includes('buy') || lowerMessage.includes('purchase') ||
+                        lowerMessage.includes('add to') || lowerMessage.includes('shopping') ||
+                        lowerMessage.includes('order now');
     
-    if (!businessProcessed) {
-      // If no business action was triggered, process through chatbot
+    let messageProcessed = false;
+    
+    if (isCartRelated) {
+      // For cart-related messages, try chatbot first
+      messageProcessed = await whatsappChatbot.processIncomingMessage(incomingMessage);
+      if (messageProcessed) {
+        logger.info('Cart-related message processed by chatbot', { from: sender });
+      }
+    }
+    
+    // If not processed by chatbot, try business actions
+    if (!messageProcessed) {
+      messageProcessed = await whatsappBusinessActions.processBusinessAction(incomingMessage);
+      if (messageProcessed) {
+        logger.info('Message processed as business action', { from: sender });
+      }
+    }
+    
+    // If still not processed, try chatbot
+    if (!messageProcessed) {
       const chatbotProcessed = await whatsappChatbot.processIncomingMessage(incomingMessage);
-      
       if (chatbotProcessed) {
         logger.info('Message processed by chatbot', { from: sender });
       } else {
-        logger.info('Message not processed by chatbot', { from: sender });
+        logger.info('Message not processed by any handler', { from: sender });
       }
-    } else {
-      logger.info('Message processed as business action', { from: sender });
     }
   } catch (error) {
     console.error('Error handling incoming message:', error);

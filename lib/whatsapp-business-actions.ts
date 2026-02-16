@@ -5,6 +5,7 @@ import { prisma } from './prisma';
 import { evolutionWhatsApp } from './evolution-whatsapp';
 import { whatsappAnalytics } from './whatsapp-analytics';
 import { logger } from './logging';
+import { whatsappContextManager } from './whatsapp-context-manager';
 
 interface BusinessAction {
   action: 'order_status' | 'cancel_order' | 'update_contact' | 'request_catalog' | 'book_service' | 'payment_info' | 'complaint' | 'feedback' | 'auto_booking_confirm' | 'cart_followup';

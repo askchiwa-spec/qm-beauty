@@ -43,14 +43,14 @@ function PaymentContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderRef: orderCode,
+          orderId: orderCode,
           amount: orderData.data.totalAmount,
           customer: {
             name: orderData.data.customerName,
             phone: phoneNumber,
             email: orderData.data.customerEmail || ''
           },
-          description: `Payment for order ${orderCode}`
+          paymentType: 'push'  // Use USSD push method for mobile money
         }),
       });
 
@@ -215,6 +215,17 @@ function PaymentContent() {
               >
                 {isLoading ? 'Processing...' : 'Pay Now'}
               </Button>
+              {/* Alternative: Direct payment button using SelcomPaymentButton component */}
+              {/* This would be used if we wanted to use the component directly */}
+              {/* <SelcomPaymentButton 
+                amount={orderData.totalAmount} 
+                orderId={orderCode}
+                customer={{
+                  name: orderData.customerName,
+                  phone: phoneNumber,
+                  email: orderData.customerEmail
+                }}
+              /> */}
             </div>
           </form>
         </div>

@@ -3,6 +3,7 @@
 
 import { evolutionWhatsApp } from './evolution-whatsapp';
 import { prisma } from './prisma';
+import { whatsappContextManager } from './whatsapp-context-manager';
 
 interface IncomingMessage {
   from: string;
@@ -41,11 +42,16 @@ class WhatsAppChatbot {
    */
   async processIncomingMessage(incomingMessage: IncomingMessage): Promise<boolean> {
     try {
-      // Check if message is during business hours
-      if (!this.isBusinessHours(incomingMessage.timestamp)) {
-        const offHoursMessage = this.getOffHoursMessage();
-        await evolutionWhatsApp.sendTextMessage(incomingMessage.from, offHoursMessage);
-        return true;
+      // Get conversation context
+      const context = whatsappContextManager.getContext(incomingMessage.from);
+      
+      // Check if message is during business hours (skip for ongoing conversations)
+      if (!context?.contextState || context.contextState === 'idle') {
+        if (!this.isBusinessHours(incomingMessage.timestamp)) {
+          const offHoursMessage = this.getOffHoursMessage();
+          await evolutionWhatsApp.sendTextMessage(incomingMessage.from, offHoursMessage);
+          return true;
+        }
       }
 
       // Check message frequency to prevent spam
@@ -55,11 +61,18 @@ class WhatsAppChatbot {
         return true;
       }
 
-      // Process the message based on content
-      const response = await this.generateResponse(incomingMessage);
+      // Process the message based on content and context
+      const response = await this.generateResponse(incomingMessage, context);
       
       if (response) {
         await evolutionWhatsApp.sendTextMessage(incomingMessage.from, response);
+        
+        // Update context after sending response
+        whatsappContextManager.updateContext(incomingMessage.from, {
+          lastMessage: incomingMessage.message,
+          lastMessageTime: incomingMessage.timestamp
+        });
+        
         return true;
       }
 
@@ -73,9 +86,17 @@ class WhatsAppChatbot {
   /**
    * Generate response based on message content
    */
-  private async generateResponse(incomingMessage: IncomingMessage): Promise<string | null> {
+  private async generateResponse(incomingMessage: IncomingMessage, context: any = null): Promise<string | null> {
     const lowerMessage = incomingMessage.message.toLowerCase();
     const from = incomingMessage.from;
+
+    // If there's an active conversation context, handle it specially
+    if (context && context.contextState !== 'idle') {
+      const contextResponse = this.handleContextualResponse(incomingMessage, context);
+      if (contextResponse) {
+        return contextResponse;
+      }
+    }
 
     // Handle greetings
     if (this.containsGreeting(lowerMessage)) {
@@ -117,6 +138,21 @@ class WhatsAppChatbot {
       return this.getAppointmentInfoResponse();
     }
 
+    // Handle cart-related inquiries
+    if (lowerMessage.includes('cart') || lowerMessage.includes('basket') || lowerMessage.includes('my items')) {
+      return this.getCartInfoResponse();
+    }
+    
+    // Handle shopping assistance
+    if (lowerMessage.includes('buy') || lowerMessage.includes('purchase') || lowerMessage.includes('order now') || lowerMessage.includes('add to cart')) {
+      return this.getShoppingAssistanceResponse();
+    }
+    
+    // Handle appointment booking
+    if (lowerMessage.includes('book') || lowerMessage.includes('appointment') || lowerMessage.includes('schedule') || lowerMessage.includes('reserve')) {
+      return this.getAppointmentBookingResponse();
+    }
+    
     // Handle help/information requests
     if (lowerMessage.includes('help') || lowerMessage.includes('info') || lowerMessage.includes('information')) {
       return this.getHelpResponse();
@@ -129,6 +165,42 @@ class WhatsAppChatbot {
 
     // Default response for unrecognized messages
     return this.getDefaultResponse();
+  }
+  
+  /**
+   * Handle contextual responses based on conversation state
+   */
+  private handleContextualResponse(incomingMessage: IncomingMessage, context: any): string | null {
+    const lowerMessage = incomingMessage.message.toLowerCase();
+    
+    switch (context.contextState) {
+      case 'confirming_order':
+        if (lowerMessage.includes('yes') || lowerMessage.includes('confirm') || lowerMessage.includes('ok')) {
+          // Confirm the order
+          whatsappContextManager.updateContext(incomingMessage.from, { contextState: 'idle' });
+          return '✅ Your order has been confirmed! You will receive a confirmation message with details shortly.';
+        } else if (lowerMessage.includes('no') || lowerMessage.includes('cancel') || lowerMessage.includes('stop')) {
+          // Cancel the order
+          whatsappContextManager.updateContext(incomingMessage.from, { contextState: 'idle' });
+          return '❌ Your order has been cancelled. Let us know if you need anything else!';
+        }
+        return 'Please confirm your order by replying with "YES" or "NO".';
+      
+      case 'booking_service':
+        if (lowerMessage.includes('yes') || lowerMessage.includes('confirm') || lowerMessage.includes('ok')) {
+          // Confirm the booking
+          whatsappContextManager.updateContext(incomingMessage.from, { contextState: 'idle' });
+          return '✅ Your appointment has been confirmed! You will receive a confirmation message with details shortly.';
+        } else if (lowerMessage.includes('no') || lowerMessage.includes('cancel') || lowerMessage.includes('stop')) {
+          // Cancel the booking
+          whatsappContextManager.updateContext(incomingMessage.from, { contextState: 'idle' });
+          return '❌ Your booking has been cancelled. Let us know if you need anything else!';
+        }
+        return 'Please confirm your booking by replying with "YES" or "NO".';
+      
+      default:
+        return null; // No contextual response
+    }
   }
 
   /**
@@ -412,6 +484,9 @@ Call anytime: +255 657 120 151`;
   /**
    * Format status for display
    */
+  /**
+   * Format status for display
+   */
   private formatStatus(status: string): string {
     const statusMap: { [key: string]: string } = {
       'new': 'New',
@@ -441,6 +516,63 @@ Call anytime: +255 657 120 151`;
       console.error('Error fetching customer:', error);
       return null;
     }
+  }
+  
+  /**
+   * Get cart information response
+   */
+  private getCartInfoResponse(): string {
+    return `🛒 *Shopping Cart Information*
+
+To check your cart:
+• Visit: qmbeauty.co.tz/shop
+• Add items to your cart
+• Proceed to checkout
+
+For cart assistance, reply with "HELP CART"
+Or call: +255 657 120 151`;
+  }
+  
+  /**
+   * Get shopping assistance response
+   */
+  private getShoppingAssistanceResponse(): string {
+    return `🛍️ *Shopping Assistance*
+
+Ready to buy from QM Beauty? Here's how:
+
+1. Browse our products at: qmbeauty.co.tz/shop
+2. Add desired items to your cart
+3. Proceed to checkout
+4. Choose your payment method:
+   • Selcom (via WhatsApp)
+   • Mobile Money
+   • Bank Transfer
+   • Cash on Delivery
+
+For help with specific products, reply with "CATALOG" or call: +255 657 120 151`;
+  }
+  
+  /**
+   * Get appointment booking response
+   */
+  private getAppointmentBookingResponse(): string {
+    return `💇‍♀️ *Book an Appointment*
+
+To book a beauty service:
+
+1. Visit: qmbeauty.co.tz/appointments
+2. Select your preferred service
+3. Choose date and time
+4. Complete booking
+
+Available services:
+• Facial Treatments
+• Hair Styling
+• Nail Care
+• Waxing Services
+
+For immediate booking assistance, call: +255 657 120 151`;
   }
 }
 
