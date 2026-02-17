@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: qmbeauty_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: qm_beauty_prod
+      POSTGRES_USER: qmbeauty_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - qm-beauty-network
+    ports:
+      - "5432:5432"
+
+  # Redis Cache (for sessions and caching)
+  redis:
+    image: redis:7-alpine
+    container_name: qmbeauty_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - qm-beauty-network
+    ports:
+      - "6379:6379"
+
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qmbeauty_app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://qmbeauty_user:${DB_PASSWORD}@db:5432/qm_beauty_prod
+      - REDIS_URL=redis://redis:6379
+      - NEXT_PUBLIC_APP_URL=https://www.qmbeauty.africa
+      - SELCOM_API_KEY=${SELCOM_API_KEY}
+      - SELCOM_API_SECRET=${SELCOM_API_SECRET}
+      - SELCOM_VENDOR_ID=${SELCOM_VENDOR_ID}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=https://www.qmbeauty.africa
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - nextjs_cache:/app/.next
+    networks:
+      - qm-beauty-network
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "3000:3000"
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: qmbeauty_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+      - ./logs:/var/log/nginx
+    networks:
+      - qm-beauty-network
+    depends_on:
+      - app
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  nextjs_cache:
+    driver: local
+
+networks:
+  qm-beauty-network:
+    driver: bridge
