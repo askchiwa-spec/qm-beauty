@@ -187,34 +187,6 @@ function PaymentContent() {
       <Head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
       </Head>
-      {/* Header Navigation */}
-      <header className="bg-[#1b2a2c] py-4 px-8 border-b-4 border-[#e0b89d] sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto flex justify-between items-center flex-wrap gap-4">
-          <a href="/" className="text-2xl font-medium bg-[#f5c842] text-[#1b2a2c] px-3 py-1 rounded-md mr-4">
-            QM<span className="bg-transparent">Beauty</span>
-          </a>
-          <div className="hidden md:flex gap-8 flex-wrap">
-            <a href="/" className="text-[#f0e2d8] hover:text-[#f5c842] text-sm font-medium uppercase tracking-[0.5px] transition-colors">
-              Home
-            </a>
-            <a href="/shop" className="text-[#f0e2d8] hover:text-[#f5c842] text-sm font-medium uppercase tracking-[0.5px] transition-colors">
-              Shop
-            </a>
-            <a href="/services" className="text-[#f0e2d8] hover:text-[#f5c842] text-sm font-medium uppercase tracking-[0.5px] transition-colors">
-              Services
-            </a>
-            <a href="/appointments" className="text-[#f0e2d8] hover:text-[#f5c842] text-sm font-medium uppercase tracking-[0.5px] transition-colors">
-              Appointments
-            </a>
-            <a href="/about" className="text-[#f0e2d8] hover:text-[#f5c842] text-sm font-medium uppercase tracking-[0.5px] transition-colors">
-              About
-            </a>
-            <a href="/contact" className="text-[#f0e2d8] hover:text-[#f5c842] text-sm font-medium uppercase tracking-[0.5px] transition-colors">
-              Contact
-            </a>
-          </div>
-        </div>
-      </header>
 
       {/* Main Payment Content */}
       <div className="max-w-6xl mx-auto w-full py-10 px-8 flex flex-col lg:flex-row gap-8 flex-1">
