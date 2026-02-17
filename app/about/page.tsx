@@ -120,7 +120,7 @@ export default function AboutPage() {
             </div>
             
             {/* Premium Image Grid */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {/* Image 1 - Expert Therapist */}
               <div className="group relative overflow-hidden rounded-2xl shadow-xl aspect-[3/4] bg-gradient-to-br from-[var(--champagne)] to-[var(--soft-beige)]">
                 <Image

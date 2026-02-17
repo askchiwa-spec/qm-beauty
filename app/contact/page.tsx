@@ -42,7 +42,7 @@ export default function ContactPage() {
       <section className="py-16 sm:py-20 md:py-24">
         <div className="w-full flex justify-center px-4">
           <div className="w-full max-w-7xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-8 md:gap-12">
+            <div className="grid lg:grid-cols-2 gap-8">
             {/* Contact Form - Luxury Styled */}
             <div>
               <h2 className="text-2xl sm:text-3xl font-serif text-[var(--deep-charcoal)] mb-8 font-medium">
@@ -105,7 +105,7 @@ export default function ContactPage() {
                 Visit Our Store
               </h2>
               
-              <div className="space-y-8 mb-10">
+              <div className="space-y-8">
                 <div className="flex gap-6">
                   <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
                     <svg className="w-8 h-8 text-[var(--rose-gold)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
@@ -191,12 +191,12 @@ export default function ContactPage() {
       <section className="py-16 sm:py-20 md:py-24 bg-gradient-to-br from-gray-50 to-white">
         <div className="w-full flex justify-center px-4">
           <div className="w-full max-w-7xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-serif text-center text-[var(--deep-charcoal)] mb-16 font-medium">
+            <h2 className="text-3xl sm:text-4xl font-serif text-center text-[var(--deep-charcoal)] mb-12 font-medium">
               Frequently Asked Questions
             </h2>
             
-            <div className="max-w-3xl mx-auto space-y-6">
-              <details className="bg-white p-8 shadow-md elegant-hover">
+            <div className="max-w-3xl mx-auto space-y-4">
+              <details className="bg-white p-6 shadow-sm elegant-hover">
                 <summary className="font-serif text-lg cursor-pointer text-[var(--deep-charcoal)] font-medium">
                   Do you offer home delivery?
                 </summary>
@@ -205,7 +205,7 @@ export default function ContactPage() {
                 </p>
               </details>
               
-              <details className="bg-white p-8 shadow-md elegant-hover">
+              <details className="bg-white p-6 shadow-sm elegant-hover">
                 <summary className="font-serif text-lg cursor-pointer text-[var(--deep-charcoal)] font-medium">
                   Are your products really organic?
                 </summary>
@@ -214,7 +214,7 @@ export default function ContactPage() {
                 </p>
               </details>
               
-              <details className="bg-white p-8 shadow-md elegant-hover">
+              <details className="bg-white p-6 shadow-sm elegant-hover">
                 <summary className="font-serif text-lg cursor-pointer text-[var(--deep-charcoal)] font-medium">
                   Can I book a spa appointment online?
                 </summary>
@@ -223,7 +223,7 @@ export default function ContactPage() {
                 </p>
               </details>
               
-              <details className="bg-white p-8 shadow-md elegant-hover">
+              <details className="bg-white p-6 shadow-sm elegant-hover">
                 <summary className="font-serif text-lg cursor-pointer text-[var(--deep-charcoal)] font-medium">
                   What payment methods do you accept?
                 </summary>
@@ -232,7 +232,7 @@ export default function ContactPage() {
                 </p>
               </details>
               
-              <details className="bg-white p-8 shadow-md elegant-hover">
+              <details className="bg-white p-6 shadow-sm elegant-hover">
                 <summary className="font-serif text-lg cursor-pointer text-[var(--deep-charcoal)] font-medium">
                   How long do your products last?
                 </summary>
@@ -241,7 +241,7 @@ export default function ContactPage() {
                 </p>
               </details>
               
-              <details className="bg-white p-8 shadow-md elegant-hover">
+              <details className="bg-white p-6 shadow-sm elegant-hover">
                 <summary className="font-serif text-lg cursor-pointer text-[var(--deep-charcoal)] font-medium">
                   Are your products suitable for sensitive skin?
                 </summary>
@@ -250,7 +250,7 @@ export default function ContactPage() {
                 </p>
               </details>
               
-              <details className="bg-white p-8 shadow-md elegant-hover">
+              <details className="bg-white p-6 shadow-sm elegant-hover">
                 <summary className="font-serif text-lg cursor-pointer text-[var(--deep-charcoal)] font-medium">
                   Do you offer wholesale or bulk discounts?
                 </summary>
@@ -259,7 +259,7 @@ export default function ContactPage() {
                 </p>
               </details>
               
-              <details className="bg-white p-8 shadow-md elegant-hover">
+              <details className="bg-white p-6 shadow-sm elegant-hover">
                 <summary className="font-serif text-lg cursor-pointer text-[var(--deep-charcoal)] font-medium">
                   How often should I use the coffee scrub?
                 </summary>

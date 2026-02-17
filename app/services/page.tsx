@@ -81,9 +81,6 @@ export default function ServicesPage() {
                       </p>
                     </div>
                     
-                    {/* Duration Only */}
-
-                    
                     {/* Action Buttons - Match ProductCard style */}
                     <div className="flex flex-col gap-2 w-full mt-2">
                       <button

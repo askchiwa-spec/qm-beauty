@@ -62,8 +62,8 @@ export default function Home() {
             
             {/* Hero Headline - Luxury Typography - FULLY CENTERED */}
             <h1 className="font-serif text-white mb-8 leading-[1.15] px-4 sm:px-0 text-center">
-              <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl mb-2">Beauty is the Reason</span>
-              <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-[var(--rose-gold)]" style={{ fontWeight: 300 }}>Why Money is Made For</span>
+              <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl mb-2 font-light tracking-wide drop-shadow-2xl text-white">Beauty is the Reason</span>
+              <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-[var(--rose-gold)] font-light tracking-wide drop-shadow-2xl" style={{ fontWeight: 300 }}>Why Money is Made For</span>
             </h1>
             
             {/* Elegant Divider - CENTERED */}
@@ -147,7 +147,7 @@ export default function Home() {
             </div>
             
             {/* Premium Grid - Luxury Breathing Space */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
               {mostLovedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -184,7 +184,7 @@ export default function Home() {
             </div>
             
             {/* Premium Service Grid - Match ProductCard Style */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 md:gap-8 mb-16">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 md:gap-8">
               {services.map((service) => (
                 <div key={service.id} className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex flex-col items-center justify-between hover:shadow-lg transition-all duration-300">
                   {/* Service Image - Match ProductCard style */}
@@ -214,20 +214,6 @@ export default function Home() {
                       <p className="text-gray-600 text-xs text-center line-clamp-2 px-2 mb-2">
                         {service.description}
                       </p>
-                    </div>
-                    
-                    {/* Price & Duration - Match ProductCard style */}
-                    <div className="flex items-center justify-center gap-4 mb-3">
-                      <div className="text-center">
-                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Duration</p>
-                        <p className="text-sm font-medium text-gray-800">{service.duration}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">From</p>
-                        <p className="text-black font-bold text-lg">
-                          Tsh {(service.price / 1000).toFixed(0)}k
-                        </p>
-                      </div>
                     </div>
                     
                     {/* Action Buttons - Match ProductCard style */}

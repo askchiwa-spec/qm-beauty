@@ -23,18 +23,14 @@ export default function Header() {
         <div className="w-full max-w-7xl mx-auto py-4 md:py-5 flex items-center justify-between">
           {/* Elegant Logo - Responsive */}
           <Link href="/" className="flex items-center z-50">
-            <div className="flex items-center space-x-2">
+            <div className="bg-gradient-to-br from-[var(--deep-charcoal)] to-[var(--espresso)] rounded-full p-3 shadow-xl">
               <img 
                 src="/images/logo/qm-beauty-logo.png" 
                 alt="QM Beauty Logo"
-                width={60}
-                height={50}
-                className="w-12 h-12 object-contain"
+                width={80}
+                height={70}
+                className="w-16 h-16 sm:w-18 sm:h-18 object-contain"
               />
-              <div className="text-xl sm:text-2xl font-serif text-[var(--deep-charcoal)] tracking-wide">
-                <span className="font-light">QM</span>
-                <span className="font-medium ml-1">Beauty</span>
-              </div>
             </div>
           </Link>
           
@@ -44,7 +40,7 @@ export default function Header() {
               <div key={item.name} className="flex items-center">
                 <Link
                   href={item.href}
-                  className="text-[var(--deep-charcoal)] hover:text-[var(--rose-gold)] transition-colors duration-300 text-sm uppercase tracking-[0.15em] font-light px-5 xl:px-6 py-2"
+                  className="text-[var(--deep-charcoal)] hover:text-[var(--rose-gold)] transition-colors duration-300 text-sm uppercase tracking-[0.15em] font-light px-7 xl:px-8 py-2"
                 >
                   {item.name}
                 </Link>

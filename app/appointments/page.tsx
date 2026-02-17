@@ -293,10 +293,9 @@ Notes: ${notes || 'None'}
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {services.slice(0, 5).map(service => (
-                    <div key={service.id} className="service-item bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                      <h3 className="font-medium text-[var(--deep-charcoal)] mb-2 text-center">{service.name}</h3>
-                      <p className="text-gray-600 text-sm mb-3 text-center px-2">{service.description}</p>
-
+                    <div key={service.id} className="service-item bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center justify-between hover:shadow-lg transition-all duration-300">
+                      <h3 className="font-medium text-[var(--deep-charcoal)] text-sm mt-4 mb-2 text-center">{service.name}</h3>
+                      <p className="text-gray-600 text-xs text-center line-clamp-2 px-2 mb-2">{service.description}</p>
                     </div>
                   ))}
                 </div>
