@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QMBeauty · Secure Payment</title>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f8f3ef 0%, #faf7f2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER NAVIGATION - matches QMBeauty aesthetic */
+        .header {
+            background: #1b2a2c;
+            padding: 1rem 2rem;
+            border-bottom: 4px solid #e0b89d;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .nav-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 500;
+            background: #f5c842;
+            color: #1b2a2c;
+            display: inline-block;
+            padding: 0.2rem 1rem 0.2rem 0.8rem;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #f0e2d8;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #f5c842;
+        }
+
+        /* MAIN PAYMENT SECTION */
+        .payment-container {
+            max-width: 1200px;
+            margin: 2.5rem auto;
+            padding: 0 2rem;
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        /* LEFT COLUMN - Payment methods */
+        .payment-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fdfaf7 100%);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            border: 1px solid rgba(212, 177, 154, 0.2);
+        }
+
+        .order-header {
+            background: #1b2a2c;
+            color: white;
+            padding: 1.5rem 2rem;
+        }
+
+        .order-header h1 {
+            font-size: 1.8rem;
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+        }
+
+        .order-id {
+            display: inline-block;
+            background: #f5c842;
+            color: #1b2a2c;
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        .payment-body {
+            padding: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1b2a2c;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .section-title i {
+            color: #b58d7a;
+            font-size: 1.4rem;
+        }
+
+        /* PAYMENT METHODS GRID */
+        .methods-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .method-card {
+            background: #ffffff;
+            border: 2px solid #e9e1da;
+            border-radius: 16px;
+            padding: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .method-card:hover {
+            border-color: #d4b19a;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .method-card.selected {
+            border-color: #f5c842;
+            background: #fffaf2;
+            box-shadow: 0 8px 20px rgba(245, 200, 66, 0.2);
+        }
+
+        .method-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+
+        .method-info h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #1b2a2c;
+            margin-bottom: 0.3rem;
+        }
+
+        .method-prefix {
+            font-size: 0.85rem;
+            color: #8a7a6d;
+            font-weight: 500;
+        }
+
+        /* MOBILE NUMBER INPUT */
+        .input-group {
+            margin: 2rem 0 1.5rem;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1b2a2c;
+            margin-bottom: 0.5rem;
+        }
+
+        .phone-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 2px solid #e9e1da;
+            border-radius: 60px;
+            padding: 0.2rem 0.2rem 0.2rem 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .phone-input-wrapper:focus-within {
+            border-color: #f5c842;
+            box-shadow: 0 0 0 4px rgba(245, 200, 66, 0.15), inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .phone-prefix {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #b58d7a;
+            margin-right: 0.5rem;
+        }
+
+        .phone-input-wrapper input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 1rem 0;
+            font-size: 1.1rem;
+            outline: none;
+            color: #1b2a2c;
+        }
+
+        .phone-input-wrapper input::placeholder {
+            color: #cbb5a8;
+        }
+
+        .helper-text {
+            font-size: 0.85rem;
+            color: #7f6a5c;
+            margin-top: 0.5rem;
+            margin-left: 1rem;
+        }
+
+        /* HOW IT WORKS */
+        .how-it-works {
+            background: linear-gradient(135deg, #f9f4ef 0%, #fbf7f3 100%);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(212, 177, 154, 0.2);
+        }
+
+        .how-title {
+            font-weight: 600;
+            color: #1b2a2c;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            background: #e0b89d;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1b2a2c;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .step-text {
+            color: #3a2e28;
+            font-size: 0.95rem;
+        }
+
+        /* PAY BUTTONS */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f5c842 0%, #f7d672 100%);
+            border: none;
+            padding: 1.1rem 2rem;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1b2a2c;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            box-shadow: 0 8px 20px rgba(245, 200, 66, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #f7d672 0%, #f9e4a0 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(245, 200, 66, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid #d4b19a;
+            padding: 1.1rem 2rem;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1b2a2c;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-secondary:hover {
+            background: #d4b19a;
+            color: white;
+        }
+
+        /* RIGHT COLUMN - Order summary */
+        .summary-card {
+            background: linear-gradient(135deg, #ffffff 0%, #fdfaf7 100%);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(212, 177, 154, 0.2);
+            position: sticky;
+            top: 100px;
+        }
+
+        .summary-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1b2a2c;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f0e2d8;
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 1.5rem 0;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #1b2a2c;
+        }
+
+        .secure-badge {
+            background: #edf0e6;
+            border-radius: 60px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: #2f5e5e;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        /* FOOTER (from previous design, simplified) */
+        .footer-mini {
+            background: #1b2a2c;
+            color: #ece2d9;
+            padding: 1.5rem 2rem;
+            margin-top: 2rem;
+            border-top: 4px solid #e0b89d;
+        }
+
+        .footer-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .footer-links a {
+            color: #f0dac8;
+            text-decoration: none;
+            margin: 0 1rem;
+        }
+
+        .footer-links a:hover {
+            color: #f5c842;
+        }
+
+        @media (max-width: 900px) {
+            .payment-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .methods-grid {
+                grid-template-columns: 1fr;
+            }
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER with navigation - matches QMBeauty main site -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="/" class="logo">QM<span style="background: transparent;">Beauty</span></a>
+            <div class="nav-links">
+                <a href="#">HOME</a>
+                <a href="#">SHOP</a>
+                <a href="#">SERVICES</a>
+                <a href="#">APPOINTMENTS</a>
+                <a href="#">ABOUT</a>
+                <a href="#">CONTACT</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN PAYMENT SECTION -->
+    <main class="payment-container">
+        <!-- LEFT: Payment methods selection -->
+        <div class="payment-card">
+            <div class="order-header">
+                <h1>Payment</h1>
+                <span class="order-id">Order: QB-1771314156047</span>
+            </div>
+            
+            <div class="payment-body">
+                <div class="section-title">
+                    <i class="fas fa-credit-card"></i> Select Payment Method
+                </div>
+
+                <!-- Mobile money options grid -->
+                <div class="methods-grid">
+                    <!-- M-Pesa -->
+                    <div class="method-card selected" onclick="selectMethod('mpesa')">
+                        <div class="method-icon" style="background: #1b2a2c; color: white; font-weight: bold;">M</div>
+                        <div class="method-info">
+                            <h3>M-Pesa (Vodacom)</h3>
+                            <div class="method-prefix">074, 075, 076</div>
+                        </div>
+                    </div>
+                    <!-- Tigo Pesa -->
+                    <div class="method-card" onclick="selectMethod('tigo')">
+                        <div class="method-icon" style="background: #3498db; color: white; font-weight: bold;">T</div>
+                        <div class="method-info">
+                            <h3>Tigo Pesa</h3>
+                            <div class="method-prefix">071, 065, 067</div>
+                        </div>
+                    </div>
+                    <!-- Airtel Money -->
+                    <div class="method-card" onclick="selectMethod('airtel')">
+                        <div class="method-icon" style="background: #e74c3c; color: white; font-weight: bold;">A</div>
+                        <div class="method-info">
+                            <h3>Airtel Money</h3>
+                            <div class="method-prefix">068, 069, 078</div>
+                        </div>
+                    </div>
+                    <!-- HaloPesa -->
+                    <div class="method-card" onclick="selectMethod('halo')">
+                        <div class="method-icon" style="background: #9b59b6; color: white; font-weight: bold;">H</div>
+                        <div class="method-info">
+                            <h3>HaloPesa</h3>
+                            <div class="method-prefix">062</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile number input -->
+                <div class="input-group">
+                    <label class="input-label">Mobile Money Number</label>
+                    <div class="phone-input-wrapper">
+                        <span class="phone-prefix">+255</span>
+                        <input type="tel" placeholder="712 345 678" value="712345678">
+                    </div>
+                    <div class="helper-text">
+                        <i class="fas fa-info-circle"></i> Enter the phone number registered with your mobile money account
+                    </div>
+                </div>
+
+                <!-- How it works -->
+                <div class="how-it-works">
+                    <div class="how-title">
+                        <i class="fas fa-lightbulb" style="color: #f5c842;"></i> How it works:
+                    </div>
+                    <div class="steps">
+                        <div class="step">
+                            <span class="step-number">1</span>
+                            <span class="step-text">Select your mobile money provider</span>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">2</span>
+                            <span class="step-text">Enter your mobile number</span>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">3</span>
+                            <span class="step-text">Click "Pay Now" to receive USSD prompt</span>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">4</span>
+                            <span class="step-text">Check your phone and approve the payment</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="action-buttons">
+                    <button class="btn-primary">
+                        <i class="fas fa-lock"></i> Pay Now
+                    </button>
+                    <button class="btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Order summary (matches QMBeauty aesthetic) -->
+        <div class="summary-card">
+            <div class="summary-title">
+                <i class="fas fa-receipt" style="color: #b58d7a;"></i> Order Summary
+            </div>
+            
+            <div class="summary-item">
+                <span>Premium Facial Treatment</span>
+                <span>TSh 85,000</span>
+            </div>
+            <div class="summary-item">
+                <span>Organic Serum Bundle</span>
+                <span>TSh 120,000</span>
+            </div>
+            <div class="summary-item">
+                <span>Service Fee</span>
+                <span>TSh 3,500</span>
+            </div>
+            
+            <div class="summary-total">
+                <span>Total</span>
+                <span>TSh 208,500</span>
+            </div>
+
+            <div class="secure-badge">
+                <i class="fas fa-shield-alt"></i> Secured by QMBeauty Payment Gateway
+            </div>
+
+            <!-- Accepted payments mini -->
+            <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: #7f6a5c;">
+                <i class="fas fa-check-circle" style="color: #2f7d4f;"></i> We accept: Mastercard, Visa, M-Pesa, Tigo Pesa, Airtel Money, Selcom
+            </div>
+        </div>
+    </main>
+
+    <!-- SIMPLE FOOTER matching main site -->
+    <footer class="footer-mini">
+        <div class="footer-content">
+            <div>© 2026 QMBeauty Africa — natural · organic · ethical</div>
+            <div class="footer-links">
+                <a href="#">Privacy</a> | 
+                <a href="#">Terms</a> | 
+                <a href="#">Contact</a> | 
+                <a href="#"><i class="fas fa-map-marker-alt"></i> View Map</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Simple interaction for method selection
+        function selectMethod(method) {
+            document.querySelectorAll('.method-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+        }
+
+        // Attach click handlers properly
+        document.querySelectorAll('.method-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+    </script>
+</body>
+</html>

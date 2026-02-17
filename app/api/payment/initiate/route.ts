@@ -32,8 +32,9 @@ export async function POST(request: Request) {
     
     let paymentResult;
     
-    if (paymentType === 'push') {
-      // Initiate USSD push payment
+    // Handle different payment types
+    if (paymentType === 'push' || ['mpesa', 'tigo', 'airtel', 'halopesa'].includes(paymentType.toLowerCase())) {
+      // Initiate USSD push payment for mobile money
       paymentResult = await selcomClient.initiatePushPayment(paymentRequest);
     } else {
       // Initiate web gateway payment (default)

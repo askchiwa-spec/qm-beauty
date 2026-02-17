@@ -198,7 +198,7 @@ export default function Cart() {
                 </button>
                 
                 {/* Mobile Money Payment */}
-                <Link href="/payment" onClick={closeCart}>
+                <Link href="/checkout" onClick={closeCart}>
                   <button className="flex items-center justify-center gap-2 py-3 px-4 border border-[var(--borderSoft)] rounded-xl hover:border-[var(--rose-gold)] transition-all bg-white">
                     <div className="w-5 h-5 bg-green-600 rounded flex items-center justify-center text-white text-xs font-bold">
                       M
