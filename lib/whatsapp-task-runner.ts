@@ -1,5 +1,5 @@
 // WhatsApp Task Runner
-// Runs background tasks for WhatsApp automation when Evolution API is not available
+// Runs background tasks for WhatsApp automation with Venom Bot
 
 import { whatsappBusinessActions } from './whatsapp-business-actions';
 import { runCartFollowUpTask } from './whatsapp-cart-followup';

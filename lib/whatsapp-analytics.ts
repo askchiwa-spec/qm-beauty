@@ -3,7 +3,7 @@
 
 interface MessageTracking {
   id: string;
-  messageId?: string; // Evolution API message ID
+  messageId?: string; // Venom Bot message ID
   phoneNumber: string;
   messageContent: string;
   messageType: 'text' | 'media' | 'location' | 'contact';

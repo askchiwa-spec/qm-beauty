@@ -1,5 +1,5 @@
 // WhatsApp Message Queue Manager
-// Handles message queuing, scheduling, and retry logic for Evolution API
+// Handles message queuing, scheduling, and retry logic for Venom Bot
 
 interface QueuedMessage {
   id: string;
@@ -134,15 +134,15 @@ class WhatsAppQueueManager {
   }
 
   /**
-   * Send a single message using the Evolution API
+   * Send a single message using Venom Bot
    */
   private async sendMessage(message: QueuedMessage): Promise<boolean> {
     try {
-      // Import the evolution WhatsApp client
+      // Import the WhatsApp client (now Venom Bot)
       const { evolutionWhatsApp } = await import('./evolution-whatsapp');
       
       if (!evolutionWhatsApp.isEnabled()) {
-        throw new Error('Evolution API not enabled');
+        throw new Error('WhatsApp not enabled or Venom Bot not connected');
       }
 
       let result;
