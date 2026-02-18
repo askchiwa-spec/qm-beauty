@@ -3,8 +3,8 @@ module.exports = {
     {
       name: 'qm-beauty-whatsapp',
       script: './whatsapp-server.ts',
-      interpreter: 'node',
-      interpreter_args: '--loader ts-node/esm --experimental-specifier-resolution=node',
+      interpreter: 'npx',
+      interpreter_args: 'tsx',
       instances: 1,
       autorestart: true,
       watch: false,
