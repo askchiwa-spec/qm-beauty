@@ -388,7 +388,7 @@ class WhatsAppBusinessActions {
         message
       };
     } catch (error) {
-      logger.error('Error handling order status:', error);
+      logger.error('Error handling order status', { error: error instanceof Error ? error.message : String(error) });
       return {
         success: false,
         error: 'Could not retrieve order status. Please try again later.'
