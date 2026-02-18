@@ -2,8 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'qm-beauty-whatsapp',
-      script: './whatsapp-server.ts',
-      exec_interpreter: './node_modules/.bin/tsx',
+      script: './start-whatsapp.sh',
       instances: 1,
       autorestart: true,
       watch: false,
