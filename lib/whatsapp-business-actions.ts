@@ -335,10 +335,15 @@ class WhatsAppBusinessActions {
     error?: string;
   }> {
     try {
+      logger.info('Handling order status', { 
+        orderCode: action.parameters.orderCode,
+        phoneNumber: action.phoneNumber 
+      });
+      
+      // Try to find order by orderCode only first (phone might be optional)
       const order = await prisma.order.findFirst({
         where: {
-          orderCode: action.parameters.orderCode,
-          customerPhone: action.phoneNumber
+          orderCode: action.parameters.orderCode
         },
         include: {
           cart: {
@@ -354,37 +359,58 @@ class WhatsAppBusinessActions {
       });
 
       if (!order) {
+        logger.warn('Order not found', { orderCode: action.parameters.orderCode });
         return {
           success: false,
-          error: `Order ${action.parameters.orderCode} not found for your phone number. Please verify the order code.`
+          error: 'Order not found. Please check your order code.'
         };
       }
 
-      const itemsList = order.cart?.items.map((item: any) => 
-        `• ${item.product.name} (Qty: ${item.quantity})`
-      ).join('\n') || 'No items found';
+      // Verify phone number matches (if provided in the database)
+      if (order.customerPhone && order.customerPhone !== action.phoneNumber) {
+        logger.warn('Phone number mismatch', {
+          expected: order.customerPhone,
+          received: action.phoneNumber
+        });
+        return {
+          success: false,
+          error: 'Order found but phone number does not match. Please use the phone number used for the order.'
+        };
+      }
 
-      const statusMessage = `📦 *Order Status: ${order.orderCode}*\n\n` +
-        `*Status*: ${this.formatStatus(order.fulfillmentStatus)}\n` +
-        `*Payment*: ${this.formatStatus(order.paymentStatus)}\n` +
-        `*Total*: TZS ${order.totalAmount.toLocaleString()}/=\n\n` +
-        `*Items ordered*:\n${itemsList}\n\n` +
-        `*Created*: ${order.createdAt.toLocaleDateString('en-US')}\n` +
-        `\n\nFor more details, call: +255 657 120 151`;
-
-      await evolutionWhatsApp.sendTextMessage(action.phoneNumber, statusMessage);
-
+      // Format the order status message
+      const message = this.formatOrderStatus(order);
+      
+      logger.info('Order status retrieved successfully', { orderCode: order.orderCode });
+      
       return {
         success: true,
-        message: `Order status sent for ${action.parameters.orderCode}`
+        message
       };
     } catch (error) {
-      console.error('Error handling order status:', error);
+      logger.error('Error handling order status:', error);
       return {
         success: false,
-        error: 'Could not retrieve order status'
+        error: 'Could not retrieve order status. Please try again later.'
       };
     }
+  }
+
+  /**
+   * Format order status message
+   */
+  private formatOrderStatus(order: any): string {
+    const itemsList = order.cart?.items.map((item: any) => 
+      `• ${item.product.name} (Qty: ${item.quantity})`
+    ).join('\n') || 'No items found';
+
+    return `📦 *Order Status: ${order.orderCode}*\n\n` +
+      `*Status*: ${this.formatStatus(order.fulfillmentStatus)}\n` +
+      `*Payment*: ${this.formatStatus(order.paymentStatus)}\n` +
+      `*Total*: TZS ${order.totalAmount.toLocaleString()}/=\n\n` +
+      `*Items ordered*:\n${itemsList}\n\n` +
+      `*Created*: ${order.createdAt.toLocaleDateString('en-US')}\n` +
+      `\n\nFor more details, call: +255 657 120 151`;
   }
 
   /**
