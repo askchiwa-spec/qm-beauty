@@ -3,11 +3,6 @@ import "server-only";
 // Replaces Evolution API with Venom Bot for self-hosted WhatsApp
 // Docs: https://github.com/orkestral/venom
 
-import { 
-  sendWhatsAppMessage, 
-  sendWhatsAppMedia, 
-  getConnectionStatus 
-} from './venom-whatsapp';
 
 interface WhatsAppMessage {
   number: string;
