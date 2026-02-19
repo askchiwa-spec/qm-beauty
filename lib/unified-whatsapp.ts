@@ -18,7 +18,7 @@ class UnifiedWhatsAppClient {
    */
   async sendTextMessage(to: string, message: string): Promise<UnifiedWhatsAppResponse> {
     // Try Evolution API first if enabled
-    if (evolutionWhatsApp.isEnabled()) {
+    if (await evolutionWhatsApp.isEnabled()) {
       console.log('Using Evolution API for WhatsApp');
       const result = await evolutionWhatsApp.sendTextMessage(to, message);
       return {
@@ -47,7 +47,7 @@ class UnifiedWhatsAppClient {
     mediaUrl: string,
     caption?: string
   ): Promise<UnifiedWhatsAppResponse> {
-    if (evolutionWhatsApp.isEnabled()) {
+    if (await evolutionWhatsApp.isEnabled()) {
       const result = await evolutionWhatsApp.sendMediaMessage(to, mediaUrl, caption);
       return {
         ...result,
@@ -72,7 +72,7 @@ class UnifiedWhatsAppClient {
     name?: string,
     address?: string
   ): Promise<UnifiedWhatsAppResponse> {
-    if (evolutionWhatsApp.isEnabled()) {
+    if (await evolutionWhatsApp.isEnabled()) {
       const result = await evolutionWhatsApp.sendLocation(to, latitude, longitude, name, address);
       return {
         ...result,
@@ -90,8 +90,8 @@ class UnifiedWhatsAppClient {
   /**
    * Check which provider is active
    */
-  getActiveProvider(): 'evolution' | 'meta' | 'none' {
-    if (evolutionWhatsApp.isEnabled()) {
+  async getActiveProvider(): Promise<'evolution' | 'meta' | 'none'> {
+    if (await evolutionWhatsApp.isEnabled()) {
       return 'evolution';
     }
     // Meta Business API client has been removed
@@ -104,8 +104,8 @@ class UnifiedWhatsAppClient {
   /**
    * Check if any WhatsApp provider is configured
    */
-  isConfigured(): boolean {
-    return evolutionWhatsApp.isEnabled();
+  async isConfigured(): Promise<boolean> {
+    return await evolutionWhatsApp.isEnabled();
   }
 }
 
