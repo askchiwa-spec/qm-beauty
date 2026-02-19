@@ -1,3 +1,4 @@
+import "server-only";
 // Unified WhatsApp Client
 // Automatically uses Evolution API or Meta Business API based on configuration
 

@@ -1,7 +1,8 @@
+import "server-only";
+import { create, Whatsapp, Message } from 'venom-bot';
 import { logger } from './logging';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let client: any = null;
+let client: Whatsapp | null = null;
 let isConnected = false;
 
 export interface WhatsAppMessage {
@@ -12,7 +13,7 @@ export interface WhatsAppMessage {
   sender?: string;
 }
 
-export async function initializeVenomBot(): Promise<unknown> {
+export async function initializeVenomBot(): Promise<Whatsapp> {
   if (client && isConnected) {
     return client;
   }
@@ -20,13 +21,9 @@ export async function initializeVenomBot(): Promise<unknown> {
   try {
     logger.info('Initializing Venom Bot...');
 
-    // Dynamic import to avoid bundling issues
-    const venom = await import('venom-bot');
-    
-    client = await venom.create(
+    client = await create(
       'qm-beauty-session',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (base64Qrimg: string, asciiQR: string, attempts: any) => {
+      (base64Qrimg: string, asciiQR: string, attempts: number, urlCode?: string) => {
         logger.info('QR Code generated', { attempts });
         console.log('\n');
         console.log(asciiQR);
@@ -35,9 +32,8 @@ export async function initializeVenomBot(): Promise<unknown> {
       (statusSession: string, session: string) => {
         logger.info('Session status changed', { statusSession, session });
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       {
-        headless: 'new' as any,
+        headless: true,
         devtools: false,
         useChrome: false,
         debug: false,
@@ -51,16 +47,18 @@ export async function initializeVenomBot(): Promise<unknown> {
           '--no-zygote',
           '--single-process',
           '--disable-gpu'
-        ]
-      } as any
+        ],
+        puppeteerOptions: {
+          args: ['--no-sandbox', '--disable-setuid-sandbox']
+        }
+      }
     );
 
     isConnected = true;
     logger.info('Venom Bot initialized successfully');
 
     // Set up message handler
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    client.onMessage(async (message: any) => {
+    client.onMessage(async (message: Message) => {
       await handleIncomingMessage(message);
     });
 
@@ -71,8 +69,7 @@ export async function initializeVenomBot(): Promise<unknown> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function handleIncomingMessage(message: any): Promise<void> {
+async function handleIncomingMessage(message: Message): Promise<void> {
   try {
     // Ignore group messages and status broadcasts
     if (message.isGroupMsg || message.from === 'status@broadcast') {
@@ -135,7 +132,7 @@ export async function sendWhatsAppMedia(
     await client.sendFile(formattedNumber, mediaPath, '', caption || '');
     logger.info(`Media sent to ${to}`);
   } catch (error) {
-    logger.error(`Failed to send media to ${to}:`, { error: error instanceof Error ? error.message : String(error) });
+    logger.error(`Failed to send media to ${to}:`, error);
     throw error;
   }
 }

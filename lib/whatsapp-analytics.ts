@@ -1,3 +1,4 @@
+import "server-only";
 // WhatsApp Analytics and Tracking System
 // Tracks message delivery, engagement, and provides analytics
 

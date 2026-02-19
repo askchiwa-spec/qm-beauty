@@ -1,3 +1,4 @@
+import "server-only";
 // Venom Bot WhatsApp Client Wrapper
 // Replaces Evolution API with Venom Bot for self-hosted WhatsApp
 // Docs: https://github.com/orkestral/venom
