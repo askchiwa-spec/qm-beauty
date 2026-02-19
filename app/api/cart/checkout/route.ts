@@ -252,44 +252,64 @@ Click here to pay: ${paymentUrl}`;
         if (!customerResult.success) {
           console.error('Failed to send WhatsApp to customer:', customerResult.error);
         }
+
+        return NextResponse.json({
+          success: true,
+          message: 'Order placed successfully',
+          data: {
+            orderCode,
+            totalAmount,
+            whatsappSent: teamResult.success,
+            customerNotified: customerResult.success,
+            paymentInitiated,
+            paymentUrl,
+            whatsappProvider: teamResult.provider,
+          },
+        });
+      } else {
+        // WhatsApp not configured, just return order data
+        console.warn('WhatsApp not configured. Order created but notifications not sent.');
+        
+        // Include the messages in the response so business can manually send them
+        const businessWhatsAppLink = `https://wa.me/${process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151'}?text=${encodeURIComponent(orderMessage)}`;
+        const customerWhatsAppLink = `https://wa.me/${customerPhone}?text=${encodeURIComponent(customerMessage)}`;
+        
+        // Add payment information to messages if payment was initiated
+        let businessMessage = orderMessage;
+        let finalCustomerMessage = customerMessage;
+        
+        if (paymentInitiated && paymentUrl) {
+          businessMessage += `\n\n💳 Payment URL: ${paymentUrl}`;
+          finalCustomerMessage += `\n\n💳 *Payment Required*\nClick here to pay: ${paymentUrl}`;
+        }
+        
+        return NextResponse.json({
+          success: true,
+          message: 'Order placed successfully (WhatsApp not configured)',
+          data: {
+            orderCode,
+            totalAmount,
+            whatsappSent: false,
+            customerNotified: false,
+            paymentInitiated,
+            paymentUrl,
+            // Provide links for manual notification
+            manualNotification: {
+              businessLink: businessWhatsAppLink,
+              customerLink: customerWhatsAppLink,
+              businessMessage: businessMessage,
+              customerMessage: finalCustomerMessage,
+            }
+          },
+        });
       }
     } catch (whatsappError) {
       console.error('Failed to send WhatsApp notifications:', whatsappError);
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Order placed successfully',
-      data: {
-        orderCode,
-        totalAmount,
-        whatsappSent: teamResult.success,
-        customerNotified: customerResult.success,
-        paymentInitiated,
-        paymentUrl,
-        whatsappProvider: teamResult.provider,
-        },
-      });
-    } else {
-      // WhatsApp not configured, just return order data
-      console.warn('WhatsApp not configured. Order created but notifications not sent.');
       
-      // Include the messages in the response so business can manually send them
-      const businessWhatsAppLink = `https://wa.me/${process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151'}?text=${encodeURIComponent(orderMessage)}`;
-      const customerWhatsAppLink = `https://wa.me/${customerPhone}?text=${encodeURIComponent(customerMessage)}`;
-      
-      // Add payment information to messages if payment was initiated
-      let businessMessage = orderMessage;
-      let finalCustomerMessage = customerMessage;
-      
-      if (paymentInitiated && paymentUrl) {
-        businessMessage += `\n\n💳 Payment URL: ${paymentUrl}`;
-        finalCustomerMessage += `\n\n💳 *Payment Required*\nClick here to pay: ${paymentUrl}`;
-      }
-      
+      // Return success even if WhatsApp fails - order was still created
       return NextResponse.json({
         success: true,
-        message: 'Order placed successfully (WhatsApp not configured)',
+        message: 'Order placed successfully (WhatsApp notification failed)',
         data: {
           orderCode,
           totalAmount,
@@ -297,13 +317,7 @@ Click here to pay: ${paymentUrl}`;
           customerNotified: false,
           paymentInitiated,
           paymentUrl,
-          // Provide links for manual notification
-          manualNotification: {
-            businessLink: businessWhatsAppLink,
-            customerLink: customerWhatsAppLink,
-            businessMessage: businessMessage,
-            customerMessage: finalCustomerMessage,
-          }
+          whatsappError: true,
         },
       });
     }
