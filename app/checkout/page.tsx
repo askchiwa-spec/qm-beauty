@@ -102,10 +102,32 @@ export default function CheckoutPage() {
         '_blank'
       );
     } else if (['mpesa', 'tigopesa', 'airtel', 'halopesa'].includes(selectedPayment)) {
-      // Redirect to payment page with order data
-      const orderCode = 'QB-' + Date.now();
-      localStorage.setItem('current-order', JSON.stringify({...orderData, orderCode}));
-      window.location.href = `/payment?order=${orderCode}`;
+      // Call API to create order first
+      try {
+        const response = await fetch('/api/cart/checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData),
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.data?.orderCode) {
+          // Store order data with the API-generated order code
+          localStorage.setItem('current-order', JSON.stringify({
+            ...orderData, 
+            orderCode: result.data.orderCode
+          }));
+          window.location.href = `/payment?order=${result.data.orderCode}`;
+        } else {
+          alert('Failed to create order: ' + (result.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Checkout error:', error);
+        alert('Failed to process checkout. Please try again.');
+      }
     } else if (['visa', 'mastercard'].includes(selectedPayment)) {
       // Inform user that card payments are coming soon
       alert('Card payments (Visa/Mastercard) are coming soon. Please select another payment method.');
