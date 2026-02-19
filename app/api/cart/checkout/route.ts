@@ -4,7 +4,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma, generateOrderCode } from '@/lib/prisma';
 import { generateOrderMessage, generateCustomerConfirmation } from '@/lib/templates/order-message';
-import { unifiedWhatsApp } from '@/lib/unified-whatsapp';
 import { selcomClient } from '@/lib/selcom';
 import {
   sanitizeInput,
@@ -14,6 +13,12 @@ import {
   isValidQuantity,
   isValidProductName
 } from '@/lib/security/validation';
+
+// Dynamic import to avoid bundling venom-bot
+async function getUnifiedWhatsApp() {
+  const { unifiedWhatsApp } = await import('@/lib/unified-whatsapp');
+  return unifiedWhatsApp;
+}
 
 interface CheckoutRequest {
   cartId: string;
@@ -212,47 +217,57 @@ export async function POST(request: NextRequest) {
     // Send to QM Beauty team
     const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151';
     
-    if (unifiedWhatsApp.isConfigured()) {
-      const teamResult = await unifiedWhatsApp.sendTextMessage(
-        recipientNumber,
-        orderMessage
-      );
-
-      if (!teamResult.success) {
-        console.error('Failed to send WhatsApp to team:', teamResult.error);
-      }
-
-      // Send confirmation to customer
-      let finalCustomerMessage = customerMessage;
+    let teamResult: any = { success: false };
+    let customerResult: any = { success: false };
+    
+    try {
+      const unifiedWhatsApp = await getUnifiedWhatsApp();
       
-      // Add payment information if payment was initiated
-      if (paymentInitiated && paymentUrl) {
-        finalCustomerMessage += `
+      if (unifiedWhatsApp.isConfigured()) {
+        teamResult = await unifiedWhatsApp.sendTextMessage(
+          recipientNumber,
+          orderMessage
+        );
+
+        if (!teamResult.success) {
+          console.error('Failed to send WhatsApp to team:', teamResult.error);
+        }
+
+        // Send confirmation to customer
+        let finalCustomerMessage = customerMessage;
+        
+        // Add payment information if payment was initiated
+        if (paymentInitiated && paymentUrl) {
+          finalCustomerMessage += `
 
 💳 *Payment Required*
 Click here to pay: ${paymentUrl}`;
-      }
-      
-      const customerResult = await unifiedWhatsApp.sendTextMessage(
-        customerPhone,
-        finalCustomerMessage
-      );
+        }
+        
+        customerResult = await unifiedWhatsApp.sendTextMessage(
+          customerPhone,
+          finalCustomerMessage
+        );
 
-      if (!customerResult.success) {
-        console.error('Failed to send WhatsApp to customer:', customerResult.error);
+        if (!customerResult.success) {
+          console.error('Failed to send WhatsApp to customer:', customerResult.error);
+        }
       }
+    } catch (whatsappError) {
+      console.error('Failed to send WhatsApp notifications:', whatsappError);
+    }
 
-      return NextResponse.json({
-        success: true,
-        message: 'Order placed successfully',
-        data: {
-          orderCode,
-          totalAmount,
-          whatsappSent: teamResult.success,
-          customerNotified: customerResult.success,
-          paymentInitiated,
-          paymentUrl,
-          whatsappProvider: teamResult.provider,
+    return NextResponse.json({
+      success: true,
+      message: 'Order placed successfully',
+      data: {
+        orderCode,
+        totalAmount,
+        whatsappSent: teamResult.success,
+        customerNotified: customerResult.success,
+        paymentInitiated,
+        paymentUrl,
+        whatsappProvider: teamResult.provider,
         },
       });
     } else {

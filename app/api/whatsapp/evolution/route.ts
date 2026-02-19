@@ -2,8 +2,13 @@
 // Manage WhatsApp instances and QR codes
 
 import { NextRequest, NextResponse } from 'next/server';
-import { evolutionWhatsApp } from '@/lib/evolution-whatsapp';
 import { isSuspiciousUserAgent } from '@/lib/security/validation';
+
+// Dynamic import to avoid bundling venom-bot
+async function getEvolutionWhatsApp() {
+  const { evolutionWhatsApp } = await import('@/lib/evolution-whatsapp');
+  return evolutionWhatsApp;
+}
 
 /**
  * GET - Get instance status and QR code
@@ -23,8 +28,10 @@ export async function GET(request: NextRequest) {
   }
   
   try {
+    const evolutionWhatsApp = await getEvolutionWhatsApp();
+    
     // Check if Evolution API is enabled
-    if (!evolutionWhatsApp.isEnabled()) {
+    if (!(await evolutionWhatsApp.isEnabled())) {
       return NextResponse.json(
         {
           success: false,
@@ -86,7 +93,9 @@ export async function POST(request: NextRequest) {
   }
   
   try {
-    if (!evolutionWhatsApp.isEnabled()) {
+    const evolutionWhatsApp = await getEvolutionWhatsApp();
+    
+    if (!(await evolutionWhatsApp.isEnabled())) {
       return NextResponse.json(
         {
           success: false,
@@ -142,10 +151,12 @@ export async function DELETE(request: NextRequest) {
   }
   
   try {
+    const evolutionWhatsApp = await getEvolutionWhatsApp();
+    
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action') || 'logout'; // 'logout' or 'delete'
 
-    if (!evolutionWhatsApp.isEnabled()) {
+    if (!(await evolutionWhatsApp.isEnabled())) {
       return NextResponse.json(
         {
           success: false,

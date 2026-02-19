@@ -3,7 +3,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { selcomClient } from '@/lib/selcom';
-import { unifiedWhatsApp } from '@/lib/unified-whatsapp';
 import { generatePaymentConfirmation } from '@/lib/templates/order-message';
 import {
   sanitizeInput,
@@ -11,6 +10,12 @@ import {
   isValidAmount,
   isValidPaymentStatus,
 } from '@/lib/security/validation';
+
+// Dynamic import to avoid bundling venom-bot
+async function getUnifiedWhatsApp() {
+  const { unifiedWhatsApp } = await import('@/lib/unified-whatsapp');
+  return unifiedWhatsApp;
+}
 
 interface SelcomWebhook {
   order_id: string;
@@ -153,14 +158,16 @@ export async function POST(request: NextRequest) {
         paymentMethod: sanitizedPaymentMethod,
       });
 
-      if (unifiedWhatsApp.isConfigured()) {
-        await unifiedWhatsApp.sendTextMessage(
-          payment_phone,
-          confirmationMessage
-        );
+      try {
+        const unifiedWhatsApp = await getUnifiedWhatsApp();
+        if (unifiedWhatsApp.isConfigured()) {
+          await unifiedWhatsApp.sendTextMessage(
+            payment_phone,
+            confirmationMessage
+          );
 
-        // Notify QM Beauty team
-        const teamMessage = `✅ *PAYMENT RECEIVED*
+          // Notify QM Beauty team
+          const teamMessage = `✅ *PAYMENT RECEIVED*
 
 Order: ${order_id}
 Amount: TZS ${amount.toLocaleString()}/=
@@ -168,9 +175,13 @@ Method: ${sanitizedPaymentMethod}
 Transaction: ${transaction_id}
 
 📦 *Action Required:* Process order for delivery`;
-        
-        const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151';
-        await unifiedWhatsApp.sendTextMessage(recipientNumber, teamMessage);
+          
+          const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151';
+          await unifiedWhatsApp.sendTextMessage(recipientNumber, teamMessage);
+        }
+      } catch (whatsappError) {
+        console.error('Failed to send WhatsApp notification:', whatsappError);
+        // Continue without failing the webhook
       }
 
       return NextResponse.json({
