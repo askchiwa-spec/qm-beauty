@@ -30,5 +30,11 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "wwebjs-server.ts",
+    "whatsapp-server.ts",
+    "ecosystem.config.js",
+    "**/*.disabled"
+  ]
 }

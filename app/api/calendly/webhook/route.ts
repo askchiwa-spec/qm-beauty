@@ -3,8 +3,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createHmac } from 'crypto';
-import { unifiedWhatsApp } from '@/lib/unified-whatsapp';
 import { generateBookingMessage } from '@/lib/templates/order-message';
+
+// Dynamic import to avoid bundling venom-bot
+async function getUnifiedWhatsApp() {
+  const { unifiedWhatsApp } = await import('@/lib/unified-whatsapp');
+  return unifiedWhatsApp;
+}
 import {
   sanitizeInput,
   isValidEmail,
@@ -154,6 +159,7 @@ export async function POST(request: NextRequest) {
         duration,
       });
 
+      const unifiedWhatsApp = await getUnifiedWhatsApp();
       if (await unifiedWhatsApp.isConfigured()) {
         const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151';
         
@@ -185,6 +191,7 @@ export async function POST(request: NextRequest) {
       // TODO: Update booking status in database to 'cancelled'
 
       // Notify team
+      const unifiedWhatsApp = await getUnifiedWhatsApp();
       if (await unifiedWhatsApp.isConfigured()) {
         const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151';
         

@@ -141,7 +141,7 @@ class WhatsAppQueueManager {
       // Import the WhatsApp client (now Venom Bot)
       const { evolutionWhatsApp } = await import('./evolution-whatsapp');
       
-      if (!evolutionWhatsApp.isEnabled()) {
+      if (!(await evolutionWhatsApp.isEnabled())) {
         throw new Error('WhatsApp not enabled or Venom Bot not connected');
       }
 
