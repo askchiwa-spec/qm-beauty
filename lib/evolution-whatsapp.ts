@@ -2,11 +2,7 @@
 // Replaces Evolution API with Venom Bot for self-hosted WhatsApp
 // Docs: https://github.com/orkestral/venom
 
-import { 
-  sendWhatsAppMessage, 
-  sendWhatsAppMedia, 
-  getConnectionStatus 
-} from './venom-whatsapp';
+// Dynamic imports to avoid bundling venom-bot in client builds
 
 interface WhatsAppMessage {
   number: string;
@@ -32,8 +28,14 @@ class VenomWhatsAppClient {
   /**
    * Check if WhatsApp is enabled and Venom Bot is connected
    */
-  isEnabled(): boolean {
-    return this.enabled && getConnectionStatus();
+  async isEnabled(): Promise<boolean> {
+    if (!this.enabled) return false;
+    try {
+      const { getConnectionStatus } = await import('./venom-whatsapp');
+      return getConnectionStatus();
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -58,17 +60,25 @@ class VenomWhatsAppClient {
    * Get instance connection status
    */
   async getInstanceStatus(): Promise<WhatsAppResponse> {
-    const isConnected = getConnectionStatus();
-    
-    return {
-      success: isConnected,
-      data: {
-        instance: {
-          instanceName: 'qm-beauty',
-          status: isConnected ? 'connected' : 'disconnected',
+    try {
+      const { getConnectionStatus } = await import('./venom-whatsapp');
+      const isConnected = getConnectionStatus();
+      
+      return {
+        success: isConnected,
+        data: {
+          instance: {
+            instanceName: 'qm-beauty',
+            status: isConnected ? 'connected' : 'disconnected',
+          },
         },
-      },
-    };
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
   }
 
   /**
@@ -90,13 +100,14 @@ class VenomWhatsAppClient {
    */
   async sendTextMessage(to: string, message: string): Promise<WhatsAppResponse> {
     try {
-      if (!this.isEnabled()) {
+      if (!this.enabled) {
         return {
           success: false,
-          error: 'WhatsApp not enabled or Venom Bot not connected',
+          error: 'WhatsApp not enabled',
         };
       }
 
+      const { sendWhatsAppMessage } = await import('./venom-whatsapp');
       await sendWhatsAppMessage(to, message);
 
       return {
@@ -121,13 +132,14 @@ class VenomWhatsAppClient {
     caption?: string
   ): Promise<WhatsAppResponse> {
     try {
-      if (!this.isEnabled()) {
+      if (!this.enabled) {
         return {
           success: false,
-          error: 'WhatsApp not enabled or Venom Bot not connected',
+          error: 'WhatsApp not enabled',
         };
       }
 
+      const { sendWhatsAppMedia } = await import('./venom-whatsapp');
       await sendWhatsAppMedia(to, mediaUrl, caption);
 
       return {
@@ -155,10 +167,10 @@ class VenomWhatsAppClient {
     address?: string
   ): Promise<WhatsAppResponse> {
     try {
-      if (!this.isEnabled()) {
+      if (!this.enabled) {
         return {
           success: false,
-          error: 'WhatsApp not enabled or Venom Bot not connected',
+          error: 'WhatsApp not enabled',
         };
       }
 
@@ -166,6 +178,7 @@ class VenomWhatsAppClient {
       const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
       const message = `📍 ${name || 'Location'}\n${address || ''}\n\n${mapsLink}`;
       
+      const { sendWhatsAppMessage } = await import('./venom-whatsapp');
       await sendWhatsAppMessage(to, message);
 
       return {
