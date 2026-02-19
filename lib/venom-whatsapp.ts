@@ -1,3 +1,4 @@
+import 'server-only';
 import { create, Whatsapp, Message } from 'venom-bot';
 import { logger } from './logging';
 
