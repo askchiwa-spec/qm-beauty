@@ -20,27 +20,38 @@ export async function initializeVenomBot(): Promise<Whatsapp> {
   try {
     logger.info('Initializing Venom Bot...');
 
-    client = await create({
-      session: 'qm-beauty-session',
-      headless: true,
-      devtools: false,
-      useChrome: false,
-      debug: false,
-      logQR: true,
-      browserArgs: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu'
-      ],
-      puppeteerOptions: {
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    client = await create(
+      'qm-beauty-session',
+      (base64Qrimg: string, asciiQR: string, attempts: number, urlCode?: string) => {
+        logger.info('QR Code generated', { attempts });
+        console.log('\n');
+        console.log(asciiQR);
+        console.log('\nScan the QR code above with your WhatsApp mobile app');
+      },
+      (statusSession: string, session: string) => {
+        logger.info('Session status changed', { statusSession, session });
+      },
+      {
+        headless: true,
+        devtools: false,
+        useChrome: false,
+        debug: false,
+        logQR: true,
+        browserArgs: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu'
+        ],
+        puppeteerOptions: {
+          args: ['--no-sandbox', '--disable-setuid-sandbox']
+        }
       }
-    });
+    );
 
     isConnected = true;
     logger.info('Venom Bot initialized successfully');
