@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
 
       try {
         const unifiedWhatsApp = await getUnifiedWhatsApp();
-        if (unifiedWhatsApp.isConfigured()) {
+        if (await unifiedWhatsApp.isConfigured()) {
           await unifiedWhatsApp.sendTextMessage(
             payment_phone,
             confirmationMessage

@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
     try {
       const unifiedWhatsApp = await getUnifiedWhatsApp();
       
-      if (unifiedWhatsApp.isConfigured()) {
+      if (await unifiedWhatsApp.isConfigured()) {
         teamResult = await unifiedWhatsApp.sendTextMessage(
           recipientNumber,
           orderMessage

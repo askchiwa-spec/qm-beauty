@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         duration,
       });
 
-      if (unifiedWhatsApp.isConfigured()) {
+      if (await unifiedWhatsApp.isConfigured()) {
         const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151';
         
         const result = await unifiedWhatsApp.sendTextMessage(
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
       // TODO: Update booking status in database to 'cancelled'
 
       // Notify team
-      if (unifiedWhatsApp.isConfigured()) {
+      if (await unifiedWhatsApp.isConfigured()) {
         const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151';
         
         const cancelMessage = `❌ *BOOKING CANCELLED*
