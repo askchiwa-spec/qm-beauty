@@ -1,3 +1,4 @@
+import "server-only";
 // WhatsApp Business Actions Handler
 // Connects WhatsApp messages to business operations
 

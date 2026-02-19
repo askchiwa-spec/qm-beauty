@@ -15,6 +15,7 @@ interface WhatsAppResponse {
   success: boolean;
   messageId?: string;
   error?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any;
 }
 
@@ -73,10 +74,11 @@ class VenomWhatsAppClient {
           },
         },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
       };
     }
   }
@@ -114,11 +116,12 @@ class VenomWhatsAppClient {
         success: true,
         messageId: `venom-${Date.now()}`,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Venom Bot - Send Message Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
       };
     }
   }
@@ -146,11 +149,12 @@ class VenomWhatsAppClient {
         success: true,
         messageId: `venom-${Date.now()}`,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Venom Bot - Send Media Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
       };
     }
   }
@@ -185,11 +189,12 @@ class VenomWhatsAppClient {
         success: true,
         messageId: `venom-${Date.now()}`,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Venom Bot - Send Location Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
       };
     }
   }
@@ -241,11 +246,12 @@ class VenomWhatsAppClient {
         success: true,
         data: { message: 'Venom Bot disconnected' },
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Venom Bot - Logout Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
       };
     }
   }

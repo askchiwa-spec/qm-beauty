@@ -1,3 +1,4 @@
+import "server-only";
 // WhatsApp Chatbot for QM Beauty
 // Handles automated responses for common customer inquiries
 

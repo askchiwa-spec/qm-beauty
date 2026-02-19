@@ -1,3 +1,4 @@
+import "server-only";
 // WhatsApp Cart Follow-up System
 // Automatically sends reminders for abandoned carts
 
