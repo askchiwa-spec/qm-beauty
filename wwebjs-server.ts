@@ -62,14 +62,14 @@ async function startBot() {
             const messageText = msg.message?.conversation || msg.message?.extendedTextMessage?.text || '';
             const from = msg.key.remoteJid;
             
-            console.log(📨 Message from \: \);
+            console.log(`📨 Message from ${from}: ${messageText}`);
             
             const lowerMsg = messageText.toLowerCase().trim();
             let reply = '';
             
             // GREETING
             if (lowerMsg === 'hi' || lowerMsg === 'hello' || lowerMsg === 'hey' || lowerMsg === 'start') {
-                reply = \👋 *Welcome to QM Beauty!*
+                reply = `👋 *Welcome to QM Beauty!*
 
 Your Natural & Organic Beauty Destination in Dar es Salaam 🌿
 
@@ -84,17 +84,17 @@ I'm your virtual assistant. Here's how I can help:
 📞 *Type "contact"* - Get in touch
 ❓ *Type "help"* - Full command list
 
-What would you like to explore?\;
+What would you like to explore?`;
             }
             
             // PRODUCTS
             else if (lowerMsg.includes('product') || lowerMsg.includes('catalog') || lowerMsg.includes('shop') || lowerMsg.includes('buy') || lowerMsg.includes('price')) {
-                let productList = products.map(p => \• *\* - \ TZS\).join('\n');
-                reply = \🛍️ *QM Beauty Product Catalog*
+                let productList = products.map(p => `• *${p.name}* - ${p.price.toLocaleString()} TZS`).join('\n');
+                reply = `🛍️ *QM Beauty Product Catalog*
 
 Our Natural & Organic Collection:
 
-\
+${productList}
 
 ✨ *All products are:*
 • 100% Natural & Organic
@@ -105,45 +105,45 @@ Our Natural & Organic Collection:
 🛒 *Shop Online:* https://qmbeauty.africa/shop
 📞 *Order via WhatsApp:* +255 657 120 151
 
-Type a product name for more details!\;
+Type a product name for more details!`;
             }
             
             // SPECIFIC PRODUCT INFO
             else if (products.some(p => lowerMsg.includes(p.name.toLowerCase()))) {
                 const product = products.find(p => lowerMsg.includes(p.name.toLowerCase()));
                 if (product) {
-                    reply = \🛍️ *\*
+                    reply = `🛍️ *${product.name}*
 
-💰 Price: \ TZS
-📁 Category: \
-✨ Benefits: \
+💰 Price: ${product.price.toLocaleString()} TZS
+📁 Category: ${product.category}
+✨ Benefits: ${product.benefits}
 
 🛒 Shop: https://qmbeauty.africa/shop
 
-Need help with your order? Just ask!\;
+Need help with your order? Just ask!`;
                 }
             }
             
             // SERVICES
             else if (lowerMsg.includes('service') || lowerMsg.includes('spa') || lowerMsg.includes('treatment')) {
-                let serviceList = services.map(s => \• *\* - \\).join('\n');
-                reply = \💇‍♀️ *QM Beauty Spa Services*
+                let serviceList = services.map(s => `• *${s.name}* - ${s.price}`).join('\n');
+                reply = `💇‍♀️ *QM Beauty Spa Services*
 
 Professional Beauty Services:
 
-\
+${serviceList}
 
 📍 *Location:* Dar es Salaam, Tanzania
 🕐 *Hours:* 8 AM - 8 PM Daily
 📅 *Book Online:* https://qmbeauty.africa/appointments
 📞 *Call/WhatsApp:* +255 657 120 151
 
-Type "book" to schedule your appointment!\;
+Type "book" to schedule your appointment!`;
             }
             
             // BOOK APPOINTMENT
             else if (lowerMsg.includes('book') || lowerMsg.includes('appointment') || lowerMsg.includes('schedule') || lowerMsg.includes('reserve')) {
-                reply = \💇‍♀️ *Book Your Beauty Appointment*
+                reply = `💇‍♀️ *Book Your Beauty Appointment*
 
 *How to Book:*
 1️⃣ Visit: https://qmbeauty.africa/appointments
@@ -162,12 +162,12 @@ Type "book" to schedule your appointment!\;
 📍 *Visit Us:* Dar es Salaam, Tanzania
 🕐 *Hours:* 8 AM - 8 PM Daily
 
-What service would you like to book?\;
+What service would you like to book?`;
             }
             
             // CART
             else if (lowerMsg.includes('cart') || lowerMsg.includes('basket') || lowerMsg.includes('bag')) {
-                reply = \🛒 *Your Shopping Cart*
+                reply = `🛒 *Your Shopping Cart*
 
 *View Your Cart:*
 👉 https://qmbeauty.africa/cart
@@ -182,12 +182,12 @@ What service would you like to book?\;
 • Order status: Type "order"
 • Contact us: Type "contact"
 
-Happy Shopping! 🛍️\;
+Happy Shopping! 🛍️`;
             }
             
             // ORDER STATUS
             else if (lowerMsg.includes('order') || lowerMsg.includes('status') || lowerMsg.includes('track') || lowerMsg.includes('delivery')) {
-                reply = \📦 *Order Status & Tracking*
+                reply = `📦 *Order Status & Tracking*
 
 *Check Your Order:*
 1. Visit: https://qmbeauty.africa/orders
@@ -204,12 +204,12 @@ Happy Shopping! 🛍️\;
 📞 *Need Help?* +255 657 120 151
 📧 *Email:* info@qmbeauty.africa
 
-Provide your order code for assistance!\;
+Provide your order code for assistance!`;
             }
             
             // PAYMENT
             else if (lowerMsg.includes('pay') || lowerMsg.includes('payment') || lowerMsg.includes('mpesa') || lowerMsg.includes('tigo') || lowerMsg.includes('airtel')) {
-                reply = \💳 *Payment Options*
+                reply = `💳 *Payment Options*
 
 We accept all major mobile money and cash:
 
@@ -231,12 +231,12 @@ https://qmbeauty.africa/checkout
 2. Select payment method at checkout
 3. Follow instructions for your chosen method
 
-Questions? Contact us: +255 657 120 151\;
+Questions? Contact us: +255 657 120 151`;
             }
             
             // CONTACT
             else if (lowerMsg.includes('contact') || lowerMsg.includes('phone') || lowerMsg.includes('address') || lowerMsg.includes('location') || lowerMsg.includes('email')) {
-                reply = \📞 *Contact QM Beauty*
+                reply = `📞 *Contact QM Beauty*
 
 *Get in Touch:*
 
@@ -255,12 +255,12 @@ Monday - Sunday: 8 AM - 8 PM
 📅 Book: https://qmbeauty.africa/appointments
 ❓ Help: Type "help"
 
-We'd love to hear from you! 💚\;
+We'd love to hear from you! 💚`;
             }
             
             // HELP
             else if (lowerMsg.includes('help') || lowerMsg.includes('support') || lowerMsg.includes('command') || lowerMsg.includes('menu')) {
-                reply = \❓ *QM Beauty Bot - Help Menu*
+                reply = `❓ *QM Beauty Bot - Help Menu*
 
 *Available Commands:*
 
@@ -285,12 +285,12 @@ We'd love to hear from you! 💚\;
 • "hours" - Business hours
 • "location" - Find us
 
-Just type any keyword and I'll help you! 🌟\;
+Just type any keyword and I'll help you! 🌟`;
             }
             
             // HOURS
             else if (lowerMsg.includes('hour') || lowerMsg.includes('time') || lowerMsg.includes('open') || lowerMsg.includes('close')) {
-                reply = \🕐 *Business Hours*
+                reply = `🕐 *Business Hours*
 
 QM Beauty is open:
 
@@ -306,12 +306,12 @@ QM Beauty is open:
 📅 https://qmbeauty.africa/appointments
 📞 +255 657 120 151
 
-Walk-ins also welcome! 💚\;
+Walk-ins also welcome! 💚`;
             }
             
             // DELIVERY/SHIPPING
             else if (lowerMsg.includes('delivery') || lowerMsg.includes('shipping') || lowerMsg.includes('dispatch')) {
-                reply = \🚚 *Delivery & Shipping*
+                reply = `🚚 *Delivery & Shipping*
 
 *Delivery Areas:*
 • Dar es Salaam: Same day / Next day
@@ -324,12 +324,12 @@ Walk-ins also welcome! 💚\;
 *Track Your Order:*
 https://qmbeauty.africa/orders
 
-Questions? Contact us: +255 657 120 151\;
+Questions? Contact us: +255 657 120 151`;
             }
             
             // DEFAULT FALLBACK
             else {
-                reply = \🤔 I didn't understand that.
+                reply = `🤔 I didn't understand that.
 
 Try these commands:
 • "products" - Browse products
@@ -337,7 +337,7 @@ Try these commands:
 • "book" - Book appointment
 • "help" - Full command list
 
-Or type "hi" to see the main menu! 👋\;
+Or type "hi" to see the main menu! 👋`;
             }
             
             if (reply && from) {
