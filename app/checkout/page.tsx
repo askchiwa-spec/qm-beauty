@@ -66,7 +66,7 @@ export default function CheckoutPage() {
     return `${price.toLocaleString()} Tsh`;
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async (): Promise<void> => {
     if (!selectedPayment) {
       alert('Please select a payment method');
       return;
