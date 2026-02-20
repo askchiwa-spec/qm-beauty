@@ -311,7 +311,7 @@ ${productList}
 Type a product name for more details!`;
             }
             
-            // SPECIFIC PRODUCT INFO
+            // SPECIFIC PRODUCT INFO - handles website inquiries
             else if (products.some(p => lowerMsg.includes(p.name.toLowerCase()))) {
                 const product = products.find(p => lowerMsg.includes(p.name.toLowerCase()));
                 if (product) {
@@ -321,9 +321,48 @@ Type a product name for more details!`;
 📁 Category: ${product.category}
 ✨ Benefits: ${product.benefits}
 
-🛒 Shop: https://qmbeauty.africa/shop
+✅ *Availability:* In Stock
+🚚 *Delivery:* 1-2 days in Dar es Salaam
+
+🛒 *Order Now:* https://qmbeauty.africa/shop
+📞 *Order via WhatsApp:* +255 657 120 151
 
 Need help with your order? Just ask!`;
+                }
+            }
+            
+            // WEBSITE PRODUCT INQUIRY - when customer asks about availability
+            else if (lowerMsg.includes('available') || lowerMsg.includes('in stock') || lowerMsg.includes('do you have') || lowerMsg.includes('can i get')) {
+                // Check if any product name is mentioned
+                const mentionedProduct = products.find(p => lowerMsg.includes(p.name.toLowerCase()));
+                if (mentionedProduct) {
+                    reply = `✅ *Yes, ${mentionedProduct.name} is available!*
+
+💰 Price: ${mentionedProduct.price.toLocaleString()} TZS
+📁 Category: ${mentionedProduct.category}
+✨ ${mentionedProduct.benefits}
+
+🛒 *Order Now:* https://qmbeauty.africa/shop
+📞 *WhatsApp Order:* +255 657 120 151
+🚚 *Delivery:* 1-2 days in Dar es Salaam
+
+Would you like to place an order?`;
+                } else {
+                    reply = `✅ *Yes, we have products in stock!*
+
+🛍️ Browse our catalog: https://qmbeauty.africa/shop
+
+Our products:
+• Carrot Oil - 25,000 TZS
+• Coconut Oil - 25,000-35,000 TZS
+• Body Butter - 100,000 TZS
+• Herbal Hair Oil - 30,000 TZS
+• Hair Relaxer - 55,000 TZS
+• Nail Care Set - 30,000 TZS
+
+📞 Order: +255 657 120 151
+
+Which product are you interested in?`;
                 }
             }
             
