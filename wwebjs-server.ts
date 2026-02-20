@@ -29,6 +29,27 @@ const services = [
     { name: 'Massage Therapy', duration: '60-90 min', price: 'From 60,000 TZS', description: 'Relaxation, deep tissue, aromatherapy' }
 ];
 
+// Conversation state management for onboarding
+const userSessions: Map<string, { step: string; data: any }> = new Map();
+
+// Available time slots
+const timeSlots = [
+    '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+    '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM'
+];
+
+// Available dates (next 7 days)
+function getAvailableDates(): string[] {
+    const dates = [];
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        dates.push(date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
+    }
+    return dates;
+}
+
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState('baileys-auth');
     
@@ -67,6 +88,116 @@ async function startBot() {
             const lowerMsg = messageText.toLowerCase().trim();
             let reply = '';
             
+            // Get or create user session
+            const userId = from;
+            let session = userSessions.get(userId);
+            
+            // Handle conversation flow for booking onboarding
+            if (session) {
+                // User is in a booking flow
+                if (session.step === 'select_service') {
+                    const serviceNum = parseInt(messageText.trim());
+                    if (serviceNum >= 1 && serviceNum <= services.length) {
+                        session.data.service = services[serviceNum - 1];
+                        session.step = 'select_date';
+                        const dates = getAvailableDates();
+                        reply = `✅ *${session.data.service.name}* selected!
+
+📅 *Select a date:*
+${dates.map((d, i) => `${i + 1}. ${d}`).join('\n')}
+
+Reply with the number (1-7):`;
+                    } else {
+                        reply = `❌ Invalid selection. Please reply with a number 1-${services.length}`;
+                    }
+                }
+                else if (session.step === 'select_date') {
+                    const dateNum = parseInt(messageText.trim());
+                    const dates = getAvailableDates();
+                    if (dateNum >= 1 && dateNum <= dates.length) {
+                        session.data.date = dates[dateNum - 1];
+                        session.step = 'select_time';
+                        reply = `✅ *${session.data.date}* selected!
+
+🕐 *Select a time:*
+${timeSlots.map((t, i) => `${i + 1}. ${t}`).join('\n')}
+
+Reply with the number (1-${timeSlots.length}):`;
+                    } else {
+                        reply = `❌ Invalid selection. Please reply with a number 1-${dates.length}`;
+                    }
+                }
+                else if (session.step === 'select_time') {
+                    const timeNum = parseInt(messageText.trim());
+                    if (timeNum >= 1 && timeNum <= timeSlots.length) {
+                        session.data.time = timeSlots[timeNum - 1];
+                        session.step = 'confirm_name';
+                        reply = `✅ *${session.data.time}* selected!
+
+👤 *Please enter your name:*
+
+(Reply with your full name)`;
+                    } else {
+                        reply = `❌ Invalid selection. Please reply with a number 1-${timeSlots.length}`;
+                    }
+                }
+                else if (session.step === 'confirm_name') {
+                    session.data.name = messageText.trim();
+                    session.step = 'confirm_phone';
+                    reply = `✅ Thank you, *${session.data.name}*!
+
+📞 *Please confirm your phone number:*
+
+(Reply with your phone number)`;
+                }
+                else if (session.step === 'confirm_phone') {
+                    session.data.phone = messageText.trim();
+                    session.step = 'final_confirm';
+                    reply = `📋 *Booking Summary:*
+
+💇‍♀️ *Service:* ${session.data.service.name}
+📅 *Date:* ${session.data.date}
+🕐 *Time:* ${session.data.time}
+👤 *Name:* ${session.data.name}
+📞 *Phone:* ${session.data.phone}
+💰 *Price:* ${session.data.service.price}
+
+✅ Reply *CONFIRM* to complete booking
+❌ Reply *CANCEL* to start over`;
+                }
+                else if (session.step === 'final_confirm') {
+                    if (lowerMsg === 'confirm') {
+                        reply = `🎉 *Booking Confirmed!*
+
+💇‍♀️ *Service:* ${session.data.service.name}
+📅 *Date:* ${session.data.date}
+🕐 *Time:* ${session.data.time}
+👤 *Name:* ${session.data.name}
+📞 *Phone:* ${session.data.phone}
+
+📍 *Location:* Dar es Salaam
+🕐 *Please arrive 10 minutes early*
+
+*Booking Reference:* QB-APT-${Date.now().toString().slice(-6)}
+
+We'll send you a reminder before your appointment!
+
+Need anything else? Type "help"`;
+                        userSessions.delete(userId);
+                    } else if (lowerMsg === 'cancel') {
+                        reply = `❌ Booking cancelled. Type "book" to start again.`;
+                        userSessions.delete(userId);
+                    } else {
+                        reply = `Please reply *CONFIRM* to complete or *CANCEL* to start over.`;
+                    }
+                }
+                
+                if (reply) {
+                    try { await sock.sendMessage(from, { text: reply }); console.log('✅ Replied'); } catch (e) {}
+                    return; // Exit after handling session
+                }
+            }
+            
             // GREETING - exact matches first
             if (lowerMsg === 'hi' || lowerMsg === 'hello' || lowerMsg === 'hey' || lowerMsg === 'start') {
                 reply = `👋 *Welcome to QM Beauty!*
@@ -77,7 +208,7 @@ I'm your virtual assistant. Here's how I can help:
 
 🛍️ *Type "products"* - Browse our catalog
 📅 *Type "services"* - View spa services
-💇 *Type "book"* - Book an appointment
+💇 *Type "book"* - Book an appointment (NEW: Full WhatsApp booking!)
 🛒 *Type "cart"* - Shopping cart info
 📦 *Type "order"* - Check order status
 💳 *Type "payment"* - Payment options
@@ -124,30 +255,19 @@ ${serviceList}
 Type "book" to schedule your appointment!`;
             }
             
-            // BOOK APPOINTMENT
+            // BOOK APPOINTMENT - Start WhatsApp onboarding flow
             else if (lowerMsg === 'book' || lowerMsg === 'appointment' || lowerMsg === 'schedule' || lowerMsg === 'reserve' || lowerMsg === 'booking') {
+                // Start the booking session
+                userSessions.set(userId, { step: 'select_service', data: {} });
+                
                 reply = `💇‍♀️ *Book Your Beauty Appointment*
 
-✅ *Slots Available Today!*
+✅ *Quick WhatsApp Booking*
 
-*How to Book:*
-1️⃣ Visit: https://qmbeauty.africa/appointments
-2️⃣ Select your preferred service
-3️⃣ Choose date & time
-4️⃣ Confirm your booking
+*Select a service:*
+${services.map((s, i) => `${i + 1}. *${s.name}*\n   💰 ${s.price} | ⏱️ ${s.duration}`).join('\n')}
 
-*Our Services:*
-• Facial Treatments (60-90 min) - 50,000 TZS
-• Hair Styling & Treatment (60-120 min) - 40,000 TZS
-• Nail Care (30-60 min) - 25,000 TZS
-• Waxing Services (30-90 min) - 30,000 TZS
-• Massage Therapy (60-90 min) - 60,000 TZS
-
-📞 *Quick Booking:* +255 657 120 151
-📍 *Visit Us:* Dar es Salaam, Tanzania
-🕐 *Hours:* 8 AM - 8 PM Daily
-
-What service would you like to book?`;
+Reply with the number (1-${services.length}):`;
             }
             
             // SERVICE AVAILABILITY INQUIRY
