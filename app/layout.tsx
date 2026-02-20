@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import Cart from "@/components/cart/Cart";
 import { CartProvider } from "@/lib/cartContext";
+import ImagePreloader from "./ImagePreloader";
 
 const cormorant = Cormorant_Garamond({
   weight: ['300', '400', '500', '600', '700'],
@@ -61,6 +62,7 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         <CartProvider>
+          <ImagePreloader />
           <Header />
           <main>{children}</main>
           <Footer />

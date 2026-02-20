@@ -30,6 +30,8 @@ export default function ProductCard({ product }: ProductCardProps) {
               fill
               className="object-contain p-4"
               sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              loading="lazy"
+              quality={75}
               onError={(e) => {
                 // Fallback if image fails to load
                 e.currentTarget.style.display = 'none';
