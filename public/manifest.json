@@ -1,0 +1,16 @@
+{
+  "name": "QM Beauty",
+  "short_name": "QM Beauty",
+  "description": "Natural & Organic Cosmetics | Spa Services in Dar es Salaam",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf7f2",
+  "theme_color": "#1e2a2b",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
