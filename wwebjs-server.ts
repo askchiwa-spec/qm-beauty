@@ -49,8 +49,12 @@ const validTriggers = [
     'services', 'service', 'spa', 'treatment',
     'cart', 'order', 'payment', 'pay', 'mpesa', 'tigo', 'airtel',
     'contact', 'phone', 'help', 'support',
-    'hours', 'delivery', 'available', 'stock'
+    'hours', 'delivery', 'available', 'stock',
+    'bye', 'goodbye', 'done', 'exit', 'quit', 'stop', 'end', 'thank', 'thanks'
 ];
+
+// Words to close/end conversation
+const closeWords = ['bye', 'goodbye', 'done', 'exit', 'quit', 'stop', 'end', 'thank', 'thanks'];
 
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState('baileys-auth');
@@ -95,6 +99,7 @@ async function startBot() {
         }
         
         const lower = text.toLowerCase().trim();
+        let reply = '';
         
         // Check if should respond
         const hasSession = sessions[from] !== undefined;
@@ -102,13 +107,26 @@ async function startBot() {
         const isNumber = /^[0-9]+$/.test(text.trim());
         const isConfirm = lower === 'confirm' || lower === 'cancel';
         
+        // Handle conversation closing
+        const isClosing = closeWords.some(w => lower.includes(w));
+        if (isClosing) {
+            if (hasSession) {
+                delete sessions[from];
+                reply = `👋 *Goodbye!*\n\nYour booking has been cancelled.\n\nType "hi" anytime to chat again or visit: qmbeauty.africa`;
+            } else {
+                reply = `👋 *Thank you for chatting with QM Beauty!* 💚\n\nWe're here anytime you need us:\n📞 +255 657 120 151\n🌐 qmbeauty.africa\n\nType "hi" to start again.`;
+            }
+            await sock.sendMessage(from, { text: reply });
+            console.log('✅ Replied: Goodbye');
+            return;
+        }
+        
         if (!hasSession && !hasTrigger && !isNumber && !isConfirm) {
             console.log(`⏩ Skipped: "${text}" - no valid trigger`);
             return;
         }
         
         console.log(`📨 ${from}: ${text}`);
-        let reply = '';
         
         // Handle active session
         if (sessions[from]) {
