@@ -67,7 +67,7 @@ async function startBot() {
             const lowerMsg = messageText.toLowerCase().trim();
             let reply = '';
             
-            // GREETING
+            // GREETING - exact matches first
             if (lowerMsg === 'hi' || lowerMsg === 'hello' || lowerMsg === 'hey' || lowerMsg === 'start') {
                 reply = `👋 *Welcome to QM Beauty!*
 
@@ -87,8 +87,211 @@ I'm your virtual assistant. Here's how I can help:
 What would you like to explore?`;
             }
             
-            // PRODUCTS
-            else if (lowerMsg.includes('product') || lowerMsg.includes('catalog') || lowerMsg.includes('shop') || lowerMsg.includes('buy') || lowerMsg.includes('price')) {
+            // CART - check before product (cart contains no product names)
+            else if (lowerMsg === 'cart' || lowerMsg === 'basket' || lowerMsg === 'bag' || lowerMsg === 'my cart') {
+                reply = `🛒 *Your Shopping Cart*
+
+*View Your Cart:*
+👉 https://qmbeauty.africa/cart
+
+*Quick Actions:*
+• Browse products: Type "products"
+• Continue shopping: https://qmbeauty.africa/shop
+• Checkout: https://qmbeauty.africa/checkout
+
+*Need Help?*
+• Payment options: Type "payment"
+• Order status: Type "order"
+• Contact us: Type "contact"
+
+Happy Shopping! 🛍️`;
+            }
+            
+            // SERVICES - check before product
+            else if (lowerMsg === 'services' || lowerMsg === 'service' || lowerMsg === 'spa' || lowerMsg === 'treatment' || lowerMsg === 'treatments') {
+                let serviceList = services.map(s => `• *${s.name}* - ${s.price}`).join('\n');
+                reply = `💇‍♀️ *QM Beauty Spa Services*
+
+Professional Beauty Services:
+
+${serviceList}
+
+📍 *Location:* Dar es Salaam, Tanzania
+🕐 *Hours:* 8 AM - 8 PM Daily
+📅 *Book Online:* https://qmbeauty.africa/appointments
+📞 *Call/WhatsApp:* +255 657 120 151
+
+Type "book" to schedule your appointment!`;
+            }
+            
+            // BOOK APPOINTMENT
+            else if (lowerMsg === 'book' || lowerMsg === 'appointment' || lowerMsg === 'schedule' || lowerMsg === 'reserve' || lowerMsg === 'booking') {
+                reply = `💇‍♀️ *Book Your Beauty Appointment*
+
+*How to Book:*
+1️⃣ Visit: https://qmbeauty.africa/appointments
+2️⃣ Select your preferred service
+3️⃣ Choose date & time
+4️⃣ Confirm your booking
+
+*Our Services:*
+• Facial Treatments (60-90 min)
+• Hair Styling & Treatment (60-120 min)
+• Nail Care (30-60 min)
+• Waxing Services (30-90 min)
+• Massage Therapy (60-90 min)
+
+📞 *Quick Booking:* +255 657 120 151
+📍 *Visit Us:* Dar es Salaam, Tanzania
+🕐 *Hours:* 8 AM - 8 PM Daily
+
+What service would you like to book?`;
+            }
+            
+            // ORDER STATUS
+            else if (lowerMsg === 'order' || lowerMsg === 'orders' || lowerMsg === 'status' || lowerMsg === 'track' || lowerMsg === 'tracking') {
+                reply = `📦 *Order Status & Tracking*
+
+*Check Your Order:*
+1. Visit: https://qmbeauty.africa/orders
+2. Enter your order code (e.g., QB-123456)
+3. View real-time status
+
+*Order Codes start with:* QB-
+
+*Shipping Information:*
+• Dar es Salaam: 1-2 business days
+• Other regions: 2-4 business days
+• Free delivery on orders over 100,000 TZS
+
+📞 *Need Help?* +255 657 120 151
+📧 *Email:* info@qmbeauty.africa
+
+Provide your order code for assistance!`;
+            }
+            
+            // PAYMENT
+            else if (lowerMsg === 'payment' || lowerMsg === 'pay' || lowerMsg === 'mpesa' || lowerMsg === 'tigo' || lowerMsg === 'airtel' || lowerMsg === 'halopesa' || lowerMsg === 'mobile money') {
+                reply = `💳 *Payment Options*
+
+We accept all major mobile money and cash:
+
+📱 *Mobile Money:*
+• M-Pesa
+• Tigo Pesa
+• Airtel Money
+• HaloPesa
+
+💵 *Cash on Delivery*
+• Available in Dar es Salaam
+• Pay when you receive
+
+🔒 *Secure Checkout:*
+https://qmbeauty.africa/checkout
+
+*How to Pay:*
+1. Add products to cart
+2. Select payment method at checkout
+3. Follow instructions for your chosen method
+
+Questions? Contact us: +255 657 120 151`;
+            }
+            
+            // CONTACT
+            else if (lowerMsg === 'contact' || lowerMsg === 'phone' || lowerMsg === 'address' || lowerMsg === 'location' || lowerMsg === 'email' || lowerMsg === 'call') {
+                reply = `📞 *Contact QM Beauty*
+
+*Get in Touch:*
+
+📱 *WhatsApp:* +255 657 120 151
+📧 *Email:* info@qmbeauty.africa
+🌐 *Website:* https://qmbeauty.africa
+
+📍 *Visit Us:*
+Dar es Salaam, Tanzania
+
+🕐 *Business Hours:*
+Monday - Sunday: 8 AM - 8 PM
+
+*Quick Links:*
+🛍️ Shop: https://qmbeauty.africa/shop
+📅 Book: https://qmbeauty.africa/appointments
+❓ Help: Type "help"
+
+We'd love to hear from you! 💚`;
+            }
+            
+            // HELP
+            else if (lowerMsg === 'help' || lowerMsg === 'support' || lowerMsg === 'commands' || lowerMsg === 'menu') {
+                reply = `❓ *QM Beauty Bot - Help Menu*
+
+*Available Commands:*
+
+🛍️ *Shopping*
+• "products" - Browse catalog
+• "carrot oil" - Product details
+• "cart" - View cart
+• "order" - Check order status
+
+💇‍♀️ *Services*
+• "services" - View spa services
+• "book" - Book appointment
+• "facial" - Service details
+
+💳 *Orders & Payment*
+• "payment" - Payment options
+• "mpesa" - Mobile money info
+• "delivery" - Shipping info
+
+📞 *Support*
+• "contact" - Contact info
+• "hours" - Business hours
+• "location" - Find us
+
+Just type any keyword and I'll help you! 🌟`;
+            }
+            
+            // HOURS
+            else if (lowerMsg === 'hours' || lowerMsg === 'hour' || lowerMsg === 'time' || lowerMsg === 'open' || lowerMsg === 'close' || lowerMsg === 'timing') {
+                reply = `🕐 *Business Hours*
+
+QM Beauty is open:
+
+*Monday - Sunday:*
+8:00 AM - 8:00 PM
+
+*Best times to visit:*
+• Morning: 9 AM - 12 PM (Less crowded)
+• Afternoon: 2 PM - 5 PM
+• Evening: 5 PM - 8 PM
+
+*Book your appointment:*
+📅 https://qmbeauty.africa/appointments
+📞 +255 657 120 151
+
+Walk-ins also welcome! 💚`;
+            }
+            
+            // DELIVERY/SHIPPING
+            else if (lowerMsg === 'delivery' || lowerMsg === 'shipping' || lowerMsg === 'dispatch' || lowerMsg === 'ship') {
+                reply = `🚚 *Delivery & Shipping*
+
+*Delivery Areas:*
+• Dar es Salaam: Same day / Next day
+• Other regions: 2-4 business days
+
+*Delivery Fees:*
+• Dar es Salaam: 5,000 TZS
+• Free delivery on orders over 100,000 TZS
+
+*Track Your Order:*
+https://qmbeauty.africa/orders
+
+Questions? Contact us: +255 657 120 151`;
+            }
+            
+            // PRODUCTS - contains checks (must be after exact matches)
+            else if (lowerMsg.includes('product') || lowerMsg.includes('catalog') || lowerMsg.includes('shop') || lowerMsg.includes('buy') || lowerMsg.includes('price') || lowerMsg.includes('item')) {
                 let productList = products.map(p => `• *${p.name}* - ${p.price.toLocaleString()} TZS`).join('\n');
                 reply = `🛍️ *QM Beauty Product Catalog*
 
@@ -122,209 +325,6 @@ Type a product name for more details!`;
 
 Need help with your order? Just ask!`;
                 }
-            }
-            
-            // SERVICES
-            else if (lowerMsg.includes('service') || lowerMsg.includes('spa') || lowerMsg.includes('treatment')) {
-                let serviceList = services.map(s => `• *${s.name}* - ${s.price}`).join('\n');
-                reply = `💇‍♀️ *QM Beauty Spa Services*
-
-Professional Beauty Services:
-
-${serviceList}
-
-📍 *Location:* Dar es Salaam, Tanzania
-🕐 *Hours:* 8 AM - 8 PM Daily
-📅 *Book Online:* https://qmbeauty.africa/appointments
-📞 *Call/WhatsApp:* +255 657 120 151
-
-Type "book" to schedule your appointment!`;
-            }
-            
-            // BOOK APPOINTMENT
-            else if (lowerMsg.includes('book') || lowerMsg.includes('appointment') || lowerMsg.includes('schedule') || lowerMsg.includes('reserve')) {
-                reply = `💇‍♀️ *Book Your Beauty Appointment*
-
-*How to Book:*
-1️⃣ Visit: https://qmbeauty.africa/appointments
-2️⃣ Select your preferred service
-3️⃣ Choose date & time
-4️⃣ Confirm your booking
-
-*Our Services:*
-• Facial Treatments (60-90 min)
-• Hair Styling & Treatment (60-120 min)
-• Nail Care (30-60 min)
-• Waxing Services (30-90 min)
-• Massage Therapy (60-90 min)
-
-📞 *Quick Booking:* +255 657 120 151
-📍 *Visit Us:* Dar es Salaam, Tanzania
-🕐 *Hours:* 8 AM - 8 PM Daily
-
-What service would you like to book?`;
-            }
-            
-            // CART
-            else if (lowerMsg.includes('cart') || lowerMsg.includes('basket') || lowerMsg.includes('bag')) {
-                reply = `🛒 *Your Shopping Cart*
-
-*View Your Cart:*
-👉 https://qmbeauty.africa/cart
-
-*Quick Actions:*
-• Browse products: Type "products"
-• Continue shopping: https://qmbeauty.africa/shop
-• Checkout: https://qmbeauty.africa/checkout
-
-*Need Help?*
-• Payment options: Type "payment"
-• Order status: Type "order"
-• Contact us: Type "contact"
-
-Happy Shopping! 🛍️`;
-            }
-            
-            // ORDER STATUS
-            else if (lowerMsg.includes('order') || lowerMsg.includes('status') || lowerMsg.includes('track') || lowerMsg.includes('delivery')) {
-                reply = `📦 *Order Status & Tracking*
-
-*Check Your Order:*
-1. Visit: https://qmbeauty.africa/orders
-2. Enter your order code (e.g., QB-123456)
-3. View real-time status
-
-*Order Codes start with:* QB-
-
-*Shipping Information:*
-• Dar es Salaam: 1-2 business days
-• Other regions: 2-4 business days
-• Free delivery on orders over 100,000 TZS
-
-📞 *Need Help?* +255 657 120 151
-📧 *Email:* info@qmbeauty.africa
-
-Provide your order code for assistance!`;
-            }
-            
-            // PAYMENT
-            else if (lowerMsg.includes('pay') || lowerMsg.includes('payment') || lowerMsg.includes('mpesa') || lowerMsg.includes('tigo') || lowerMsg.includes('airtel')) {
-                reply = `💳 *Payment Options*
-
-We accept all major mobile money and cash:
-
-📱 *Mobile Money:*
-• M-Pesa
-• Tigo Pesa
-• Airtel Money
-• HaloPesa
-
-💵 *Cash on Delivery*
-• Available in Dar es Salaam
-• Pay when you receive
-
-🔒 *Secure Checkout:*
-https://qmbeauty.africa/checkout
-
-*How to Pay:*
-1. Add products to cart
-2. Select payment method at checkout
-3. Follow instructions for your chosen method
-
-Questions? Contact us: +255 657 120 151`;
-            }
-            
-            // CONTACT
-            else if (lowerMsg.includes('contact') || lowerMsg.includes('phone') || lowerMsg.includes('address') || lowerMsg.includes('location') || lowerMsg.includes('email')) {
-                reply = `📞 *Contact QM Beauty*
-
-*Get in Touch:*
-
-📱 *WhatsApp:* +255 657 120 151
-📧 *Email:* info@qmbeauty.africa
-🌐 *Website:* https://qmbeauty.africa
-
-📍 *Visit Us:*
-Dar es Salaam, Tanzania
-
-🕐 *Business Hours:*
-Monday - Sunday: 8 AM - 8 PM
-
-*Quick Links:*
-🛍️ Shop: https://qmbeauty.africa/shop
-📅 Book: https://qmbeauty.africa/appointments
-❓ Help: Type "help"
-
-We'd love to hear from you! 💚`;
-            }
-            
-            // HELP
-            else if (lowerMsg.includes('help') || lowerMsg.includes('support') || lowerMsg.includes('command') || lowerMsg.includes('menu')) {
-                reply = `❓ *QM Beauty Bot - Help Menu*
-
-*Available Commands:*
-
-🛍️ *Shopping*
-• "products" - Browse catalog
-• "carrot oil" - Product details
-• "cart" - View cart
-• "order" - Check order status
-
-💇‍♀️ *Services*
-• "services" - View spa services
-• "book" - Book appointment
-• "facial" - Service details
-
-💳 *Orders & Payment*
-• "payment" - Payment options
-• "mpesa" - Mobile money info
-• "delivery" - Shipping info
-
-📞 *Support*
-• "contact" - Contact info
-• "hours" - Business hours
-• "location" - Find us
-
-Just type any keyword and I'll help you! 🌟`;
-            }
-            
-            // HOURS
-            else if (lowerMsg.includes('hour') || lowerMsg.includes('time') || lowerMsg.includes('open') || lowerMsg.includes('close')) {
-                reply = `🕐 *Business Hours*
-
-QM Beauty is open:
-
-*Monday - Sunday:*
-8:00 AM - 8:00 PM
-
-*Best times to visit:*
-• Morning: 9 AM - 12 PM (Less crowded)
-• Afternoon: 2 PM - 5 PM
-• Evening: 5 PM - 8 PM
-
-*Book your appointment:*
-📅 https://qmbeauty.africa/appointments
-📞 +255 657 120 151
-
-Walk-ins also welcome! 💚`;
-            }
-            
-            // DELIVERY/SHIPPING
-            else if (lowerMsg.includes('delivery') || lowerMsg.includes('shipping') || lowerMsg.includes('dispatch')) {
-                reply = `🚚 *Delivery & Shipping*
-
-*Delivery Areas:*
-• Dar es Salaam: Same day / Next day
-• Other regions: 2-4 business days
-
-*Delivery Fees:*
-• Dar es Salaam: 5,000 TZS
-• Free delivery on orders over 100,000 TZS
-
-*Track Your Order:*
-https://qmbeauty.africa/orders
-
-Questions? Contact us: +255 657 120 151`;
             }
             
             // DEFAULT FALLBACK
