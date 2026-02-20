@@ -128,6 +128,8 @@ Type "book" to schedule your appointment!`;
             else if (lowerMsg === 'book' || lowerMsg === 'appointment' || lowerMsg === 'schedule' || lowerMsg === 'reserve' || lowerMsg === 'booking') {
                 reply = `💇‍♀️ *Book Your Beauty Appointment*
 
+✅ *Slots Available Today!*
+
 *How to Book:*
 1️⃣ Visit: https://qmbeauty.africa/appointments
 2️⃣ Select your preferred service
@@ -135,14 +137,32 @@ Type "book" to schedule your appointment!`;
 4️⃣ Confirm your booking
 
 *Our Services:*
-• Facial Treatments (60-90 min)
-• Hair Styling & Treatment (60-120 min)
-• Nail Care (30-60 min)
-• Waxing Services (30-90 min)
-• Massage Therapy (60-90 min)
+• Facial Treatments (60-90 min) - 50,000 TZS
+• Hair Styling & Treatment (60-120 min) - 40,000 TZS
+• Nail Care (30-60 min) - 25,000 TZS
+• Waxing Services (30-90 min) - 30,000 TZS
+• Massage Therapy (60-90 min) - 60,000 TZS
 
 📞 *Quick Booking:* +255 657 120 151
 📍 *Visit Us:* Dar es Salaam, Tanzania
+🕐 *Hours:* 8 AM - 8 PM Daily
+
+What service would you like to book?`;
+            }
+            
+            // SERVICE AVAILABILITY INQUIRY
+            else if ((lowerMsg.includes('available') || lowerMsg.includes('can i book') || lowerMsg.includes('do you have slot') || lowerMsg.includes('is there space')) && (lowerMsg.includes('facial') || lowerMsg.includes('hair') || lowerMsg.includes('nail') || lowerMsg.includes('waxing') || lowerMsg.includes('massage') || lowerMsg.includes('appointment') || lowerMsg.includes('service'))) {
+                reply = `✅ *Yes, we have appointment slots available!*
+
+💇‍♀️ *Available Services:*
+• Facial Treatments - 50,000 TZS
+• Hair Styling & Treatment - 40,000 TZS
+• Nail Care - 25,000 TZS
+• Waxing Services - 30,000 TZS
+• Massage Therapy - 60,000 TZS
+
+📅 *Book Now:* https://qmbeauty.africa/appointments
+📞 *Quick Booking:* +255 657 120 151
 🕐 *Hours:* 8 AM - 8 PM Daily
 
 What service would you like to book?`;
