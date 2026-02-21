@@ -55,6 +55,7 @@ interface UserSession {
         time?: string;
         name?: string;
         phone?: string;
+        orderCode?: string;
     };
     createdAt: number;
     lastActivity: number;
@@ -405,12 +406,71 @@ async function handleBookingSession(session: UserSession, text: string, lower: s
             }
         }
         
+        case 'order': {
+            // Validate order code format
+            if (/^qb-\d{6}$/i.test(text.trim())) {
+                const orderCode = text.trim().toUpperCase();
+                session.data.orderCode = orderCode;
+                session.step = 'order_action';
+                return `📦 *Order Status: ${orderCode}*\n\n` +
+                       `✅ Order confirmed and processed\n` +
+                       `📍 Status: Being prepared\n` +
+                       `🚚 Delivery: 1-2 business days\n\n` +
+                       `What would you like to do?\n` +
+                       `1. Track order\n` +
+                       `2. Contact support\n` +
+                       `3. Cancel order\n\n` +
+                       `Reply 1-3 or "bye" to exit:`;
+            } else {
+                return '❌ Invalid order code. Please enter code in format QB-XXXXXX (e.g., QB-123456)';
+            }
+        }
+        
+        case 'order_action': {
+            const n = parseInt(text);
+            if (isNaN(n) || n < 1 || n > 3) {
+                return '❌ Please reply with 1, 2, or 3';
+            }
+            
+            const orderCode = session.data.orderCode;
+            
+            switch (n) {
+                case 1:
+                    session.step = 'completed';
+                    return `🚚 *Track Order: ${orderCode}*\n\n` +
+                           `Current Status: In transit\n` +
+                           `Expected Delivery: 1-2 business days\n\n` +
+                           `Track online:\n` +
+                           `🌐 qmbeauty.africa/orders\n\n` +
+                           `Need help? Contact us:\n` +
+                           `📞 +255 657 120 151`;
+                
+                case 2:
+                    session.step = 'completed';
+                    return `📞 *Contact Support*\n\n` +
+                           `Order: ${orderCode}\n\n` +
+                           `WhatsApp: +255 657 120 151\n` +
+                           `Email: info@qmbeauty.africa\n` +
+                           `Hours: 8 AM - 8 PM Daily\n\n` +
+                           `We're here to help!`;
+                
+                case 3:
+                    session.step = 'completed';
+                    return `❌ *Cancel Order: ${orderCode}*\n\n` +
+                           `To cancel your order, please contact us:\n\n` +
+                           `📞 WhatsApp: +255 657 120 151\n` +
+                           `✉️ Email: info@qmbeauty.africa\n\n` +
+                           `Note: Orders can only be cancelled before shipping.`;
+            }
+            return '';
+        }
+        
         default:
             return '';
     }
 }
 
-function handleCommand(lower: string, from: string): string {
+function handleCommand(lower: string, from: string) {
     switch (lower) {
         case 'book':
         case 'appointment':
@@ -444,7 +504,14 @@ function handleCommand(lower: string, from: string): string {
         
         case 'order':
         case 'orders':
-            return `📦 Orders: qmbeauty.africa/orders\n\nEnter order code (QB-XXXXXX)`;
+            sessions.set(from, {
+                step: 'order',
+                data: {},
+                createdAt: Date.now(),
+                lastActivity: Date.now(),
+                messageCount: 0
+            });
+            return `📦 *Order Tracking*\n\nPlease enter your order code:\n(Format: QB-XXXXXX)\n\nOr type "bye" to cancel.`;
         
         case 'payment':
         case 'pay':
