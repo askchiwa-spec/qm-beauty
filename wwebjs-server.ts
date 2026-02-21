@@ -307,8 +307,9 @@ async function handleMessage(sock: any, m: any): Promise<void> {
     const hasTrigger = validTriggers.some(t => lower.includes(t));
     const isNumber = /^[0-9]+$/.test(text);
     const isConfirm = lower === 'confirm' || lower === 'cancel';
+    const isOrderCode = /^qb-\d{6}$/i.test(text.trim());
     
-    if (!hasSession && !hasTrigger && !isNumber && !isConfirm) {
+    if (!hasSession && !hasTrigger && !isNumber && !isConfirm && !isOrderCode) {
         console.log(`⏩ Skipped: "${text}" - no valid trigger`);
         return;
     }
@@ -462,6 +463,19 @@ function handleCommand(lower: string, from: string): string {
             return `🚚 Delivery:\n• Dar: 1-2 days (5K TZS)\n• Free over 100K TZS\n• Other: 2-4 days\n\nTrack: qmbeauty.africa/orders`;
         
         default: {
+            // Check for order code (QB-XXXXXX format)
+            if (/^qb-\d{6}$/i.test(lower)) {
+                const orderCode = lower.toUpperCase();
+                return `📦 *Order Status: ${orderCode}*\n\n` +
+                       `✅ Order confirmed and processed\n` +
+                       `📍 Status: Being prepared\n` +
+                       `🚚 Delivery: 1-2 business days\n\n` +
+                       `Track your order:\n` +
+                       `🌐 qmbeauty.africa/orders\n\n` +
+                       `Need help? Contact us:\n` +
+                       `📞 +255 657 120 151`;
+            }
+            
             // Check for product mentions
             const product = products.find(p => lower.includes(p.name.toLowerCase()));
             if (product) {
