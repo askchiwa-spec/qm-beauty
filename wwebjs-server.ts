@@ -481,11 +481,31 @@ function handleCommand(lower: string, from: string) {
                 lastActivity: Date.now(),
                 messageCount: 0
             });
-            return `💇 *Book Appointment*\n\nSelect service:\n1. Facial - 50K\n2. Hair Styling - 40K\n3. Nail Care - 25K\n4. Waxing - 30K\n5. Massage - 60K\n\nReply 1-5 or "bye" to cancel:`;
+            return [
+                '💇 *Book Appointment*',
+                '',
+                'Select service:',
+                '1. Facial — 50K',
+                '2. Hair — 40K',
+                '3. Nails — 25K',
+                '4. Waxing — 30K',
+                '5. Massage — 60K',
+                '',
+                'Reply with a number (1–5) or type "bye" to cancel:'
+            ].join('\n');
         
         case 'hi':
         case 'hello':
-            return `👋 Welcome to QM Beauty!\n\n🛍️ Products\n📅 Book Appointment\n💳 Payment Options\n📞 +255 657 120 151\n\nType "help" for commands or "bye" to exit.`;
+            return [
+                '👋 Welcome to QM Beauty!',
+                '',
+                '🛍️ Products',
+                '📅 Book Appointment',
+                '💳 Payment Options',
+                '📞 +255 657 120 151',
+                '',
+                'Type "help" for commands or "bye" to exit.'
+            ].join('\n');
         
         case 'products':
         case 'product': {
@@ -521,7 +541,18 @@ function handleCommand(lower: string, from: string) {
             return `📞 Contact:\nWhatsApp: +255 657 120 151\nEmail: info@qmbeauty.africa\nHours: 8 AM - 8 PM Daily`;
         
         case 'help':
-            return `❓ Commands:\n• book - Book appointment\n• products - Catalog\n• services - Services\n• cart - View cart\n• order - Check order\n• payment - Payment options\n• contact - Contact info\n• bye - Exit chat`;
+            return [
+                '❓ *Commands*',
+                '',
+                '• book — Book appointment',
+                '• products — Catalog',
+                '• services — Services',
+                '• cart — View cart',
+                '• order — Check order',
+                '• payment — Payment options',
+                '• contact — Contact info',
+                '• bye — Exit chat'
+            ].join('\n');
         
         case 'hours':
             return `🕐 Hours: 8 AM - 8 PM Daily\n\nBook: qmbeauty.africa/appointments`;
