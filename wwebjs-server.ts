@@ -234,11 +234,27 @@ async function handleMessage(sock: any, m: any): Promise<void> {
     
     const from = msg.key.remoteJid as string;
     
-    // SECURITY: Only respond to individual chats
-    if (!from || !from.endsWith('@s.whatsapp.net')) {
-        console.log(`⏩ Skipped: ${from} (not direct chat)`);
+    // SECURITY: Detect chat type and log decision
+    const isStatus = from === 'status@broadcast';
+    const isNewsletter = from?.endsWith('@newsletter');
+    const isGroup = from?.endsWith('@g.us');
+    const isDirect = from?.endsWith('@s.whatsapp.net') || from?.endsWith('@lid');
+    
+    console.log(`📨 Incoming: ${from} | Type: ${isStatus ? 'status' : isNewsletter ? 'newsletter' : isGroup ? 'group' : isDirect ? 'direct' : 'unknown'}`);
+    
+    // Skip status, newsletter, and group chats
+    if (isStatus || isNewsletter || isGroup) {
+        console.log(`⏩ Skipped: ${from} (${isStatus ? 'status' : isNewsletter ? 'newsletter' : 'group'})`);
         return;
     }
+    
+    // SECURITY: Only respond to direct chats (individual users)
+    if (!isDirect) {
+        console.log(`⏩ Skipped: ${from} (not direct chat - unknown format)`);
+        return;
+    }
+    
+    console.log(`✅ Processing: ${from} (direct chat)`);
     
     // SECURITY: Rate limiting
     if (!checkRateLimit(from)) {
