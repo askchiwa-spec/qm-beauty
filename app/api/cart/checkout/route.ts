@@ -21,7 +21,7 @@ async function getUnifiedWhatsApp() {
 }
 
 interface CheckoutRequest {
-  cartId: string;
+  cartId?: string;
   customerName: string;
   customerPhone: string;
   customerEmail?: string;
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const sanitizedDeliveryAddress = deliveryAddress ? sanitizeInput(deliveryAddress) : undefined;
     
     // Validation
-    if (!cartId || !sanitizedCustomerName || !customerPhone || !items || !totalAmount) {
+    if (!sanitizedCustomerName || !customerPhone || !items || !totalAmount) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -121,10 +121,18 @@ export async function POST(request: NextRequest) {
 
     // Create order in database
     try {
+      // Ensure a Cart record exists for the FK constraint
+      const resolvedCartId = cartId || crypto.randomUUID();
+      await prisma.cart.upsert({
+        where: { id: resolvedCartId },
+        create: { id: resolvedCartId, totalAmount, status: 'submitted' },
+        update: { status: 'submitted' },
+      });
+
       const order = await prisma.order.create({
         data: {
           orderCode,
-          cartId,
+          cartId: resolvedCartId,
           customerName: sanitizedCustomerName,
           customerPhone,
           customerEmail: sanitizedCustomerEmail || null,

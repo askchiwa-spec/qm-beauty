@@ -1,6 +1,6 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 
-const BOT_API_KEY = process.env.BOT_API_KEY || 'dev-key-change-in-production';
+const BOT_API_KEY = process.env.BOT_API_KEY || 'qm-bot-secret-key';
 
 // Services are hardcoded to match website
 const services = [
@@ -58,11 +58,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  console.log([BOT API] Services fetched:  items);
+  console.log(`[BOT API] Services fetched: ${services.length} items`);
 
   return NextResponse.json({
     success: true,
     count: services.length,
-    services
+    items: services
   });
 }

@@ -720,5 +720,36 @@ app.listen(PORT, () => {
     console.log(`📋 Message logs: http://localhost:${PORT}/logs`);
 });
 
+// ============================================================================
+// PROCESS-LEVEL ERROR HANDLERS
+// Baileys WebSocket stream errors (TransformError, NetworkError) bubble up as
+// uncaught exceptions and crash the process. Catch them here and reconnect.
+// ============================================================================
+
+process.on('uncaughtException', (error: Error) => {
+    console.error(`[${new Date().toISOString()}] ❌ Uncaught Exception: ${error.name}: ${error.message}`);
+
+    const isStreamError = error.name === 'TransformError'
+        || error.name === 'NetworkError'
+        || error.message.includes('TransformError')
+        || error.message.includes('stream')
+        || error.message.includes('WebSocket');
+
+    if (isStreamError) {
+        console.log('🔄 Stream/network error — restarting bot in 5s...');
+        reconnectAttempts = 0;
+        isConnected = false;
+        sock = null;
+        setTimeout(() => startBot(), 5000);
+    } else {
+        console.error('💀 Non-recoverable error — process exiting.');
+        process.exit(1);
+    }
+});
+
+process.on('unhandledRejection', (reason: any) => {
+    console.error(`[${new Date().toISOString()}] ⚠️ Unhandled Rejection:`, reason?.message || reason);
+});
+
 // Start bot
 startBot();

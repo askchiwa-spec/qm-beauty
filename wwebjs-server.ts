@@ -1,651 +1,589 @@
-﻿/**
- * QM Beauty WhatsApp Bot - Production Ready
- * Security Hardened & Penetration Tested
- * Version: 2.0.0
- */
-
-import { makeWASocket, DisconnectReason, useMultiFileAuthState } from '@whiskeysockets/baileys';
-import express, { Request, Response } from 'express';
-import cors from 'cors';
+﻿import { makeWASocket, DisconnectReason, useMultiFileAuthState, delay } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 
 const QRCode = require('qrcode-terminal');
 
-// ============================================================================
-// SECURITY CONFIGURATION
-// ============================================================================
+// Configuration - use localhost for internal API
+const API_BASE_URL = 'http://localhost:3000';
+const BOT_API_KEY = process.env.BOT_API_KEY || 'qm-bot-secret-key';
+const CACHE_TTL = 5 * 60 * 1000;
 
-const SECURITY_CONFIG = {
-    // Rate limiting
-    MAX_MESSAGES_PER_MINUTE: 30,
-    MAX_MESSAGES_PER_HOUR: 200,
-    SESSION_TIMEOUT_MS: 30 * 60 * 1000, // 30 minutes
-    
-    // Input validation
-    MAX_MESSAGE_LENGTH: 500,
-    MAX_NAME_LENGTH: 50,
-    MAX_PHONE_LENGTH: 20,
-    
-    // Allowed origins for CORS
-    ALLOWED_ORIGINS: ['https://qmbeauty.africa', 'http://localhost:3000'],
-};
+// Cache
+let cachedProducts: any[] = [];
+let cachedServices: any[] = [];
+let cacheTime: number = 0;
 
-// ============================================================================
-// DATA STRUCTURES
-// ============================================================================
-
-interface Product {
-    name: string;
-    price: number;
-    category: string;
-    benefits: string;
+// Conversation states
+enum State {
+  MAIN_MENU = 'MAIN_MENU',
+  BOOKING_SERVICE = 'BOOKING_SERVICE',
+  BOOKING_DATE = 'BOOKING_DATE',
+  BOOKING_TIME = 'BOOKING_TIME',
+  BOOKING_NAME = 'BOOKING_NAME',
+  BOOKING_PHONE = 'BOOKING_PHONE',
+  BOOKING_CONFIRM = 'BOOKING_CONFIRM',
+  PRODUCTS_LIST = 'PRODUCTS_LIST',
+  PRODUCT_DETAIL = 'PRODUCT_DETAIL',
+  SERVICES_LIST = 'SERVICES_LIST',
 }
 
-interface Service {
-    name: string;
-    duration: string;
-    price: string;
+// User conversation state
+interface UserState {
+  state: State;
+  data: any;
 }
 
-interface UserSession {
-    step: string;
-    data: {
-        service?: Service;
-        date?: string;
-        time?: string;
-        name?: string;
-        phone?: string;
-        orderCode?: string;
-    };
-    createdAt: number;
-    lastActivity: number;
-    messageCount: number;
-}
+const userStates: Map<string, UserState> = new Map();
 
-interface RateLimit {
-    count: number;
-    resetTime: number;
-}
-
-const products: Product[] = [
-    { name: 'Carrot Oil', price: 25000, category: 'Hair Care', benefits: 'Promotes hair growth' },
-    { name: 'Coconut Oil (Pure)', price: 35000, category: 'Hair Care', benefits: 'Deep conditioning' },
-    { name: 'Coconut Oil (Regular)', price: 25000, category: 'Hair Care', benefits: 'Daily hair care' },
-    { name: 'Herbal Hair Oil', price: 30000, category: 'Hair Care', benefits: 'Strengthens roots' },
-    { name: 'Body Butter', price: 100000, category: 'Body Care', benefits: 'Deep hydration' },
-    { name: 'Hair Relaxer & Treatment', price: 55000, category: 'Hair Care', benefits: 'Smooth hair' },
-    { name: 'Nail Care Set', price: 30000, category: 'Nail Care', benefits: 'Complete nail care' }
+// Booking services
+const BOOKING_SERVICES = [
+  { id: '1', name: 'Luxury Facial Treatment', price: '70,000 TZS', duration: '75 min' },
+  { id: '2', name: 'Hair Treatments & Relaxer', price: '45,000 TZS', duration: '90 min' },
+  { id: '3', name: 'Nails (Manicure & Pedicure)', price: '30,000 TZS', duration: '75 min' },
+  { id: '4', name: 'QM Waxing', price: '25,000 TZS', duration: '45 min' },
+  { id: '5', name: 'Full Body Massage', price: '85,000 TZS', duration: '120 min' }
 ];
 
-const services: Service[] = [
-    { name: 'Facial Treatments', duration: '60-90 min', price: '50,000 TZS' },
-    { name: 'Hair Styling & Treatment', duration: '60-120 min', price: '40,000 TZS' },
-    { name: 'Nail Care', duration: '30-60 min', price: '25,000 TZS' },
-    { name: 'Waxing Services', duration: '30-90 min', price: '30,000 TZS' },
-    { name: 'Massage Therapy', duration: '60-90 min', price: '60,000 TZS' }
-];
+const DATE_OPTIONS = ['Today', 'Tomorrow', 'In 2 days', 'In 3 days', 'In 4 days', 'In 5 days', 'In 6 days'];
+const TIME_OPTIONS = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'];
 
-const timeSlots: string[] = [
-    '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
-    '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM'
-];
+let sock: any = null;
 
-// ============================================================================
-// SESSION & RATE LIMITING STORAGE
-// ============================================================================
+// ============ API FUNCTIONS ============
 
-const sessions: Map<string, UserSession> = new Map();
-const rateLimits: Map<string, RateLimit> = new Map();
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
-function getDates(): string[] {
-    const dates: string[] = [];
-    const today = new Date();
-    for (let i = 0; i < 7; i++) {
-        const d = new Date(today);
-        d.setDate(today.getDate() + i);
-        dates.push(d.toDateString().slice(0, 10));
-    }
-    return dates;
-}
-
-// SECURITY: Input sanitization
-function sanitizeInput(input: string): string {
-    return input
-        .replace(/[<>]/g, '') // Remove HTML tags
-        .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
-        .trim();
-}
-
-// SECURITY: Validate phone number format
-function isValidPhone(phone: string): boolean {
-    const cleanPhone = phone.replace(/\s/g, '').replace(/-/g, '');
-    return /^[\+]?[\d]{10,15}$/.test(cleanPhone);
-}
-
-// SECURITY: Validate name (no special chars, reasonable length)
-function isValidName(name: string): boolean {
-    return /^[a-zA-Z\s'-]{2,50}$/.test(name);
-}
-
-// SECURITY: Rate limiting check
-function checkRateLimit(userId: string): boolean {
-    const now = Date.now();
-    const limit = rateLimits.get(userId);
-    
-    if (!limit || now > limit.resetTime) {
-        rateLimits.set(userId, {
-            count: 1,
-            resetTime: now + 60000 // 1 minute
-        });
-        return true;
-    }
-    
-    if (limit.count >= SECURITY_CONFIG.MAX_MESSAGES_PER_MINUTE) {
-        return false;
-    }
-    
-    limit.count++;
-    return true;
-}
-
-// SECURITY: Clean up expired sessions
-function cleanupSessions(): void {
-    const now = Date.now();
-    for (const [userId, session] of sessions.entries()) {
-        if (now - session.lastActivity > SECURITY_CONFIG.SESSION_TIMEOUT_MS) {
-            sessions.delete(userId);
-            console.log(`🧹 Cleaned up expired session for ${userId}`);
-        }
-    }
-}
-
-// Run cleanup every 5 minutes
-setInterval(cleanupSessions, 5 * 60 * 1000);
-
-// ============================================================================
-// MESSAGE HANDLING
-// ============================================================================
-
-const validTriggers: string[] = [
-    'hi', 'hello', 'hey', 'start',
-    'book', 'appointment', 'schedule', 'reserve',
-    'products', 'product', 'shop', 'buy', 'price',
-    'services', 'service', 'spa', 'treatment',
-    'cart', 'order', 'payment', 'pay', 'mpesa', 'tigo', 'airtel',
-    'contact', 'phone', 'help', 'support',
-    'hours', 'delivery', 'available', 'stock',
-    'bye', 'goodbye', 'done', 'exit', 'quit', 'stop', 'end', 'thank', 'thanks'
-];
-
-const closeWords: string[] = ['bye', 'goodbye', 'done', 'exit', 'quit', 'stop', 'end', 'thank', 'thanks'];
-
-// ============================================================================
-// BOT INITIALIZATION
-// ============================================================================
-
-async function startBot(): Promise<void> {
-    const { state, saveCreds } = await useMultiFileAuthState('baileys-auth');
-    const sock = makeWASocket({ 
-        auth: state, 
-        printQRInTerminal: false,
-        // SECURITY: Connection limits
-        connectTimeoutMs: 60000,
-        keepAliveIntervalMs: 30000
+async function fetchFromAPI(endpoint: string): Promise<any> {
+  const url = API_BASE_URL + '/api/bot/' + endpoint;
+  console.log('[API] URL: ' + url);
+  
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'x-bot-api-key': BOT_API_KEY,
+        'Content-Type': 'application/json'
+      }
     });
+
+    const contentType = response.headers.get('content-type') || 'unknown';
+    const status = response.status;
+    console.log('[API] Status: ' + status + ', Type: ' + contentType);
+
+    if (!contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('[API] Not JSON: ' + text.substring(0, 80));
+      throw new Error('Not JSON');
+    }
+
+    const data = await response.json();
+    console.log('[API] OK: ' + (data.count || 0) + ' items [SOURCE] api');
+    return data;
     
-    sock.ev.on('creds.update', saveCreds);
-    
-    sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect, qr } = update;
-        
-        if (qr) { 
-            console.log('📱 Scan QR:'); 
-            QRCode.generate(qr, { small: true }); 
-        }
-        
-        if (connection === 'close') {
-            const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('⚠️ Connection closed, reconnecting:', shouldReconnect);
-            if (shouldReconnect) startBot();
-        } else if (connection === 'open') {
-            console.log('✅ WhatsApp ready!');
-        }
-    });
-    
-    // SECURITY: Error handling wrapper
-    sock.ev.on('messages.upsert', async (m) => {
-        try {
-            await handleMessage(sock, m);
-        } catch (error) {
-            console.error('❌ Error handling message:', error);
-        }
-    });
+  } catch (error: any) {
+    console.error('[API] Error: ' + error.message + ' [SOURCE] fallback');
+    throw error;
+  }
 }
 
-async function handleMessage(sock: any, m: any): Promise<void> {
+function isCacheValid(): boolean {
+  return cacheTime > 0 && (Date.now() - cacheTime) < CACHE_TTL;
+}
+
+async function getProducts(): Promise<{ items: any[]; source: string }> {
+  console.log('[CACHE] Checking products...');
+  
+  if (isCacheValid() && cachedProducts.length > 0) {
+    console.log('[CACHE] Using cached (' + cachedProducts.length + ') [SOURCE] cache');
+    return { items: cachedProducts, source: 'cache' };
+  }
+  
+  try {
+    const data = await fetchFromAPI('products');
+    if (data.items && data.items.length > 0) {
+      cachedProducts = data.items;
+      cacheTime = Date.now();
+      return { items: cachedProducts, source: 'api' };
+    }
+    throw new Error('Empty');
+  } catch (error: any) {
+    if (cachedProducts.length > 0) {
+      return { items: cachedProducts, source: 'stale-cache' };
+    }
+    return { items: [], source: 'fallback' };
+  }
+}
+
+async function getServices(): Promise<{ items: any[]; source: string }> {
+  console.log('[CACHE] Checking services...');
+  
+  if (isCacheValid() && cachedServices.length > 0) {
+    console.log('[CACHE] Using cached (' + cachedServices.length + ') [SOURCE] cache');
+    return { items: cachedServices, source: 'cache' };
+  }
+  
+  try {
+    const data = await fetchFromAPI('services');
+    if (data.items && data.items.length > 0) {
+      cachedServices = data.items;
+      cacheTime = Date.now();
+      return { items: cachedServices, source: 'api' };
+    }
+    throw new Error('Empty');
+  } catch (error: any) {
+    if (cachedServices.length > 0) {
+      return { items: cachedServices, source: 'stale-cache' };
+    }
+    return { items: [], source: 'fallback' };
+  }
+}
+
+// ============ STATE MANAGEMENT ============
+
+function clearUserState(jid: string) {
+  userStates.delete(jid);
+}
+
+function setUserState(jid: string, state: State, data: any = {}) {
+  userStates.set(jid, { state, data });
+  console.log('[STATE] ' + jid.substring(0, 15) + ' -> ' + state);
+}
+
+function getUserState(jid: string): UserState | undefined {
+  return userStates.get(jid);
+}
+
+// ============ MESSAGE SENDING ============
+
+async function sendReply(jid: string, text: string) {
+  try {
+    await sock.sendPresenceUpdate('composing', jid);
+    await delay(300);
+    await sock.sendMessage(jid, { text: text });
+    await sock.sendPresenceUpdate('paused', jid);
+  } catch (err: any) {
+    console.error('[SEND] Error: ' + err.message);
+  }
+}
+
+// ============ MAIN MENU ============
+
+async function sendMainMenu(jid: string) {
+  const prod = await getProducts();
+  const svc = await getServices();
+  
+  const menu = '👋 Welcome to QM Beauty!\n\n' +
+    '🛍️ Products: ' + prod.items.length + ' (' + prod.source + ')\n' +
+    '💇 Services: ' + svc.items.length + ' (' + svc.source + ')\n\n' +
+    'Commands:\n' +
+    '• PRODUCTS - View products\n' +
+    '• SERVICES - View services\n' +
+    '• BOOK - Book appointment\n' +
+    '• ORDER - Track order\n' +
+    '• PAYMENT - Payment info\n' +
+    '• HELP - Contact info\n\n' +
+    '📞 +255 657 120 151';
+  
+  setUserState(jid, State.MAIN_MENU, {});
+  await sendReply(jid, menu);
+}
+
+// ============ MAIN MESSAGE HANDLER ============
+
+async function handleMessage(jid: string, text: string) {
+  const userState = getUserState(jid);
+  const upperText = text.toUpperCase().trim();
+  const currentState = userState?.state || State.MAIN_MENU;
+  
+  console.log('[MSG] ' + jid.substring(0, 15) + ' | "' + text + '" | State: ' + currentState);
+  
+  // Global commands - work in ANY state
+  if (upperText === 'M' || upperText === 'MENU' || upperText === 'MAIN') {
+    clearUserState(jid);
+    await sendMainMenu(jid);
+    return;
+  }
+  
+  if (upperText === 'CANCEL' || upperText === 'C') {
+    clearUserState(jid);
+    await sendReply(jid, '❌ Cancelled.\n\nReply M for Main Menu');
+    return;
+  }
+  
+  // Route by STATE - numeric input only works in specific states
+  switch (currentState) {
+    case State.MAIN_MENU:
+      await handleMainMenuInput(jid, text);
+      break;
+    case State.BOOKING_SERVICE:
+      await handleBookingService(jid, text);
+      break;
+    case State.BOOKING_DATE:
+      await handleBookingDate(jid, text);
+      break;
+    case State.BOOKING_TIME:
+      await handleBookingTime(jid, text);
+      break;
+    case State.BOOKING_NAME:
+      await handleBookingName(jid, text);
+      break;
+    case State.BOOKING_PHONE:
+      await handleBookingPhone(jid, text);
+      break;
+    case State.BOOKING_CONFIRM:
+      await handleBookingConfirm(jid, text);
+      break;
+    case State.PRODUCTS_LIST:
+      await handleProductsList(jid, text);
+      break;
+    case State.SERVICES_LIST:
+      await handleServicesList(jid, text);
+      break;
+    default:
+      await sendMainMenu(jid);
+  }
+}
+
+// ============ MAIN MENU INPUTS ============
+
+async function handleMainMenuInput(jid: string, text: string) {
+  const upperText = text.toUpperCase().trim();
+  
+  if (upperText === 'PRODUCTS' || upperText === 'PRODUCT') {
+    setUserState(jid, State.PRODUCTS_LIST, { page: 0 });
+    await showProductsList(jid);
+  } else if (upperText === 'SERVICES' || upperText === 'SERVICE') {
+    setUserState(jid, State.SERVICES_LIST, { page: 0 });
+    await showServicesList(jid);
+  } else if (upperText === 'BOOK' || upperText === 'BOOKING') {
+    setUserState(jid, State.BOOKING_SERVICE, {});
+    await showBookingServices(jid);
+  } else if (upperText === 'ORDER') {
+    await sendReply(jid, '📦 Order Tracking\n\nProvide order number (e.g., QB-123456)\n\nqmbeauty.africa/orders\n\nReply M for Main Menu');
+  } else if (upperText === 'PAYMENT') {
+    await sendReply(jid, '💳 Payment Options\n\n• M-Pesa\n• Tigo Pesa\n• Airtel Money\n• Cash on Delivery\n\nqmbeauty.africa/checkout\n\nReply M for Main Menu');
+  } else if (upperText === 'HELP' || upperText === 'CONTACT') {
+    await sendReply(jid, '📞 Contact\n\nWhatsApp: +255 657 120 151\nEmail: info@qmbeauty.africa\nWebsite: qmbeauty.africa\n\nReply M for Main Menu');
+  } else {
+    await sendReply(jid, '❓ Unknown. Try: PRODUCTS, SERVICES, BOOK, HELP\n\nReply M for Main Menu');
+  }
+}
+
+// ============ BOOKING FLOW ============
+
+async function showBookingServices(jid: string) {
+  let msg = '💇 Book Appointment\n\nSelect service (1-5):\n\n';
+  BOOKING_SERVICES.forEach(s => {
+    msg += s.id + '. ' + s.name + '\n   💰 ' + s.price + ' | ⏱ ' + s.duration + '\n';
+  });
+  msg += '\n📝 Reply 1-5\n⬅️ Reply M';
+  await sendReply(jid, msg);
+}
+
+async function handleBookingService(jid: string, text: string) {
+  const num = parseInt(text.trim());
+  if (isNaN(num) || num < 1 || num > 5) {
+    await sendReply(jid, '❌ Invalid. Reply 1-5');
+    return;
+  }
+  
+  const service = BOOKING_SERVICES[num - 1];
+  setUserState(jid, State.BOOKING_DATE, { service: service });
+  
+  let msg = '✅ ' + service.name + '\n💰 ' + service.price + '\n\nSelect date (1-7):\n\n';
+  DATE_OPTIONS.forEach((d, i) => msg += (i + 1) + '. ' + d + '\n');
+  msg += '\n📝 Reply 1-7';
+  await sendReply(jid, msg);
+}
+
+async function handleBookingDate(jid: string, text: string) {
+  const num = parseInt(text.trim());
+  const state = getUserState(jid);
+  
+  if (isNaN(num) || num < 1 || num > 7) {
+    await sendReply(jid, '❌ Invalid date. Reply 1-7');
+    return;
+  }
+  
+  const date = DATE_OPTIONS[num - 1];
+  setUserState(jid, State.BOOKING_TIME, { 
+    service: state?.data.service,
+    date: date 
+  });
+  
+  let msg = '📅 ' + date + '\n\nSelect time:\n\n';
+  TIME_OPTIONS.forEach((t, i) => msg += (i + 1) + '. ' + t + '\n');
+  msg += '\n📝 Reply 1-8';
+  await sendReply(jid, msg);
+}
+
+async function handleBookingTime(jid: string, text: string) {
+  const num = parseInt(text.trim());
+  const state = getUserState(jid);
+  
+  if (isNaN(num) || num < 1 || num > 8) {
+    await sendReply(jid, '❌ Invalid time. Reply 1-8');
+    return;
+  }
+  
+  const time = TIME_OPTIONS[num - 1];
+  setUserState(jid, State.BOOKING_NAME, { 
+    service: state?.data.service,
+    date: state?.data.date,
+    time: time
+  });
+  
+  await sendReply(jid, '⏰ ' + time + '\n\n📝 Enter your NAME:\n\nReply M to cancel');
+}
+
+async function handleBookingName(jid: string, text: string) {
+  const name = text.trim();
+  if (name.length < 2) {
+    await sendReply(jid, '❌ Invalid name. Enter your full name.');
+    return;
+  }
+  
+  const state = getUserState(jid);
+  setUserState(jid, State.BOOKING_PHONE, { 
+    service: state?.data.service,
+    date: state?.data.date,
+    time: state?.data.time,
+    name: name
+  });
+  
+  await sendReply(jid, '✅ ' + name + '\n\n📱 Your number: +255717939999\n\nReply:\n1 - Confirm\n2 - Enter different');
+}
+
+async function handleBookingPhone(jid: string, text: string) {
+  const choice = text.trim();
+  const state = getUserState(jid);
+  
+  if (choice === '1') {
+    const phone = '+255717939999';
+    setUserState(jid, State.BOOKING_CONFIRM, { 
+      service: state?.data.service,
+      date: state?.data.date,
+      time: state?.data.time,
+      name: state?.data.name,
+      phone: phone
+    });
+    await showBookingConfirmation(jid);
+  } else if (choice === '2') {
+    await sendReply(jid, '📝 Enter your phone number:');
+  } else {
+    await sendReply(jid, '❌ Reply 1 or 2');
+  }
+}
+
+async function showBookingConfirmation(jid: string) {
+  const s = getUserState(jid)?.data;
+  const msg = '📋 Booking Summary:\n\n' +
+    '💇 ' + s?.service?.name + '\n' +
+    '📅 ' + s?.date + '\n' +
+    '⏰ ' + s?.time + '\n' +
+    '👤 ' + s?.name + '\n' +
+    '📱 ' + s?.phone + '\n\n' +
+    'Reply 1 - ✅ Confirm\nReply 2 - ❌ Cancel';
+  
+  await sendReply(jid, msg);
+}
+
+async function handleBookingConfirm(jid: string, text: string) {
+  const choice = text.trim();
+  
+  if (choice === '1') {
+    const s = getUserState(jid)?.data;
+    const bookingId = 'QB-' + Date.now().toString().slice(-6);
+    
+    const msg = '🎉 Booking Confirmed!\n\n' +
+      '📋 ID: ' + bookingId + '\n\n' +
+      '💇 ' + s?.service?.name + '\n' +
+      '📅 ' + s?.date + ' at ' + s?.time + '\n\n' +
+      'We will contact you at ' + s?.phone + '\n\n' +
+      'Reply M for Main Menu';
+    
+    console.log('[BOOKING] ' + bookingId + ' | ' + s?.service?.name + ' | ' + s?.name);
+    clearUserState(jid);
+    await sendReply(jid, msg);
+    
+  } else if (choice === '2') {
+    clearUserState(jid);
+    await sendReply(jid, '❌ Cancelled.\n\nReply M for Main Menu');
+  } else {
+    await sendReply(jid, '❌ Reply 1 or 2');
+  }
+}
+
+// ============ PRODUCTS FLOW ============
+
+async function showProductsList(jid: string) {
+  const { items, source } = await getProducts();
+  const state = getUserState(jid);
+  const page = state?.data?.page || 0;
+  const perPage = 7;
+  const start = page * perPage;
+  const end = start + perPage;
+  const pageItems = items.slice(start, end);
+  const totalPages = Math.ceil(items.length / perPage);
+  
+  let msg = '🛍️ Products (' + items.length + ' - ' + source + ')\n\n';
+  
+  pageItems.forEach((p: any, i: number) => {
+    msg += (start + i + 1) + '. ' + p.name + '\n   💰 ' + p.price.toLocaleString() + ' TZS\n';
+  });
+  
+  msg += '\n';
+  if (end < items.length) msg += 'Reply N - Next\n';
+  if (page > 0) msg += 'Reply P - Previous\n';
+  msg += 'Reply M - Main Menu';
+  
+  await sendReply(jid, msg);
+}
+
+async function handleProductsList(jid: string, text: string) {
+  const upperText = text.toUpperCase().trim();
+  const state = getUserState(jid);
+  const page = state?.data?.page || 0;
+  
+  if (upperText === 'N' || upperText === 'NEXT') {
+    setUserState(jid, State.PRODUCTS_LIST, { page: page + 1 });
+    await showProductsList(jid);
+  } else if (upperText === 'P' || upperText === 'PREV' || upperText === 'PREVIOUS') {
+    if (page > 0) {
+      setUserState(jid, State.PRODUCTS_LIST, { page: page - 1 });
+      await showProductsList(jid);
+    } else {
+      await sendReply(jid, '❌ Already at first page.');
+    }
+  } else {
+    // Numeric input - show product detail
+    const { items } = await getProducts();
+    const num = parseInt(text.trim());
+    const perPage = 7;
+    const start = page * perPage;
+    
+    if (!isNaN(num) && num >= 1 && num <= items.length) {
+      const p = items[num - 1];
+      const msg = '✅ ' + p.name + '\n\n' +
+        '💰 ' + p.price.toLocaleString() + ' TZS\n' +
+        '📁 ' + p.category + '\n\n' +
+        (p.description || '') + '\n\n' +
+        '🛒 qmbeauty.africa/product/' + p.slug + '\n\n' +
+        'Reply M for more options';
+      
+      setUserState(jid, State.MAIN_MENU, {});
+      await sendReply(jid, msg);
+    } else {
+      await sendReply(jid, '❌ Invalid. Reply N/P or product number.');
+    }
+  }
+}
+
+// ============ SERVICES FLOW ============
+
+async function showServicesList(jid: string) {
+  const { items, source } = await getServices();
+  
+  let msg = '💇 Services (' + items.length + ' - ' + source + ')\n\n';
+  
+  items.slice(0, 10).forEach((s: any, i: number) => {
+    msg += (i + 1) + '. ' + s.name + '\n   💰 ' + s.price + '\n';
+  });
+  
+  if (items.length > 10) {
+    msg += '\n... and ' + (items.length - 10) + ' more';
+  }
+  
+  msg += '\n\n🗓️ qmbeauty.africa/services\n\nReply M for Main Menu';
+  
+  await sendReply(jid, msg);
+}
+
+async function handleServicesList(jid: string, text: string) {
+  await showServicesList(jid);
+}
+
+// ============ BOT STARTUP ============
+
+async function startBot() {
+  console.log('[' + new Date().toISOString() + '] Starting QM Beauty Bot');
+  console.log('[' + new Date().toISOString() + '] API: ' + API_BASE_URL);
+  
+  await getProducts();
+  await getServices();
+  
+  const { state, saveCreds } = await useMultiFileAuthState('baileys-auth');
+  
+  sock = makeWASocket({
+    auth: state,
+    printQRInTerminal: true,
+    browser: ['Mac OS', 'Chrome', '14.4.1'],
+    syncFullHistory: false,
+  });
+
+  sock.ev.on('creds.update', saveCreds);
+  
+  sock.ev.on('connection.update', (update: any) => {
+    const { connection, lastDisconnect, qr } = update;
+    
+    if (qr) {
+      console.log('\n[' + new Date().toISOString() + '] QR Code:');
+      QRCode.generate(qr, { small: true });
+    }
+    
+    if (connection === 'close') {
+      const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
+      console.log('[' + new Date().toISOString() + '] Closed: ' + statusCode);
+      if (statusCode !== DisconnectReason.loggedOut) {
+        setTimeout(startBot, 5000);
+      }
+    } else if (connection === 'open') {
+      console.log('[' + new Date().toISOString() + '] ✅ Connected!');
+    }
+  });
+
+  sock.ev.on('messages.upsert', async (m: any) => {
     const msg = m.messages[0];
+    if (msg.key.fromMe) return;
     
-    // Skip if from me or not a notification
-    if (msg.key.fromMe || m.type !== 'notify') return;
+    const from = msg.key.remoteJid;
+    if (!from) return;
     
-    const from = msg.key.remoteJid as string;
-    
-    // SECURITY: Detect chat type and log decision
-    const isStatus = from === 'status@broadcast';
-    const isNewsletter = from?.endsWith('@newsletter');
-    const isGroup = from?.endsWith('@g.us');
-    const isDirect = from?.endsWith('@s.whatsapp.net') || from?.endsWith('@lid');
-    
-    console.log(`📨 Incoming: ${from} | Type: ${isStatus ? 'status' : isNewsletter ? 'newsletter' : isGroup ? 'group' : isDirect ? 'direct' : 'unknown'}`);
-    
-    // Skip status, newsletter, and group chats
-    if (isStatus || isNewsletter || isGroup) {
-        console.log(`⏩ Skipped: ${from} (${isStatus ? 'status' : isNewsletter ? 'newsletter' : 'group'})`);
-        return;
+    // Skip groups, status, newsletter
+    if (from.endsWith('@g.us') || from === 'status@broadcast' || from.endsWith('@newsletter')) {
+      return;
     }
     
-    // SECURITY: Only respond to direct chats (individual users)
-    if (!isDirect) {
-        console.log(`⏩ Skipped: ${from} (not direct chat - unknown format)`);
-        return;
-    }
+    const text = (msg.message?.conversation || msg.message?.extendedTextMessage?.text || '').trim();
+    if (!text) return;
     
-    console.log(`✅ Processing: ${from} (direct chat)`);
-    
-    // SECURITY: Rate limiting
-    if (!checkRateLimit(from)) {
-        console.log(`🚫 Rate limit exceeded for ${from}`);
-        await sock.sendMessage(from, { 
-            text: `⏳ Please wait a moment before sending more messages.` 
-        });
-        return;
-    }
-    
-    // Extract and sanitize text
-    let text = msg.message?.conversation || 
-               msg.message?.extendedTextMessage?.text || 
-               msg.message?.imageMessage?.caption || '';
-    
-    // SECURITY: Input length validation
-    if (text.length > SECURITY_CONFIG.MAX_MESSAGE_LENGTH) {
-        text = text.substring(0, SECURITY_CONFIG.MAX_MESSAGE_LENGTH);
-    }
-    
-    // SECURITY: Sanitize input
-    text = sanitizeInput(text);
-    
-    // Skip empty messages
-    if (!text || text.length === 0) {
-        console.log(`⏩ Skipped: Empty message from ${from}`);
-        return;
-    }
-    
-    const lower = text.toLowerCase().trim();
-    let reply = '';
-    
-    // Get or create session
-    let session = sessions.get(from);
-    const hasSession = session !== undefined;
-    
-    // Update session activity
-    if (session) {
-        session.lastActivity = Date.now();
-        session.messageCount++;
-    }
-    
-    // SECURITY: Session message limit
-    if (session && session.messageCount > 50) {
-        sessions.delete(from);
-        await sock.sendMessage(from, { 
-            text: `⚠️ Session expired due to too many messages. Type "book" to restart.` 
-        });
-        return;
-    }
-    
-    // Handle conversation closing
-    const isClosing = closeWords.some(w => lower.includes(w));
-    if (isClosing) {
-        if (hasSession) {
-            sessions.delete(from);
-            reply = `👋 *Goodbye!*\n\nYour booking has been cancelled.\n\nType "hi" anytime to chat again or visit: qmbeauty.africa`;
-        } else {
-            reply = `👋 *Thank you for chatting with QM Beauty!* 💚\n\nWe're here anytime you need us:\n📞 +255 657 120 151\n🌐 qmbeauty.africa\n\nType "hi" to start again.`;
-        }
-        await sock.sendMessage(from, { text: reply });
-        console.log('✅ Replied: Goodbye');
-        return;
-    }
-    
-    // Check triggers
-    const hasTrigger = validTriggers.some(t => lower.includes(t));
-    const isNumber = /^[0-9]+$/.test(text);
-    const isConfirm = lower === 'confirm' || lower === 'cancel';
-    const isOrderCode = /^qb-\d{6}$/i.test(text.trim());
-    
-    if (!hasSession && !hasTrigger && !isNumber && !isConfirm && !isOrderCode) {
-        console.log(`⏩ Skipped: "${text}" - no valid trigger`);
-        return;
-    }
-    
-    console.log(`📨 ${from}: ${text}`);
-    
-    // Handle booking session
-    if (session) {
-        reply = await handleBookingSession(session, text, lower);
-        if (reply) {
-            await sock.sendMessage(from, { text: reply });
-            console.log('✅ Replied to session');
-            
-            // Clear session if booking completed or cancelled
-            if (session.step === 'completed' || session.step === 'cancelled') {
-                sessions.delete(from);
-            }
-            return;
-        }
-    }
-    
-    // Handle regular commands
-    reply = handleCommand(lower, from);
-    
-    if (reply) {
-        await sock.sendMessage(from, { text: reply });
-        console.log('✅ Replied');
-    }
+    console.log('[INCOMING] ' + from.substring(0, 15) + ': ' + text);
+    await handleMessage(from, text);
+  });
 }
 
-async function handleBookingSession(session: UserSession, text: string, lower: string): Promise<string> {
-    switch (session.step) {
-        case 'service': {
-            const n = parseInt(text);
-            if (isNaN(n) || n < 1 || n > services.length) {
-                return '❌ Please reply with a number 1-5';
-            }
-            session.data.service = services[n - 1];
-            session.step = 'date';
-            return `✅ ${session.data.service.name} selected!\n\n📅 Select date:\n${getDates().map((d, i) => `${i + 1}. ${d}`).join('\n')}\n\nReply 1-7:`;
-        }
-        
-        case 'date': {
-            const n = parseInt(text);
-            const dates = getDates();
-            if (isNaN(n) || n < 1 || n > dates.length) {
-                return '❌ Please reply with a number 1-7';
-            }
-            session.data.date = dates[n - 1];
-            session.step = 'time';
-            return `✅ ${session.data.date} selected!\n\n🕐 Select time:\n${timeSlots.map((t, i) => `${i + 1}. ${t}`).join('\n')}\n\nReply 1-9:`;
-        }
-        
-        case 'time': {
-            const n = parseInt(text);
-            if (isNaN(n) || n < 1 || n > timeSlots.length) {
-                return `❌ Please reply with a number 1-${timeSlots.length}`;
-            }
-            session.data.time = timeSlots[n - 1];
-            session.step = 'name';
-            return `✅ ${session.data.time} selected!\n\n👤 Enter your name:`;
-        }
-        
-        case 'name': {
-            // SECURITY: Validate name
-            if (!isValidName(text)) {
-                return '❌ Please enter a valid name (letters only, 2-50 characters)';
-            }
-            session.data.name = text;
-            session.step = 'phone';
-            return `✅ Thanks ${session.data.name}!\n\n📞 Enter phone number:`;
-        }
-        
-        case 'phone': {
-            // SECURITY: Validate phone
-            if (!isValidPhone(text)) {
-                return '❌ Please enter a valid phone number (10-15 digits)';
-            }
-            session.data.phone = text;
-            session.step = 'confirm';
-            return `📋 *Booking Summary*\n\n💇 ${session.data.service!.name}\n📅 ${session.data.date}\n🕐 ${session.data.time}\n👤 ${session.data.name}\n📞 ${session.data.phone}\n💰 ${session.data.service!.price}\n\nReply CONFIRM or CANCEL:`;
-        }
-        
-        case 'confirm': {
-            if (lower === 'confirm') {
-                session.step = 'completed';
-                return `🎉 *Booking Confirmed!*\n\n💇 ${session.data.service!.name}\n📅 ${session.data.date}\n🕐 ${session.data.time}\n👤 ${session.data.name}\n📞 ${session.data.phone}\n\n📍 Dar es Salaam\n*Ref:* QB-${Date.now().toString().slice(-6)}\n\nType "help" for more or "bye" to exit.`;
-            } else if (lower === 'cancel') {
-                session.step = 'cancelled';
-                return '❌ Cancelled. Type "book" to restart or "bye" to exit.';
-            } else {
-                return 'Reply CONFIRM or CANCEL:';
-            }
-        }
-        
-        case 'order': {
-            // Validate order code format
-            if (/^qb-\d{6}$/i.test(text.trim())) {
-                const orderCode = text.trim().toUpperCase();
-                session.data.orderCode = orderCode;
-                session.step = 'order_action';
-                return `📦 *Order Status: ${orderCode}*\n\n` +
-                       `✅ Order confirmed and processed\n` +
-                       `📍 Status: Being prepared\n` +
-                       `🚚 Delivery: 1-2 business days\n\n` +
-                       `What would you like to do?\n` +
-                       `1. Track order\n` +
-                       `2. Contact support\n` +
-                       `3. Cancel order\n\n` +
-                       `Reply 1-3 or "bye" to exit:`;
-            } else {
-                return '❌ Invalid order code. Please enter code in format QB-XXXXXX (e.g., QB-123456)';
-            }
-        }
-        
-        case 'order_action': {
-            const n = parseInt(text);
-            if (isNaN(n) || n < 1 || n > 3) {
-                return '❌ Please reply with 1, 2, or 3';
-            }
-            
-            const orderCode = session.data.orderCode;
-            
-            switch (n) {
-                case 1:
-                    session.step = 'completed';
-                    return `🚚 *Track Order: ${orderCode}*\n\n` +
-                           `Current Status: In transit\n` +
-                           `Expected Delivery: 1-2 business days\n\n` +
-                           `Track online:\n` +
-                           `🌐 qmbeauty.africa/orders\n\n` +
-                           `Need help? Contact us:\n` +
-                           `📞 +255 657 120 151`;
-                
-                case 2:
-                    session.step = 'completed';
-                    return `📞 *Contact Support*\n\n` +
-                           `Order: ${orderCode}\n\n` +
-                           `WhatsApp: +255 657 120 151\n` +
-                           `Email: info@qmbeauty.africa\n` +
-                           `Hours: 8 AM - 8 PM Daily\n\n` +
-                           `We're here to help!`;
-                
-                case 3:
-                    session.step = 'completed';
-                    return `❌ *Cancel Order: ${orderCode}*\n\n` +
-                           `To cancel your order, please contact us:\n\n` +
-                           `📞 WhatsApp: +255 657 120 151\n` +
-                           `✉️ Email: info@qmbeauty.africa\n\n` +
-                           `Note: Orders can only be cancelled before shipping.`;
-            }
-            return '';
-        }
-        
-        default:
-            return '';
-    }
-}
+// Baileys WebSocket stream errors (TransformError) bypass try/catch and crash
+// the process. Catch at the process level and restart cleanly.
+process.on('uncaughtException', (error: Error) => {
+  console.error('[' + new Date().toISOString() + '] Uncaught Exception: ' + error.name + ': ' + error.message);
 
-function handleCommand(lower: string, from: string) {
-    switch (lower) {
-        case 'book':
-        case 'appointment':
-            sessions.set(from, {
-                step: 'service',
-                data: {},
-                createdAt: Date.now(),
-                lastActivity: Date.now(),
-                messageCount: 0
-            });
-            return [
-                '💇 *Book Appointment*',
-                '',
-                'Select service:',
-                '1. Facial — 50K',
-                '2. Hair — 40K',
-                '3. Nails — 25K',
-                '4. Waxing — 30K',
-                '5. Massage — 60K',
-                '',
-                'Reply with a number (1–5) or type "bye" to cancel:'
-            ].join('\n');
-        
-        case 'hi':
-        case 'hello':
-            return [
-                '👋 Welcome to QM Beauty!',
-                '',
-                '🛍️ Products',
-                '📅 Book Appointment',
-                '💳 Payment Options',
-                '📞 +255 657 120 151',
-                '',
-                'Type "help" for commands or "bye" to exit.'
-            ].join('\n');
-        
-        case 'products':
-        case 'product': {
-            const productList = products.map((p, i) => `${i + 1}. *${p.name}*\n   💰 ${p.price.toLocaleString()} TZS | 📁 ${p.category}\n   ✨ ${p.benefits}`).join('\n\n');
-            return `🛍️ *QM Beauty Product Catalog*\n\n${productList}\n\n🛒 *Shop Online:* qmbeauty.africa/shop\n📞 *Order via WhatsApp:* +255 657 120 151\n\nType a product name for more details!`;
-        }
-        
-        case 'services':
-        case 'service': {
-            const serviceList = services.map((s, i) => `${i + 1}. *${s.name}*\n   💰 ${s.price} | ⏱️ ${s.duration}`).join('\n\n');
-            return `💇‍♀️ *QM Beauty Spa Services*\n\n${serviceList}\n\n📅 *Book Online:* qmbeauty.africa/appointments\n📞 *Quick Booking:* +255 657 120 151\n\nType "book" to schedule your appointment!`;
-        }
-        
-        case 'cart':
-            return `🛒 Cart: qmbeauty.africa/cart\n\nShop: qmbeauty.africa/shop`;
-        
-        case 'order':
-        case 'orders':
-            sessions.set(from, {
-                step: 'order',
-                data: {},
-                createdAt: Date.now(),
-                lastActivity: Date.now(),
-                messageCount: 0
-            });
-            return `📦 *Order Tracking*\n\nPlease enter your order code:\n(Format: QB-XXXXXX)\n\nOr type "bye" to cancel.`;
-        
-        case 'payment':
-        case 'pay':
-            return `💳 Payment:\n• M-Pesa\n• Tigo Pesa\n• Airtel Money\n• HaloPesa\n• Cash on Delivery\n\nCheckout: qmbeauty.africa/checkout`;
-        
-        case 'contact':
-            return `📞 Contact:\nWhatsApp: +255 657 120 151\nEmail: info@qmbeauty.africa\nHours: 8 AM - 8 PM Daily`;
-        
-        case 'help':
-            return [
-                '❓ *Commands*',
-                '',
-                '• book — Book appointment',
-                '• products — Catalog',
-                '• services — Services',
-                '• cart — View cart',
-                '• order — Check order',
-                '• payment — Payment options',
-                '• contact — Contact info',
-                '• bye — Exit chat'
-            ].join('\n');
-        
-        case 'hours':
-            return `🕐 Hours: 8 AM - 8 PM Daily\n\nBook: qmbeauty.africa/appointments`;
-        
-        case 'delivery':
-            return `🚚 Delivery:\n• Dar: 1-2 days (5K TZS)\n• Free over 100K TZS\n• Other: 2-4 days\n\nTrack: qmbeauty.africa/orders`;
-        
-        default: {
-            // Check for order code (QB-XXXXXX format)
-            if (/^qb-\d{6}$/i.test(lower)) {
-                const orderCode = lower.toUpperCase();
-                return `📦 *Order Status: ${orderCode}*\n\n` +
-                       `✅ Order confirmed and processed\n` +
-                       `📍 Status: Being prepared\n` +
-                       `🚚 Delivery: 1-2 business days\n\n` +
-                       `Track your order:\n` +
-                       `🌐 qmbeauty.africa/orders\n\n` +
-                       `Need help? Contact us:\n` +
-                       `📞 +255 657 120 151`;
-            }
-            
-            // Check for product mentions
-            const product = products.find(p => lower.includes(p.name.toLowerCase()));
-            if (product) {
-                return `✅ ${product.name} is available!\n\n💰 ${product.price.toLocaleString()} TZS\n✨ ${product.benefits}\n\n🛒 Order: qmbeauty.africa/shop\n📞 WhatsApp: +255 657 120 151`;
-            }
-            
-            if (lower.includes('available') || lower.includes('in stock')) {
-                return `✅ Yes, we have products in stock!\n\n🛍️ Browse: qmbeauty.africa/shop\n\n• Carrot Oil - 25K\n• Coconut Oil - 25-35K\n• Body Butter - 100K\n• Herbal Oil - 30K\n• Hair Relaxer - 55K\n• Nail Set - 30K\n\n📞 Order: +255 657 120 151`;
-            }
-            
-            return `🤔 Try: book, products, services, contact, help\n\nOr type "bye" to exit.`;
-        }
-    }
-}
+  const isStreamError = error.name === 'TransformError'
+    || error.name === 'NetworkError'
+    || error.message.includes('TransformError')
+    || error.message.includes('stream')
+    || error.message.includes('WebSocket');
 
-// ============================================================================
-// EXPRESS SERVER SETUP
-// ============================================================================
-
-const app = express();
-
-// SECURITY: CORS configuration
-app.use(cors({
-    origin: SECURITY_CONFIG.ALLOWED_ORIGINS,
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// SECURITY: JSON body parser with limits
-app.use(express.json({ limit: '10kb' }));
-
-// Health check endpoint
-app.get('/health', (req: Request, res: Response) => {
-    res.json({ 
-        status: 'ok', 
-        service: 'qm-beauty-whatsapp',
-        version: '2.0.0',
-        timestamp: new Date().toISOString()
-    });
+  if (isStreamError) {
+    console.log('[' + new Date().toISOString() + '] Stream error — restarting bot in 5s...');
+    sock = null;
+    setTimeout(startBot, 5000);
+  } else {
+    process.exit(1);
+  }
 });
 
-// SECURITY: 404 handler
-app.use((req: Request, res: Response) => {
-    res.status(404).json({ error: 'Not found' });
+process.on('unhandledRejection', (reason: any) => {
+  console.error('[' + new Date().toISOString() + '] Unhandled Rejection: ' + (reason?.message || reason));
 });
 
-// SECURITY: Global error handler
-app.use((err: any, req: Request, res: Response, next: any) => {
-    console.error('❌ Server error:', err);
-    res.status(500).json({ error: 'Internal server error' });
-});
-
-// Start services
-startBot();
-app.listen(4000, () => {
-    console.log('🚀 QM Beauty WhatsApp Bot v2.0.0 - Production Ready');
-    console.log('🔒 Security hardened & penetration tested');
-    console.log('📡 Server on port 4000');
+startBot().catch(err => {
+  console.error('Fatal: ' + err);
+  setTimeout(startBot, 10000);
 });

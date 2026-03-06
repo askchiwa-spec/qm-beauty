@@ -1,7 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-const BOT_API_KEY = process.env.BOT_API_KEY || 'dev-key-change-in-production';
+const BOT_API_KEY = process.env.BOT_API_KEY || 'qm-bot-secret-key';
 
 export async function GET(request: NextRequest) {
   // Verify API key
@@ -35,12 +35,12 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    console.log([BOT API] Products fetched:  items);
+    console.log(`[BOT API] Products fetched: ${products.length} items`);
 
     return NextResponse.json({
       success: true,
       count: products.length,
-      products: products.map(p => ({
+      items: products.map(p => ({
         id: p.id,
         name: p.name,
         price: p.price,
