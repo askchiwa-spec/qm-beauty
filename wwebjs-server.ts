@@ -542,19 +542,19 @@ async function startBot() {
   sock.ev.on('messages.upsert', async (m: any) => {
     const msg = m.messages[0];
     if (msg.key.fromMe) return;
-    
+
     const from = msg.key.remoteJid;
     if (!from) return;
-    
+
     // Skip groups, status, newsletter
     if (from.endsWith('@g.us') || from === 'status@broadcast' || from.endsWith('@newsletter')) {
       return;
     }
-    
+
     const text = (msg.message?.conversation || msg.message?.extendedTextMessage?.text || '').trim();
     if (!text) return;
-    
-    console.log('[INCOMING] ' + from.substring(0, 15) + ': ' + text);
+
+    console.log('[INCOMING] ' + from.substring(0, 20) + ': ' + text);
     await handleMessage(from, text);
   });
 }
