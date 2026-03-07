@@ -66,6 +66,20 @@ function cacheSentMessage(key: any, message: any) {
   }
 }
 
+// LID (Linked ID) → phone JID resolution map.
+// WhatsApp now assigns privacy-preserving LIDs to accounts. The bot receives
+// messages from these LIDs but must reply to the phone JID for delivery to work.
+const lidToPhoneJid = new Map<string, string>();
+
+function resolveJidForSend(jid: string): string {
+  // Direct map hit (LID stored with full @s.whatsapp.net suffix)
+  if (lidToPhoneJid.has(jid)) return lidToPhoneJid.get(jid)!;
+  // Try bare number
+  const num = jid.split('@')[0];
+  if (lidToPhoneJid.has(num)) return lidToPhoneJid.get(num)!;
+  return jid;
+}
+
 // ============ API FUNCTIONS ============
 
 async function fetchFromAPI(endpoint: string): Promise<any> {
@@ -175,12 +189,14 @@ async function sendReply(jid: string, text: string) {
     return;
   }
   try {
-    await sock.sendPresenceUpdate('composing', jid).catch(() => {});
+    const targetJid = resolveJidForSend(jid);
+    if (targetJid !== jid) console.log('[SEND] LID resolved: ' + jid.substring(0, 15) + ' -> ' + targetJid.substring(0, 15));
+    await sock.sendPresenceUpdate('composing', targetJid).catch(() => {});
     await delay(300);
-    const sent = await sock.sendMessage(jid, { text });
+    const sent = await sock.sendMessage(targetJid, { text });
     const sentId = sent?.key?.id;
     const hasMsgProto = !!sent?.message;
-    console.log('[SEND] id=' + sentId + ' to=' + jid.substring(0, 20) + ' proto=' + hasMsgProto);
+    console.log('[SEND] id=' + sentId + ' to=' + targetJid.substring(0, 20) + ' proto=' + hasMsgProto);
     if (sent?.key) cacheSentMessage(sent.key, sent.message);
     await sock.sendPresenceUpdate('paused', jid).catch(() => {});
   } catch (err: any) {
@@ -607,6 +623,22 @@ async function startBot() {
   store.bind(sock.ev);
 
   sock.ev.on('creds.update', saveCreds);
+
+  // Build LID → phone JID map so we can reply to the correct address.
+  // WhatsApp sends contacts.upsert with both id (phone JID) and lid when known.
+  sock.ev.on('contacts.upsert', (contacts: any[]) => {
+    for (const c of contacts) {
+      const phoneJid: string | undefined = c.id;
+      const lid: string | undefined = c.lid;
+      if (phoneJid && lid) {
+        const lidNum = lid.includes('@') ? lid.split('@')[0] : lid;
+        lidToPhoneJid.set(lidNum, phoneJid);
+        lidToPhoneJid.set(lidNum + '@s.whatsapp.net', phoneJid);
+        lidToPhoneJid.set(lidNum + '@lid', phoneJid);
+        console.log('[CONTACT] LID ' + lidNum.substring(0, 12) + ' -> ' + phoneJid.substring(0, 20));
+      }
+    }
+  });
 
   // Track delivery status of sent messages (1=pending 2=server_ack 3=delivered 4=read)
   sock.ev.on('messages.update', (updates: any[]) => {
