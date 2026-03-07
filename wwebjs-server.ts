@@ -53,6 +53,20 @@ let sock: any = null;
 // In-memory store keeps sent messages so Baileys can resend on phash ACK
 const store = makeInMemoryStore({ logger: pino({ level: 'silent' }) as any });
 
+// Manual sent-message cache — store captures via events but has a race condition
+// with phash ACKs. This cache is populated synchronously after every sendMessage call.
+const sentMessages = new Map<string, any>();
+
+function cacheSentMessage(key: any, message: any) {
+  if (key?.id) {
+    sentMessages.set(key.id, message);
+    // Keep last 200 messages to avoid unbounded growth
+    if (sentMessages.size > 200) {
+      sentMessages.delete(sentMessages.keys().next().value);
+    }
+  }
+}
+
 // ============ API FUNCTIONS ============
 
 async function fetchFromAPI(endpoint: string): Promise<any> {
@@ -157,11 +171,16 @@ function getUserState(jid: string): UserState | undefined {
 // ============ MESSAGE SENDING ============
 
 async function sendReply(jid: string, text: string) {
+  if (!sock) {
+    console.error('[SEND] Socket not ready');
+    return;
+  }
   try {
-    await sock.sendPresenceUpdate('composing', jid);
+    await sock.sendPresenceUpdate('composing', jid).catch(() => {});
     await delay(300);
-    await sock.sendMessage(jid, { text: text });
-    await sock.sendPresenceUpdate('paused', jid);
+    const sent = await sock.sendMessage(jid, { text });
+    if (sent?.key) cacheSentMessage(sent.key, sent.message);
+    await sock.sendPresenceUpdate('paused', jid).catch(() => {});
   } catch (err: any) {
     console.error('[SEND] Error: ' + err.message);
   }
@@ -521,6 +540,11 @@ async function startBot() {
     browser: ['Mac OS', 'Chrome', '14.4.1'],
     syncFullHistory: false,
     getMessage: async (key: any) => {
+      // Check manual cache first (populated synchronously after sendMessage)
+      if (key?.id && sentMessages.has(key.id)) {
+        return sentMessages.get(key.id);
+      }
+      // Fall back to store
       const msg = await store.loadMessage(key.remoteJid, key.id);
       return msg?.message || undefined;
     },
