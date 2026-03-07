@@ -24,7 +24,6 @@ enum State {
   BOOKING_PHONE = 'BOOKING_PHONE',
   BOOKING_CONFIRM = 'BOOKING_CONFIRM',
   PRODUCTS_LIST = 'PRODUCTS_LIST',
-  PRODUCT_DETAIL = 'PRODUCT_DETAIL',
   SERVICES_LIST = 'SERVICES_LIST',
 }
 
@@ -189,21 +188,18 @@ async function sendReply(jid: string, text: string) {
 // ============ MAIN MENU ============
 
 async function sendMainMenu(jid: string) {
-  const prod = await getProducts();
-  const svc = await getServices();
-  
-  const menu = '👋 Welcome to QM Beauty!\n\n' +
-    '🛍️ Products: ' + prod.items.length + ' (' + prod.source + ')\n' +
-    '💇 Services: ' + svc.items.length + ' (' + svc.source + ')\n\n' +
-    'Commands:\n' +
-    '• PRODUCTS - View products\n' +
-    '• SERVICES - View services\n' +
-    '• BOOK - Book appointment\n' +
-    '• ORDER - Track order\n' +
-    '• PAYMENT - Payment info\n' +
-    '• HELP - Contact info\n\n' +
+  const menu =
+    '👋 *Welcome to QM Beauty!*\n\n' +
+    'What can we help you with today?\n\n' +
+    '1️⃣ PRODUCTS — Browse our products\n' +
+    '2️⃣ SERVICES — View beauty services\n' +
+    '3️⃣ BOOK — Book an appointment\n' +
+    '4️⃣ ORDER — Track your order\n' +
+    '5️⃣ PAYMENT — Payment options\n' +
+    '6️⃣ CONTACT — Get in touch\n\n' +
+    'Reply with a number (1-6) or keyword.\n' +
     '📞 +255 657 120 151';
-  
+
   setUserState(jid, State.MAIN_MENU, {});
   await sendReply(jid, menu);
 }
@@ -266,26 +262,32 @@ async function handleMessage(jid: string, text: string) {
 
 // ============ MAIN MENU INPUTS ============
 
+const GREETINGS = new Set(['HI', 'HELLO', 'HEY', 'START', 'BEGIN', 'HUJAMBO', 'MAMBO', 'HABARI', 'SALAM', 'HAI', 'NIAJE', 'SUP', 'YO', 'HELP', '0']);
+
 async function handleMainMenuInput(jid: string, text: string) {
   const upperText = text.toUpperCase().trim();
-  
-  if (upperText === 'PRODUCTS' || upperText === 'PRODUCT') {
+
+  // Greetings and first-time users → show main menu
+  if (GREETINGS.has(upperText)) {
+    await sendMainMenu(jid);
+  } else if (upperText === 'PRODUCTS' || upperText === 'PRODUCT' || upperText === '1') {
     setUserState(jid, State.PRODUCTS_LIST, { page: 0 });
     await showProductsList(jid);
-  } else if (upperText === 'SERVICES' || upperText === 'SERVICE') {
-    setUserState(jid, State.SERVICES_LIST, { page: 0 });
+  } else if (upperText === 'SERVICES' || upperText === 'SERVICE' || upperText === '2') {
+    setUserState(jid, State.SERVICES_LIST, {});
     await showServicesList(jid);
-  } else if (upperText === 'BOOK' || upperText === 'BOOKING') {
+  } else if (upperText === 'BOOK' || upperText === 'BOOKING' || upperText === '3') {
     setUserState(jid, State.BOOKING_SERVICE, {});
     await showBookingServices(jid);
-  } else if (upperText === 'ORDER') {
-    await sendReply(jid, '📦 Order Tracking\n\nProvide order number (e.g., QB-123456)\n\nqmbeauty.africa/orders\n\nReply M for Main Menu');
-  } else if (upperText === 'PAYMENT') {
-    await sendReply(jid, '💳 Payment Options\n\n• M-Pesa\n• Tigo Pesa\n• Airtel Money\n• Cash on Delivery\n\nqmbeauty.africa/checkout\n\nReply M for Main Menu');
-  } else if (upperText === 'HELP' || upperText === 'CONTACT') {
-    await sendReply(jid, '📞 Contact\n\nWhatsApp: +255 657 120 151\nEmail: info@qmbeauty.africa\nWebsite: qmbeauty.africa\n\nReply M for Main Menu');
+  } else if (upperText === 'ORDER' || upperText === '4') {
+    await sendReply(jid, '📦 *Order Tracking*\n\nSend your order number (e.g. QB-123456) and we will update you.\n\n🌐 qmbeauty.africa/orders\n\nReply M for Main Menu');
+  } else if (upperText === 'PAYMENT' || upperText === '5') {
+    await sendReply(jid, '💳 *Payment Options*\n\n• M-Pesa\n• Tigo Pesa\n• Airtel Money\n• Cash on Delivery\n\n🌐 qmbeauty.africa/checkout\n\nReply M for Main Menu');
+  } else if (upperText === 'CONTACT' || upperText === '6') {
+    await sendReply(jid, '📞 *Contact Us*\n\nWhatsApp: +255 657 120 151\nEmail: info@qmbeauty.africa\nWebsite: qmbeauty.africa\n\nReply M for Main Menu');
   } else {
-    await sendReply(jid, '❓ Unknown. Try: PRODUCTS, SERVICES, BOOK, HELP\n\nReply M for Main Menu');
+    // Unknown input — show menu instead of error
+    await sendMainMenu(jid);
   }
 }
 
@@ -358,41 +360,47 @@ async function handleBookingTime(jid: string, text: string) {
 
 async function handleBookingName(jid: string, text: string) {
   const name = text.trim();
-  if (name.length < 2) {
-    await sendReply(jid, '❌ Invalid name. Enter your full name.');
+  if (name.length < 2 || /\d/.test(name)) {
+    await sendReply(jid, '❌ Please enter your full name (letters only).');
     return;
   }
-  
+
   const state = getUserState(jid);
-  setUserState(jid, State.BOOKING_PHONE, { 
+  setUserState(jid, State.BOOKING_PHONE, {
     service: state?.data.service,
     date: state?.data.date,
     time: state?.data.time,
-    name: name
+    name,
   });
-  
-  await sendReply(jid, '✅ ' + name + '\n\n📱 Your number: +255717939999\n\nReply:\n1 - Confirm\n2 - Enter different');
+
+  await sendReply(jid, '✅ ' + name + '\n\n📱 Enter your phone number:\n(e.g. 0712345678 or +255712345678)\n\nReply M to cancel');
 }
 
 async function handleBookingPhone(jid: string, text: string) {
-  const choice = text.trim();
+  const raw = text.trim().replace(/\s+/g, '');
   const state = getUserState(jid);
-  
-  if (choice === '1') {
-    const phone = '+255717939999';
-    setUserState(jid, State.BOOKING_CONFIRM, { 
-      service: state?.data.service,
-      date: state?.data.date,
-      time: state?.data.time,
-      name: state?.data.name,
-      phone: phone
-    });
-    await showBookingConfirmation(jid);
-  } else if (choice === '2') {
-    await sendReply(jid, '📝 Enter your phone number:');
+
+  // Normalize: accept 07XXXXXXXX, 255XXXXXXXXX, +255XXXXXXXXX
+  let phone = raw;
+  if (/^0\d{9}$/.test(raw)) {
+    phone = '+255' + raw.slice(1);
+  } else if (/^255\d{9}$/.test(raw)) {
+    phone = '+' + raw;
+  } else if (/^\+255\d{9}$/.test(raw)) {
+    phone = raw;
   } else {
-    await sendReply(jid, '❌ Reply 1 or 2');
+    await sendReply(jid, '❌ Invalid number. Enter a Tanzania number:\ne.g. 0712345678 or +255712345678');
+    return;
   }
+
+  setUserState(jid, State.BOOKING_CONFIRM, {
+    service: state?.data.service,
+    date: state?.data.date,
+    time: state?.data.time,
+    name: state?.data.name,
+    phone,
+  });
+  await showBookingConfirmation(jid);
 }
 
 async function showBookingConfirmation(jid: string) {
@@ -436,27 +444,39 @@ async function handleBookingConfirm(jid: string, text: string) {
 
 // ============ PRODUCTS FLOW ============
 
+function formatPrice(price: any): string {
+  if (typeof price === 'number') return price.toLocaleString() + ' TZS';
+  if (typeof price === 'string') {
+    const n = parseFloat(price.replace(/[^0-9.]/g, ''));
+    return isNaN(n) ? price : n.toLocaleString() + ' TZS';
+  }
+  return String(price);
+}
+
 async function showProductsList(jid: string) {
-  const { items, source } = await getProducts();
+  const { items } = await getProducts();
   const state = getUserState(jid);
   const page = state?.data?.page || 0;
   const perPage = 7;
   const start = page * perPage;
   const end = start + perPage;
   const pageItems = items.slice(start, end);
-  const totalPages = Math.ceil(items.length / perPage);
-  
-  let msg = '🛍️ Products (' + items.length + ' - ' + source + ')\n\n';
-  
+
+  if (items.length === 0) {
+    await sendReply(jid, '😔 Products unavailable right now.\n\n🌐 qmbeauty.africa/products\n\nReply M for Main Menu');
+    return;
+  }
+
+  let msg = '🛍️ *Products* (' + items.length + ' total)\n\n';
   pageItems.forEach((p: any, i: number) => {
-    msg += (start + i + 1) + '. ' + p.name + '\n   💰 ' + p.price.toLocaleString() + ' TZS\n';
+    msg += (start + i + 1) + '. ' + p.name + '\n   💰 ' + formatPrice(p.price) + '\n';
   });
-  
+
   msg += '\n';
-  if (end < items.length) msg += 'Reply N - Next\n';
-  if (page > 0) msg += 'Reply P - Previous\n';
-  msg += 'Reply M - Main Menu';
-  
+  if (end < items.length) msg += 'N - Next page\n';
+  if (page > 0) msg += 'P - Previous page\n';
+  msg += 'Reply number for details, or M for Main Menu';
+
   await sendReply(jid, msg);
 }
 
@@ -484,11 +504,11 @@ async function handleProductsList(jid: string, text: string) {
     
     if (!isNaN(num) && num >= 1 && num <= items.length) {
       const p = items[num - 1];
-      const msg = '✅ ' + p.name + '\n\n' +
-        '💰 ' + p.price.toLocaleString() + ' TZS\n' +
-        '📁 ' + p.category + '\n\n' +
-        (p.description || '') + '\n\n' +
-        '🛒 qmbeauty.africa/product/' + p.slug + '\n\n' +
+      const msg = '🛍️ *' + p.name + '*\n\n' +
+        '💰 ' + formatPrice(p.price) + '\n' +
+        '📁 ' + (p.category || '') + '\n' +
+        (p.description ? '\n' + p.description + '\n' : '') +
+        '\n🛒 qmbeauty.africa/product/' + (p.slug || p.id) + '\n\n' +
         'Reply M for more options';
       
       setUserState(jid, State.MAIN_MENU, {});
@@ -501,26 +521,54 @@ async function handleProductsList(jid: string, text: string) {
 
 // ============ SERVICES FLOW ============
 
+function formatServicePrice(s: any): string {
+  if (s.priceFormatted) return s.priceFormatted;
+  if (typeof s.price === 'number') return s.price.toLocaleString() + ' TZS';
+  return String(s.price);
+}
+
 async function showServicesList(jid: string) {
-  const { items, source } = await getServices();
-  
-  let msg = '💇 Services (' + items.length + ' - ' + source + ')\n\n';
-  
-  items.slice(0, 10).forEach((s: any, i: number) => {
-    msg += (i + 1) + '. ' + s.name + '\n   💰 ' + s.price + '\n';
-  });
-  
-  if (items.length > 10) {
-    msg += '\n... and ' + (items.length - 10) + ' more';
+  const { items } = await getServices();
+
+  if (items.length === 0) {
+    await sendReply(jid, '😔 Services unavailable right now.\n\n🌐 qmbeauty.africa/services\n\nReply M for Main Menu');
+    return;
   }
-  
-  msg += '\n\n🗓️ qmbeauty.africa/services\n\nReply M for Main Menu';
-  
+
+  let msg = '💇 *Our Services*\n\n';
+  items.slice(0, 10).forEach((s: any, i: number) => {
+    msg += (i + 1) + '. ' + s.name + '\n   💰 ' + formatServicePrice(s) + ' | ⏱ ' + (s.duration || '') + '\n';
+  });
+
+  if (items.length > 10) msg += '\n... and ' + (items.length - 10) + ' more';
+
+  msg += '\n\nReply a number for details, BOOK to book, or M for Main Menu';
   await sendReply(jid, msg);
 }
 
 async function handleServicesList(jid: string, text: string) {
-  await showServicesList(jid);
+  const upperText = text.toUpperCase().trim();
+  if (upperText === 'BOOK' || upperText === 'BOOKING') {
+    setUserState(jid, State.BOOKING_SERVICE, {});
+    await showBookingServices(jid);
+    return;
+  }
+
+  const { items } = await getServices();
+  const num = parseInt(text.trim());
+  if (!isNaN(num) && num >= 1 && num <= items.length) {
+    const s = items[num - 1];
+    const msg =
+      '💇 *' + s.name + '*\n\n' +
+      '💰 ' + formatServicePrice(s) + '\n' +
+      '⏱ ' + (s.duration || 'Contact us') + '\n' +
+      (s.description ? '\n' + s.description + '\n' : '') +
+      '\n📅 Reply BOOK to book this service\nReply M for Main Menu';
+    setUserState(jid, State.MAIN_MENU, {});
+    await sendReply(jid, msg);
+  } else {
+    await showServicesList(jid);
+  }
 }
 
 // ============ BOT STARTUP ============
