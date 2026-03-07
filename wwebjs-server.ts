@@ -520,9 +520,13 @@ async function startBot() {
     printQRInTerminal: true,
     browser: ['Mac OS', 'Chrome', '14.4.1'],
     syncFullHistory: false,
+    getMessage: async (key: any) => {
+      const msg = await store.loadMessage(key.remoteJid, key.id);
+      return msg?.message || undefined;
+    },
   });
 
-  // Bind store so Baileys can resend messages on phash ACK
+  // Bind store so sent messages are stored for phash resend lookups
   store.bind(sock.ev);
 
   sock.ev.on('creds.update', saveCreds);
