@@ -1,5 +1,6 @@
-﻿import { makeWASocket, DisconnectReason, useMultiFileAuthState, delay } from '@whiskeysockets/baileys';
+﻿import { makeWASocket, DisconnectReason, useMultiFileAuthState, delay, makeInMemoryStore } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
+import pino from 'pino';
 
 const QRCode = require('qrcode-terminal');
 
@@ -48,6 +49,9 @@ const DATE_OPTIONS = ['Today', 'Tomorrow', 'In 2 days', 'In 3 days', 'In 4 days'
 const TIME_OPTIONS = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'];
 
 let sock: any = null;
+
+// In-memory store keeps sent messages so Baileys can resend on phash ACK
+const store = makeInMemoryStore({ logger: pino({ level: 'silent' }) as any });
 
 // ============ API FUNCTIONS ============
 
@@ -517,6 +521,9 @@ async function startBot() {
     browser: ['Mac OS', 'Chrome', '14.4.1'],
     syncFullHistory: false,
   });
+
+  // Bind store so Baileys can resend messages on phash ACK
+  store.bind(sock.ev);
 
   sock.ev.on('creds.update', saveCreds);
   
