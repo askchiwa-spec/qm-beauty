@@ -625,7 +625,6 @@ async function startBot() {
   
   sock = makeWASocket({
     auth: state,
-    printQRInTerminal: true,
     browser: ['Mac OS', 'Chrome', '14.4.1'],
     syncFullHistory: false,
     getMessage: async (key: any) => {
