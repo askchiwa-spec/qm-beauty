@@ -640,11 +640,13 @@ async function startBot() {
     }
   });
 
-  // Track delivery status of sent messages (1=pending 2=server_ack 3=delivered 4=read)
+  // Track delivery status (1=pending 2=server_ack 3=delivered 4=read)
+  // fromMe=true means OUR message was delivered to the user
+  // fromMe=false means USER's message was ACK'd by our account
   sock.ev.on('messages.update', (updates: any[]) => {
     for (const u of updates) {
       if (u.update?.status !== undefined) {
-        console.log('[DELIVERY] id=' + u.key?.id + ' status=' + u.update.status + ' to=' + (u.key?.remoteJid || '').substring(0, 20));
+        console.log('[DELIVERY] id=' + u.key?.id + ' fromMe=' + u.key?.fromMe + ' status=' + u.update.status + ' jid=' + (u.key?.remoteJid || ''));
       }
     }
   });
