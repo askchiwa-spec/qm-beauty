@@ -178,6 +178,9 @@ async function sendReply(jid: string, text: string) {
     await sock.sendPresenceUpdate('composing', jid).catch(() => {});
     await delay(300);
     const sent = await sock.sendMessage(jid, { text });
+    const sentId = sent?.key?.id;
+    const hasMsgProto = !!sent?.message;
+    console.log('[SEND] id=' + sentId + ' to=' + jid.substring(0, 20) + ' proto=' + hasMsgProto);
     if (sent?.key) cacheSentMessage(sent.key, sent.message);
     await sock.sendPresenceUpdate('paused', jid).catch(() => {});
   } catch (err: any) {
@@ -588,12 +591,14 @@ async function startBot() {
     browser: ['Mac OS', 'Chrome', '14.4.1'],
     syncFullHistory: false,
     getMessage: async (key: any) => {
-      // Check manual cache first (populated synchronously after sendMessage)
-      if (key?.id && sentMessages.has(key.id)) {
-        return sentMessages.get(key.id);
+      const id = key?.id;
+      if (id && sentMessages.has(id)) {
+        const m = sentMessages.get(id);
+        console.log('[GETMSG] CACHE HIT id=' + id + ' proto=' + !!m);
+        return m;
       }
-      // Fall back to store
       const msg = await store.loadMessage(key.remoteJid, key.id);
+      console.log('[GETMSG] STORE id=' + id + ' found=' + !!msg);
       return msg?.message || undefined;
     },
   });
@@ -602,6 +607,15 @@ async function startBot() {
   store.bind(sock.ev);
 
   sock.ev.on('creds.update', saveCreds);
+
+  // Track delivery status of sent messages (1=pending 2=server_ack 3=delivered 4=read)
+  sock.ev.on('messages.update', (updates: any[]) => {
+    for (const u of updates) {
+      if (u.update?.status !== undefined) {
+        console.log('[DELIVERY] id=' + u.key?.id + ' status=' + u.update.status + ' to=' + (u.key?.remoteJid || '').substring(0, 20));
+      }
+    }
+  });
   
   sock.ev.on('connection.update', (update: any) => {
     const { connection, lastDisconnect, qr } = update;
@@ -637,6 +651,7 @@ async function startBot() {
     const text = (msg.message?.conversation || msg.message?.extendedTextMessage?.text || '').trim();
     if (!text) return;
 
+    console.log('[INCOMING] key=' + JSON.stringify(msg.key));
     console.log('[INCOMING] ' + from.substring(0, 20) + ': ' + text);
     await handleMessage(from, text);
   });
