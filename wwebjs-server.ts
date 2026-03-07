@@ -1,6 +1,5 @@
-﻿import { makeWASocket, DisconnectReason, useMultiFileAuthState, delay, makeInMemoryStore } from '@whiskeysockets/baileys';
+﻿import { makeWASocket, DisconnectReason, useMultiFileAuthState, delay } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
-import pino from 'pino';
 
 const QRCode = require('qrcode-terminal');
 
@@ -49,11 +48,8 @@ const TIME_OPTIONS = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', 
 
 let sock: any = null;
 
-// In-memory store keeps sent messages so Baileys can resend on phash ACK
-const store = makeInMemoryStore({ logger: pino({ level: 'silent' }) as any });
-
-// Manual sent-message cache — store captures via events but has a race condition
-// with phash ACKs. This cache is populated synchronously after every sendMessage call.
+// Manual sent-message cache — populated synchronously after every sendMessage call.
+// Baileys uses the getMessage callback to resend messages on phash ACK.
 const sentMessages = new Map<string, any>();
 
 function cacheSentMessage(key: any, message: any) {
@@ -98,24 +94,7 @@ function resolveJidForSend(jid: string): string {
   const num = jid.split('@')[0];
   if (lidToPhoneJid.has(num)) return lidToPhoneJid.get(num)!;
 
-  // 2. Check Baileys in-memory store contacts for a mapping
-  const storeContacts = (store as any).contacts as Record<string, any> | undefined;
-  if (storeContacts) {
-    const contact = storeContacts[jid];
-    if (contact?.id && contact.id !== jid) {
-      console.log('[RESOLVE] store contact: ' + jid.substring(0, 15) + ' -> ' + contact.id.substring(0, 15));
-      return contact.id;
-    }
-    // Also try with @lid suffix key
-    const lidKey = num + '@lid';
-    const lidContact = storeContacts[lidKey];
-    if (lidContact?.id) {
-      console.log('[RESOLVE] store @lid contact: ' + lidKey.substring(0, 15) + ' -> ' + lidContact.id.substring(0, 15));
-      return lidContact.id;
-    }
-  }
-
-  // 3. Log unresolved LIDs so we can diagnose
+  // 2. Log unresolved LIDs so we can diagnose
   if (isLidJid(jid)) {
     console.log('[RESOLVE] LID unresolved, using as-is: ' + jid.substring(0, 25));
   }
@@ -656,14 +635,10 @@ async function startBot() {
         console.log('[GETMSG] CACHE HIT id=' + id + ' proto=' + !!m);
         return m;
       }
-      const msg = await store.loadMessage(key.remoteJid, key.id);
-      console.log('[GETMSG] STORE id=' + id + ' found=' + !!msg);
-      return msg?.message || undefined;
+      console.log('[GETMSG] MISS id=' + id);
+      return undefined;
     },
   });
-
-  // Bind store so sent messages are stored for phash resend lookups
-  store.bind(sock.ev);
 
   sock.ev.on('creds.update', saveCreds);
 
