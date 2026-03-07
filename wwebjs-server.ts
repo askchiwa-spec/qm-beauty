@@ -67,16 +67,62 @@ function cacheSentMessage(key: any, message: any) {
 }
 
 // LID (Linked ID) → phone JID resolution map.
-// WhatsApp now assigns privacy-preserving LIDs to accounts. The bot receives
-// messages from these LIDs but must reply to the phone JID for delivery to work.
+// WhatsApp assigns privacy-preserving 14-digit LIDs to accounts. Messages arrive
+// with a @s.whatsapp.net JID that looks like a phone but is actually a LID.
+// For delivery to work we must send to either: the real phone JID (from contacts
+// events) OR use the @lid domain suffix which Baileys/WhatsApp routes correctly.
 const lidToPhoneJid = new Map<string, string>();
 
+function mapContact(c: any) {
+  const phoneJid: string | undefined = c.id;
+  const lid: string | undefined = c.lid;
+  if (phoneJid && lid) {
+    const lidNum = lid.includes('@') ? lid.split('@')[0] : lid;
+    lidToPhoneJid.set(lidNum, phoneJid);
+    lidToPhoneJid.set(lidNum + '@s.whatsapp.net', phoneJid);
+    lidToPhoneJid.set(lidNum + '@lid', phoneJid);
+    console.log('[CONTACT] LID ' + lidNum.substring(0, 12) + ' -> ' + phoneJid.substring(0, 20));
+  }
+}
+
+function isLidJid(jid: string): boolean {
+  // Standard phone JIDs: country_code + number = 10-13 digits max
+  // Tanzania = 255XXXXXXXXX = 12 digits. LIDs are 14+ digits.
+  const num = jid.split('@')[0];
+  return /^\d{14,}$/.test(num);
+}
+
 function resolveJidForSend(jid: string): string {
-  // Direct map hit (LID stored with full @s.whatsapp.net suffix)
+  // 1. Direct hit from contacts events (phone JID confirmed)
   if (lidToPhoneJid.has(jid)) return lidToPhoneJid.get(jid)!;
-  // Try bare number
   const num = jid.split('@')[0];
   if (lidToPhoneJid.has(num)) return lidToPhoneJid.get(num)!;
+
+  // 2. Check Baileys in-memory store contacts for a mapping
+  const storeContacts = (store as any).contacts as Record<string, any> | undefined;
+  if (storeContacts) {
+    const contact = storeContacts[jid];
+    if (contact?.id && contact.id !== jid) {
+      console.log('[RESOLVE] store contact: ' + jid.substring(0, 15) + ' -> ' + contact.id.substring(0, 15));
+      return contact.id;
+    }
+    // Also try with @lid suffix key
+    const lidKey = num + '@lid';
+    const lidContact = storeContacts[lidKey];
+    if (lidContact?.id) {
+      console.log('[RESOLVE] store @lid contact: ' + lidKey.substring(0, 15) + ' -> ' + lidContact.id.substring(0, 15));
+      return lidContact.id;
+    }
+  }
+
+  // 3. If this JID looks like a LID (14+ digits), switch to @lid domain.
+  //    WhatsApp routes @lid JIDs to the correct device even without a phone mapping.
+  if (isLidJid(jid) && jid.endsWith('@s.whatsapp.net')) {
+    const lidJid = num + '@lid';
+    console.log('[RESOLVE] LID detected -> ' + lidJid.substring(0, 20));
+    return lidJid;
+  }
+
   return jid;
 }
 
@@ -624,20 +670,16 @@ async function startBot() {
 
   sock.ev.on('creds.update', saveCreds);
 
-  // Build LID → phone JID map so we can reply to the correct address.
-  // WhatsApp sends contacts.upsert with both id (phone JID) and lid when known.
+  // Build LID → phone JID map from all three contact events.
+  // contacts.set fires on initial sync, upsert/update fire on changes.
+  sock.ev.on('contacts.set', ({ contacts }: any) => {
+    for (const c of contacts) mapContact(c);
+  });
   sock.ev.on('contacts.upsert', (contacts: any[]) => {
-    for (const c of contacts) {
-      const phoneJid: string | undefined = c.id;
-      const lid: string | undefined = c.lid;
-      if (phoneJid && lid) {
-        const lidNum = lid.includes('@') ? lid.split('@')[0] : lid;
-        lidToPhoneJid.set(lidNum, phoneJid);
-        lidToPhoneJid.set(lidNum + '@s.whatsapp.net', phoneJid);
-        lidToPhoneJid.set(lidNum + '@lid', phoneJid);
-        console.log('[CONTACT] LID ' + lidNum.substring(0, 12) + ' -> ' + phoneJid.substring(0, 20));
-      }
-    }
+    for (const c of contacts) mapContact(c);
+  });
+  sock.ev.on('contacts.update', (updates: any[]) => {
+    for (const c of updates) mapContact(c);
   });
 
   // Track delivery status (1=pending 2=server_ack 3=delivered 4=read)
