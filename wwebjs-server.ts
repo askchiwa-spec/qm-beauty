@@ -115,12 +115,9 @@ function resolveJidForSend(jid: string): string {
     }
   }
 
-  // 3. If this JID looks like a LID (14+ digits), switch to @lid domain.
-  //    WhatsApp routes @lid JIDs to the correct device even without a phone mapping.
-  if (isLidJid(jid) && jid.endsWith('@s.whatsapp.net')) {
-    const lidJid = num + '@lid';
-    console.log('[RESOLVE] LID detected -> ' + lidJid.substring(0, 20));
-    return lidJid;
+  // 3. Log unresolved LIDs so we can diagnose
+  if (isLidJid(jid)) {
+    console.log('[RESOLVE] LID unresolved, using as-is: ' + jid.substring(0, 25));
   }
 
   return jid;
@@ -728,6 +725,7 @@ async function startBot() {
     if (!text) return;
 
     console.log('[INCOMING] key=' + JSON.stringify(msg.key));
+    console.log('[INCOMING] full=' + JSON.stringify(msg));
     console.log('[INCOMING] ' + from.substring(0, 20) + ': ' + text);
     await handleMessage(from, text);
   });
