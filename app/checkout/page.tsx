@@ -7,6 +7,51 @@ import { useRouter } from 'next/navigation';
 const DELIVERY_FEE = 5000;
 const MOBILE_MONEY = ['mpesa', 'tigopesa', 'airtel', 'halopesa'];
 
+const PAYMENT_OPTIONS = [
+  {
+    id: 'whatsapp',
+    label: 'WhatsApp Order',
+    sub: 'Confirm & pay via WhatsApp',
+    badge: 'Fastest',
+    badgeColor: 'bg-green-100 text-green-700',
+    icon: (
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 2.01.61 3.96 1.76 5.61L2.05 22l4.63-1.8c1.63.9 3.46 1.38 5.36 1.38 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2z"/>
+      </svg>
+    ),
+    bg: 'bg-green-500',
+  },
+  {
+    id: 'cod',
+    label: 'Cash on Delivery',
+    sub: 'Pay when you receive',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+    ),
+    bg: 'bg-gray-500',
+  },
+  {
+    id: 'bank',
+    label: 'Bank Transfer',
+    sub: 'CRDB, NMB, NBC',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H5a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      </svg>
+    ),
+    bg: 'bg-blue-700',
+  },
+];
+
+const MOBILE_MONEY_OPTIONS = [
+  { id: 'mpesa',     label: 'M-Pesa',       bg: 'bg-green-600' },
+  { id: 'tigopesa', label: 'Tigo Pesa',     bg: 'bg-blue-500'  },
+  { id: 'airtel',   label: 'Airtel Money',  bg: 'bg-red-500'   },
+  { id: 'halopesa', label: 'HaloPesa',      bg: 'bg-purple-600'},
+];
+
 export default function CheckoutPage() {
   const router = useRouter();
   const [cart, setCart] = useState<any>(null);
@@ -17,60 +62,38 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
-  const handleCustomerInfoChange = (field: string, value: string) => {
+  const handleInfoChange = (field: string, value: string) => {
     setCustomerInfo(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => { const e = { ...prev }; delete e[field]; return e; });
   };
 
   useEffect(() => {
-    const savedCart = localStorage.getItem('qm-beauty-cart');
-    if (savedCart) {
+    const saved = localStorage.getItem('qm-beauty-cart');
+    if (saved) {
       try {
-        const parsedCart = JSON.parse(savedCart);
-        const total = parsedCart.reduce((sum: number, item: any) => {
-          const price = item.product.salePrice || item.product.price;
-          return sum + price * item.quantity;
+        const parsed = JSON.parse(saved);
+        const total = parsed.reduce((sum: number, item: any) => {
+          return sum + (item.product.salePrice || item.product.price) * item.quantity;
         }, 0);
-        setCart({ items: parsedCart, total });
-      } catch (error) {
-        console.error('Error loading cart:', error);
-      }
+        setCart({ items: parsed, total });
+      } catch {}
     }
   }, []);
 
-  if (!cart || !cart.items || cart.items.length === 0) {
-    return (
-      <div className="min-h-screen bg-[#faf7f2] py-16">
-        <div className="container mx-auto px-4 max-w-6xl text-center">
-          <h1 className="text-4xl font-light text-[#6b4f3a] mb-4">Your Cart is Empty</h1>
-          <p className="text-[#8b7356] mb-8">Add some products to your cart before checking out</p>
-          <Link 
-            href="/shop" 
-            className="inline-block bg-[#b49a7b] text-white px-8 py-3 rounded-lg hover:bg-[#9a8266] transition-all"
-          >
-            Continue Shopping
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const formatPrice = (price: number) => {
-    return `${price.toLocaleString()} Tsh`;
-  };
+  const formatPrice = (p: number) => `${p.toLocaleString()} Tsh`;
 
   function validate(): boolean {
     const e: Record<string, string> = {};
     if (!customerInfo.fullName.trim()) e.fullName = 'Full name is required';
-    if (!/^\d{9}$/.test(customerInfo.phone.trim())) e.phone = 'Enter 9 digits after +255 (e.g. 712345678)';
-    if (customerInfo.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerInfo.email)) e.email = 'Enter a valid email address';
-    if (selectedDelivery === 'home' && !customerInfo.address.trim()) e.address = 'Delivery address is required for home delivery';
+    if (!/^\d{9}$/.test(customerInfo.phone.trim())) e.phone = 'Enter 9 digits after +255';
+    if (customerInfo.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerInfo.email)) e.email = 'Invalid email address';
+    if (selectedDelivery === 'home' && !customerInfo.address.trim()) e.address = 'Delivery address is required';
     if (!selectedPayment) e.payment = 'Please select a payment method';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
-  const handleCheckout = async (): Promise<void> => {
+  const handleCheckout = async () => {
     if (!validate()) return;
     setLoading(true);
     setSubmitError('');
@@ -97,13 +120,12 @@ export default function CheckoutPage() {
     };
 
     try {
-      const response = await fetch('/api/cart/checkout', {
+      const res = await fetch('/api/cart/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData),
       });
-
-      const result = await response.json();
+      const result = await res.json();
 
       if (!result.success) {
         setSubmitError(result.error || 'Failed to place order. Please try again.');
@@ -112,448 +134,336 @@ export default function CheckoutPage() {
       }
 
       const { orderCode } = result.data;
-
-      // Clear cart from localStorage
       localStorage.removeItem('qm-beauty-cart');
 
       if (selectedPayment === 'whatsapp') {
-        // Also open WhatsApp so the customer can confirm manually
-        const cartItemsMsg = cart.items
-          .map((item: any) => `${item.quantity}x ${item.product.name} - ${(item.product.salePrice || item.product.price).toLocaleString()} Tsh`)
+        const lines = cart.items
+          .map((i: any) => `${i.quantity}x ${i.product.name} — ${((i.product.salePrice || i.product.price) * i.quantity).toLocaleString()} Tsh`)
           .join('\n');
-        const deliveryMsg = selectedDelivery === 'home'
-          ? `\nDelivery: TZS 5,000\nAddress: ${customerInfo.address}`
+        const deliveryNote = selectedDelivery === 'home'
+          ? `\nDelivery: 5,000 Tsh\nAddress: ${customerInfo.address}`
           : '\nDelivery: Free (Store Pickup)';
-        const waMessage = `Hello! I'd like to place an order:\n\n${cartItemsMsg}\n\nTotal: ${totalAmount.toLocaleString()} Tsh${deliveryMsg}\n\nOrder: ${orderCode}\nName: ${customerInfo.fullName}\nPhone: ${customerPhone}`;
-        window.open(`https://wa.me/255657120151?text=${encodeURIComponent(waMessage)}`, '_blank');
+        const msg = `Hello! I'd like to place an order:\n\n${lines}\n\nTotal: ${totalAmount.toLocaleString()} Tsh${deliveryNote}\n\nOrder: ${orderCode}\nName: ${customerInfo.fullName}\nPhone: ${customerPhone}`;
+        window.open(`https://wa.me/255657120151?text=${encodeURIComponent(msg)}`, '_blank');
         router.push(`/order-confirmation?order=${orderCode}`);
       } else if (MOBILE_MONEY.includes(selectedPayment)) {
         localStorage.setItem('current-order', JSON.stringify({ ...orderData, orderCode }));
         router.push(`/payment?order=${orderCode}`);
       } else {
-        // COD, bank transfer, etc.
         router.push(`/order-confirmation?order=${orderCode}`);
       }
-    } catch (error) {
-      console.error('Checkout error:', error);
+    } catch {
       setSubmitError('Network error. Please check your connection and try again.');
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--cream)] to-[var(--soft-beige)] py-12">
-      <div className="container mx-auto px-4 max-w-7xl">
-        
-        {/* Header */}
-        <div className="mb-10 text-center">
-          <h1 className="text-4xl font-serif font-light text-[var(--deep-charcoal)] mb-2">Complete Your Order</h1>
-          <p className="text-[var(--textLight)]">Secure checkout process</p>
-          
-          {/* Progress indicator */}
-          <div className="flex justify-center mt-8">
-            <div className="flex items-center">
-              <div className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-full bg-[var(--rose-gold)] flex items-center justify-center text-white font-medium">1</div>
-                <span className="mt-2 text-xs text-[var(--deep-charcoal)]">Cart</span>
-              </div>
-              <div className="w-16 h-0.5 bg-[var(--borderSoft)]"></div>
-              <div className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-full bg-[var(--rose-gold)] flex items-center justify-center text-white font-medium">2</div>
-                <span className="mt-2 text-xs text-[var(--deep-charcoal)]">Information</span>
-              </div>
-              <div className="w-16 h-0.5 bg-[var(--borderSoft)]"></div>
-              <div className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-medium">3</div>
-                <span className="mt-2 text-xs text-[var(--deep-charcoal)]">Payment</span>
-              </div>
-            </div>
+  if (!cart || !cart.items || cart.items.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#faf7f2] flex items-center justify-center px-4">
+        <div className="text-center max-w-sm">
+          <div className="w-20 h-20 mx-auto mb-6 bg-[#f0e8dc] rounded-full flex items-center justify-center">
+            <svg className="w-10 h-10 text-[#b49a7b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+            </svg>
           </div>
+          <h1 className="text-2xl font-serif text-[#4a3728] mb-2">Your cart is empty</h1>
+          <p className="text-[#8b7356] mb-8 text-sm">Add some products before checking out</p>
+          <Link href="/shop" className="inline-block bg-[#b49a7b] text-white px-8 py-3 rounded-xl font-medium hover:bg-[#9a8266] transition-colors">
+            Browse Products
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const deliveryFee = selectedDelivery === 'home' ? DELIVERY_FEE : 0;
+  const grandTotal = cart.total + deliveryFee;
+
+  const inputCls = (field: string) =>
+    `w-full px-4 py-3 text-sm border rounded-xl outline-none transition-colors focus:ring-2 focus:ring-[#c4a882] ${
+      errors[field] ? 'border-red-400 bg-red-50' : 'border-[#e8ddd0] bg-white focus:border-[#c4a882]'
+    }`;
+
+  return (
+    <div className="min-h-screen bg-[#faf7f2] py-10 px-4">
+      <div className="max-w-5xl mx-auto">
+
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <Link href="/shop" className="inline-flex items-center gap-1.5 text-sm text-[#8b7356] hover:text-[#4a3728] mb-4 transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/>
+            </svg>
+            Continue Shopping
+          </Link>
+          <h1 className="text-3xl font-serif font-light text-[#4a3728]">Checkout</h1>
+          <p className="text-sm text-[#8b7356] mt-1">Complete your order below</p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          
-          {/* Left Column - Customer & Delivery Info */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* Customer Information Card */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 border border-[var(--borderSoft)]">
-              <h2 className="text-xl font-serif font-semibold text-[var(--deep-charcoal)] mb-6 flex items-center">
-                <span className="w-8 h-8 bg-[var(--rose-gold)] rounded-full flex items-center justify-center text-white text-sm mr-3">1</span>
-                Customer Information
+        <div className="grid lg:grid-cols-5 gap-6">
+
+          {/* ── Left: Forms ── */}
+          <div className="lg:col-span-3 space-y-5">
+
+            {/* Customer Info */}
+            <section className="bg-white rounded-2xl border border-[#ede4d8] p-6">
+              <h2 className="text-base font-semibold text-[#4a3728] mb-5 flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#c4a882] text-white text-xs font-bold flex items-center justify-center">1</span>
+                Your Details
               </h2>
-              <div className="grid md:grid-cols-2 gap-6">
+
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[var(--deep-charcoal)] mb-2">Full Name *</label>
+                  <label className="block text-xs font-medium text-[#6b4f3a] mb-1.5">Full Name *</label>
                   <input
                     type="text"
                     value={customerInfo.fullName}
-                    onChange={(e) => handleCustomerInfoChange('fullName', e.target.value)}
-                    placeholder="Enter your full name"
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--rose-gold)] focus:border-[var(--rose-gold)] transition-colors ${errors.fullName ? 'border-red-400' : 'border-[var(--borderSoft)]'}`}
+                    onChange={e => handleInfoChange('fullName', e.target.value)}
+                    placeholder="e.g. Amina Hassan"
+                    className={inputCls('fullName')}
                   />
                   {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>}
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-[var(--deep-charcoal)] mb-2">Phone Number *</label>
+                  <label className="block text-xs font-medium text-[#6b4f3a] mb-1.5">Phone Number *</label>
                   <div className="flex">
-                    <span className="inline-flex items-center px-4 rounded-l-lg border border-r-0 border-[var(--borderSoft)] bg-[var(--cream)] text-[var(--deep-charcoal)] text-sm">
+                    <span className="flex items-center px-4 rounded-l-xl border border-r-0 border-[#e8ddd0] bg-[#f5ede3] text-[#6b4f3a] text-sm font-medium">
                       +255
                     </span>
                     <input
                       type="tel"
                       value={customerInfo.phone}
-                      onChange={(e) => handleCustomerInfoChange('phone', e.target.value.replace(/\D/g, '').slice(0, 9))}
-                      placeholder="712345678"
+                      onChange={e => handleInfoChange('phone', e.target.value.replace(/\D/g, '').slice(0, 9))}
+                      placeholder="712 345 678"
                       maxLength={9}
-                      className={`flex-1 px-4 py-3 border rounded-r-lg focus:ring-2 focus:ring-[var(--rose-gold)] focus:border-[var(--rose-gold)] transition-colors ${errors.phone ? 'border-red-400' : 'border-[var(--borderSoft)]'}`}
+                      className={`flex-1 px-4 py-3 text-sm border rounded-r-xl outline-none transition-colors focus:ring-2 focus:ring-[#c4a882] ${errors.phone ? 'border-red-400 bg-red-50' : 'border-[#e8ddd0] focus:border-[#c4a882]'}`}
                     />
                   </div>
                   {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
                 </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-[var(--deep-charcoal)] mb-2">Email Address</label>
+
+                <div>
+                  <label className="block text-xs font-medium text-[#6b4f3a] mb-1.5">Email <span className="text-[#a89070] font-normal">(optional)</span></label>
                   <input
                     type="email"
                     value={customerInfo.email}
-                    onChange={(e) => handleCustomerInfoChange('email', e.target.value)}
-                    placeholder="your.email@example.com (optional)"
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--rose-gold)] focus:border-[var(--rose-gold)] transition-colors ${errors.email ? 'border-red-400' : 'border-[var(--borderSoft)]'}`}
+                    onChange={e => handleInfoChange('email', e.target.value)}
+                    placeholder="you@example.com"
+                    className={inputCls('email')}
                   />
                   {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Delivery Information Card */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 border border-[var(--borderSoft)]">
-              <h2 className="text-xl font-serif font-semibold text-[var(--deep-charcoal)] mb-6 flex items-center">
-                <span className="w-8 h-8 bg-[var(--rose-gold)] rounded-full flex items-center justify-center text-white text-sm mr-3">2</span>
-                Delivery Information
-              </h2>
-              
-              <div className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <button
-                    onClick={() => setSelectedDelivery('home')}
-                    className={`p-5 border-2 rounded-xl text-left transition-all ${
-                      selectedDelivery === 'home'
-                        ? 'border-[var(--rose-gold)] bg-[var(--cream)]'
-                        : 'border-[var(--borderSoft)] hover:border-[var(--rose-gold)]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-[var(--deep-charcoal)]">Home Delivery</span>
-                      <span className="text-sm bg-[var(--rose-gold)] text-white px-3 py-1 rounded">+ TZS 5,000</span>
-                    </div>
-                    <p className="text-sm text-[var(--textLight)]">Delivery within 2-3 business days</p>
-                    <p className="text-xs text-[var(--textLight)] mt-1 opacity-70">Dar es Salaam only</p>
-                  </button>
-
-                  <button
-                    onClick={() => setSelectedDelivery('pickup')}
-                    className={`p-5 border-2 rounded-xl text-left transition-all ${
-                      selectedDelivery === 'pickup'
-                        ? 'border-[var(--rose-gold)] bg-[var(--cream)]'
-                        : 'border-[var(--borderSoft)] hover:border-[var(--rose-gold)]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-[var(--deep-charcoal)]">Store Pickup</span>
-                      <span className="text-sm bg-green-600 text-white px-3 py-1 rounded">Free</span>
-                    </div>
-                    <p className="text-sm text-[var(--textLight)]">Pick up from our Oysterbay store</p>
-                    <p className="text-xs text-[var(--textLight)] mt-1 opacity-70">Ready in 24 hours</p>
-                  </button>
-                </div>
-
-                {selectedDelivery === 'home' && (
-                  <div className="mt-4 p-4 bg-[var(--cream)] rounded-lg border border-[var(--borderSoft)]">
-                    <label className="block text-sm font-medium text-[var(--deep-charcoal)] mb-2">Delivery Address *</label>
-                    <textarea
-                      value={customerInfo.address}
-                      onChange={(e) => handleCustomerInfoChange('address', e.target.value)}
-                      placeholder="Street address, Landmark, Area (e.g., Oysterbay, Mikocheni)"
-                      rows={3}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--rose-gold)] focus:border-[var(--rose-gold)] transition-colors ${errors.address ? 'border-red-400' : 'border-[var(--borderSoft)]'}`}
-                    />
-                    {errors.address && <p className="mt-1 text-xs text-red-500">{errors.address}</p>}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Payment Methods Card - WITH LOGOS */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 border border-[var(--borderSoft)]">
-              <h2 className="text-xl font-serif font-semibold text-[var(--deep-charcoal)] mb-6 flex items-center">
-                <span className="w-8 h-8 bg-[var(--rose-gold)] rounded-full flex items-center justify-center text-white text-sm mr-3">3</span>
-                Payment Method
+            {/* Delivery */}
+            <section className="bg-white rounded-2xl border border-[#ede4d8] p-6">
+              <h2 className="text-base font-semibold text-[#4a3728] mb-5 flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#c4a882] text-white text-xs font-bold flex items-center justify-center">2</span>
+                Delivery
               </h2>
 
-              <div className="space-y-4">
-                {/* WhatsApp Payment - with logo */}
-                <button
-                  onClick={() => setSelectedPayment('whatsapp')}
-                  className={`w-full p-4 border-2 rounded-xl flex items-center space-x-4 transition-all ${
-                    selectedPayment === 'whatsapp'
-                      ? 'border-[var(--rose-gold)] bg-[var(--cream)]'
-                      : 'border-[var(--borderSoft)] hover:border-[var(--rose-gold)]'
-                  }`}
-                >
-                  <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                    <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 2.01.61 3.96 1.76 5.61L2.05 22l4.63-1.8c1.63.9 3.46 1.38 5.36 1.38 5.46 0 9.91-4.45 9.91-9.91 0-5.46-4.45-9.92-9.91-9.92z"/>
-                    </svg>
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-semibold text-[var(--deep-charcoal)]">Order via WhatsApp</p>
-                    <p className="text-sm text-[var(--textLight)]">Confirm payment details on WhatsApp</p>
-                  </div>
-                  <span className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded-full">Fast</span>
-                </button>
-
-                {/* Cash on Delivery */}
-                <button
-                  onClick={() => setSelectedPayment('cod')}
-                  className={`w-full p-4 border-2 rounded-xl flex items-center space-x-4 transition-all ${
-                    selectedPayment === 'cod'
-                      ? 'border-[var(--rose-gold)] bg-[var(--cream)]'
-                      : 'border-[var(--borderSoft)] hover:border-[var(--rose-gold)]'
-                  }`}
-                >
-                  <div className="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center">
-                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-semibold text-[var(--deep-charcoal)]">Cash on Delivery</p>
-                    <p className="text-sm text-[var(--textLight)]">Pay when you receive your order</p>
-                  </div>
-                </button>
-
-                {/* Card Payments - Coming Soon */}
-                <div className="space-y-3">
-                  <p className="text-sm font-medium text-[var(--deep-charcoal)] px-1">Card Payments</p>
-                  
-                  {/* Visa */}
-                  <div className="w-full p-4 border-2 rounded-xl flex items-center space-x-4 opacity-60">
-                    <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                      V
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-semibold text-[var(--deep-charcoal)]">Visa</p>
-                      <p className="text-sm text-[var(--textLight)]">Coming soon</p>
-                    </div>
-                    <span className="text-xs bg-gray-300 text-gray-600 px-2 py-1 rounded">Soon</span>
-                  </div>
-
-                  {/* Mastercard */}
-                  <div className="w-full p-4 border-2 rounded-xl flex items-center space-x-4 opacity-60">
-                    <div className="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                      M
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-semibold text-[var(--deep-charcoal)]">Mastercard</p>
-                      <p className="text-sm text-[var(--textLight)]">Coming soon</p>
-                    </div>
-                    <span className="text-xs bg-gray-300 text-gray-600 px-2 py-1 rounded">Soon</span>
-                  </div>
-                </div>
-
-                {/* Mobile Money - WITH ALL MNO LOGOS */}
-                <div className="space-y-3">
-                  <p className="text-sm font-medium text-[var(--deep-charcoal)] px-1">Mobile Money</p>
-                  
-                  {/* M-Pesa */}
+              <div className="grid sm:grid-cols-2 gap-3 mb-4">
+                {[
+                  { id: 'pickup', title: 'Store Pickup', sub: 'Ready in 24 hrs · Oysterbay', badge: 'Free', badgeCls: 'bg-green-100 text-green-700' },
+                  { id: 'home',   title: 'Home Delivery', sub: '2–3 business days · DSM only', badge: '+5,000 Tsh', badgeCls: 'bg-[#f5ede3] text-[#8b5e3c]' },
+                ].map(opt => (
                   <button
-                    onClick={() => setSelectedPayment('mpesa')}
-                    className={`w-full p-4 border-2 rounded-xl flex items-center space-x-4 transition-all ${
-                      selectedPayment === 'mpesa'
-                        ? 'border-[var(--rose-gold)] bg-[var(--cream)]'
-                        : 'border-[var(--borderSoft)] hover:border-[var(--rose-gold)]'
+                    key={opt.id}
+                    onClick={() => setSelectedDelivery(opt.id)}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      selectedDelivery === opt.id
+                        ? 'border-[#c4a882] bg-[#fdf8f2]'
+                        : 'border-[#ede4d8] hover:border-[#c4a882]'
                     }`}
                   >
-                    <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                      M
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-medium text-sm text-[#4a3728]">{opt.title}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${opt.badgeCls}`}>{opt.badge}</span>
                     </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-semibold text-[var(--deep-charcoal)]">M-Pesa</p>
-                      <p className="text-sm text-[var(--textLight)]">Pay with Vodacom M-Pesa</p>
-                    </div>
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">Popular</span>
+                    <p className="text-xs text-[#8b7356] mt-1">{opt.sub}</p>
                   </button>
-
-                  {/* Tigo Pesa */}
-                  <button
-                    onClick={() => setSelectedPayment('tigopesa')}
-                    className={`w-full p-4 border-2 rounded-xl flex items-center space-x-4 transition-all ${
-                      selectedPayment === 'tigopesa'
-                        ? 'border-[var(--rose-gold)] bg-[var(--cream)]'
-                        : 'border-[var(--borderSoft)] hover:border-[var(--rose-gold)]'
-                    }`}
-                  >
-                    <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                      T
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-semibold text-[var(--deep-charcoal)]">Tigo Pesa</p>
-                      <p className="text-sm text-[var(--textLight)]">Pay with Tigo Pesa</p>
-                    </div>
-                  </button>
-
-                  {/* Airtel Money */}
-                  <button
-                    onClick={() => setSelectedPayment('airtel')}
-                    className={`w-full p-4 border-2 rounded-xl flex items-center space-x-4 transition-all ${
-                      selectedPayment === 'airtel'
-                        ? 'border-[var(--rose-gold)] bg-[var(--cream)]'
-                        : 'border-[var(--borderSoft)] hover:border-[var(--rose-gold)]'
-                    }`}
-                  >
-                    <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                      A
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-semibold text-[var(--deep-charcoal)]">Airtel Money</p>
-                      <p className="text-sm text-[var(--textLight)]">Pay with Airtel Money</p>
-                    </div>
-                  </button>
-
-                  {/* HaloPesa */}
-                  <button
-                    onClick={() => setSelectedPayment('halopesa')}
-                    className={`w-full p-4 border-2 rounded-xl flex items-center space-x-4 transition-all ${
-                      selectedPayment === 'halopesa'
-                        ? 'border-[var(--rose-gold)] bg-[var(--cream)]'
-                        : 'border-[var(--borderSoft)] hover:border-[var(--rose-gold)]'
-                    }`}
-                  >
-                    <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                      H
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-semibold text-[var(--deep-charcoal)]">HaloPesa</p>
-                      <p className="text-sm text-[var(--textLight)]">Pay with Halopesa</p>
-                    </div>
-                  </button>
-                </div>
-
-                {/* Bank Transfer */}
-                <button
-                  onClick={() => setSelectedPayment('bank')}
-                  className={`w-full p-4 border-2 rounded-xl flex items-center space-x-4 transition-all ${
-                    selectedPayment === 'bank'
-                      ? 'border-[var(--rose-gold)] bg-[var(--cream)]'
-                      : 'border-[var(--borderSoft)] hover:border-[var(--rose-gold)]'
-                  }`}
-                >
-                  <div className="w-12 h-12 bg-blue-700 rounded-lg flex items-center justify-center">
-                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H5a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-semibold text-[var(--deep-charcoal)]">Bank Transfer</p>
-                    <p className="text-sm text-[var(--textLight)]">Pay via CRDB, NMB, NBC</p>
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Order Summary */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-24 border border-[var(--borderSoft)]">
-              <h2 className="text-xl font-serif font-semibold text-[var(--deep-charcoal)] mb-6">Order Summary</h2>
-              
-              <div className="space-y-4">
-                {cart.items.map((item: any, index: number) => (
-                  <div key={index} className="flex space-x-4">
-                    <div className="w-16 h-16 bg-[var(--cream)] rounded-lg overflow-hidden flex-shrink-0 border border-[var(--borderSoft)]">
-                      {item.product.images && item.product.images[0] ? (
-                        <img 
-                          src={item.product.images[0]} 
-                          alt={item.product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[var(--textLight)]">
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-[var(--deep-charcoal)]">{item.product.name}</p>
-                      <p className="text-xs text-[var(--textLight)]">Qty: {item.quantity}</p>
-                      <p className="text-sm font-semibold text-[var(--rose-gold)] mt-1">
-                        {formatPrice((item.product.salePrice || item.product.price) * item.quantity)}
-                      </p>
-                    </div>
-                  </div>
                 ))}
               </div>
 
-              <div className="border-t border-[var(--borderSoft)] mt-6 pt-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-[var(--textLight)]">Subtotal</span>
-                  <span className="font-medium text-[var(--deep-charcoal)]">{formatPrice(cart.total)}</span>
+              {selectedDelivery === 'home' && (
+                <div>
+                  <label className="block text-xs font-medium text-[#6b4f3a] mb-1.5">Delivery Address *</label>
+                  <textarea
+                    value={customerInfo.address}
+                    onChange={e => handleInfoChange('address', e.target.value)}
+                    placeholder="Street, landmark, area — e.g. Oysterbay, near Total petrol station"
+                    rows={3}
+                    className={`w-full px-4 py-3 text-sm border rounded-xl outline-none resize-none transition-colors focus:ring-2 focus:ring-[#c4a882] ${errors.address ? 'border-red-400 bg-red-50' : 'border-[#e8ddd0] focus:border-[#c4a882]'}`}
+                  />
+                  {errors.address && <p className="mt-1 text-xs text-red-500">{errors.address}</p>}
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[var(--textLight)]">Delivery</span>
-                  <span className="font-medium text-[var(--deep-charcoal)]">{selectedDelivery === 'home' ? formatPrice(5000) : 'Free'}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold text-[var(--deep-charcoal)] pt-2">
-                  <span>Total</span>
-                  <span>{formatPrice(cart.total + (selectedDelivery === 'home' ? 5000 : 0))}</span>
+              )}
+            </section>
+
+            {/* Payment */}
+            <section className="bg-white rounded-2xl border border-[#ede4d8] p-6">
+              <h2 className="text-base font-semibold text-[#4a3728] mb-5 flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#c4a882] text-white text-xs font-bold flex items-center justify-center">3</span>
+                Payment Method
+              </h2>
+
+              <div className="space-y-3">
+                {/* Standard options */}
+                {PAYMENT_OPTIONS.map(opt => (
+                  <button
+                    key={opt.id}
+                    onClick={() => setSelectedPayment(opt.id)}
+                    className={`w-full flex items-center gap-4 p-3.5 rounded-xl border-2 transition-all text-left ${
+                      selectedPayment === opt.id
+                        ? 'border-[#c4a882] bg-[#fdf8f2]'
+                        : 'border-[#ede4d8] hover:border-[#c4a882]'
+                    }`}
+                  >
+                    <div className={`w-10 h-10 ${opt.bg} rounded-lg flex items-center justify-center text-white shrink-0`}>
+                      {opt.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-[#4a3728]">{opt.label}</p>
+                      <p className="text-xs text-[#8b7356]">{opt.sub}</p>
+                    </div>
+                    {opt.badge && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${opt.badgeColor}`}>{opt.badge}</span>
+                    )}
+                    <div className={`w-4 h-4 rounded-full border-2 shrink-0 transition-colors ${
+                      selectedPayment === opt.id ? 'border-[#c4a882] bg-[#c4a882]' : 'border-[#ccc]'
+                    }`} />
+                  </button>
+                ))}
+
+                {/* Mobile Money */}
+                <div className="pt-1">
+                  <p className="text-xs font-semibold text-[#8b7356] uppercase tracking-wide mb-2 px-0.5">Mobile Money</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {MOBILE_MONEY_OPTIONS.map(opt => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setSelectedPayment(opt.id)}
+                        className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                          selectedPayment === opt.id
+                            ? 'border-[#c4a882] bg-[#fdf8f2]'
+                            : 'border-[#ede4d8] hover:border-[#c4a882]'
+                        }`}
+                      >
+                        <div className={`w-8 h-8 ${opt.bg} rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0`}>
+                          {opt.label[0]}
+                        </div>
+                        <span className="text-sm font-medium text-[#4a3728] leading-tight">{opt.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
               {errors.payment && (
-                <p className="mt-4 text-sm text-red-500 text-center">{errors.payment}</p>
+                <p className="mt-3 text-xs text-red-500 flex items-center gap-1">
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/></svg>
+                  {errors.payment}
+                </p>
               )}
+            </section>
+          </div>
+
+          {/* ── Right: Order Summary ── */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-2xl border border-[#ede4d8] p-6 sticky top-6">
+              <h2 className="text-base font-semibold text-[#4a3728] mb-5">Order Summary</h2>
+
+              {/* Items */}
+              <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+                {cart.items.map((item: any, i: number) => {
+                  const price = item.product.salePrice || item.product.price;
+                  return (
+                    <div key={i} className="flex gap-3 items-start">
+                      <div className="w-12 h-12 rounded-lg bg-[#f5ede3] overflow-hidden shrink-0 border border-[#ede4d8]">
+                        {item.product.images?.[0]
+                          ? <img src={item.product.images[0]} alt={item.product.name} className="w-full h-full object-cover"/>
+                          : <div className="w-full h-full flex items-center justify-center text-[#c4a882]">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                              </svg>
+                            </div>
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#4a3728] truncate">{item.product.name}</p>
+                        <p className="text-xs text-[#8b7356]">Qty: {item.quantity}</p>
+                      </div>
+                      <p className="text-sm font-semibold text-[#c4a882] shrink-0">{formatPrice(price * item.quantity)}</p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Totals */}
+              <div className="mt-5 pt-4 border-t border-[#ede4d8] space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#8b7356]">Subtotal</span>
+                  <span className="text-[#4a3728] font-medium">{formatPrice(cart.total)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#8b7356]">Delivery</span>
+                  <span className={`font-medium ${selectedDelivery === 'home' ? 'text-[#4a3728]' : 'text-green-600'}`}>
+                    {selectedDelivery === 'home' ? formatPrice(DELIVERY_FEE) : 'Free'}
+                  </span>
+                </div>
+                <div className="flex justify-between pt-3 border-t border-[#ede4d8]">
+                  <span className="font-bold text-[#4a3728]">Total</span>
+                  <span className="font-bold text-lg text-[#4a3728]">{formatPrice(grandTotal)}</span>
+                </div>
+              </div>
+
+              {/* Error */}
               {submitError && (
-                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 flex items-start gap-2">
+                  <svg className="w-4 h-4 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/></svg>
                   {submitError}
                 </div>
               )}
 
+              {/* CTA */}
               <button
                 onClick={handleCheckout}
                 disabled={loading}
-                className={`w-full mt-4 py-3 px-6 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                className={`w-full mt-5 py-3.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                   loading
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-[var(--rose-gold)] text-white hover:bg-[var(--accent-gold)]'
+                    ? 'bg-[#ddd0bf] text-[#a09080] cursor-not-allowed'
+                    : 'bg-[#c4a882] text-white hover:bg-[#b49270] active:scale-[0.98]'
                 }`}
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                    <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                     </svg>
                     Processing…
                   </>
                 ) : selectedPayment === 'whatsapp'
-                  ? 'Continue to WhatsApp'
+                  ? 'Continue to WhatsApp →'
                   : selectedPayment === 'cod' || selectedPayment === 'bank'
-                  ? 'Place Order'
-                  : 'Pay Now'
+                  ? 'Place Order →'
+                  : 'Pay Now →'
                 }
               </button>
 
-              <div className="flex items-center justify-center mt-4 space-x-2">
-                <div className="w-8 h-8 bg-green-600 rounded flex items-center justify-center text-white text-xs font-bold">M</div>
-                <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white text-xs font-bold">T</div>
-                <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center text-white text-xs font-bold">A</div>
-                <div className="w-8 h-8 bg-purple-600 rounded flex items-center justify-center text-white text-xs font-bold">H</div>
-                <p className="text-xs text-[var(--textLight)] ml-2">Secure payments</p>
+              {/* Trust */}
+              <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-[#a89070]">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                Secure checkout · Your data is protected
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>

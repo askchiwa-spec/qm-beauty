@@ -220,27 +220,6 @@ export const products: Product[] = [
     packageSize: '50g',
   },
   {
-    id: '10',
-    name: 'Waxing Kit',
-    slug: 'waxing-kit',
-    price: 35000,
-    category: 'skincare',
-    image: '/images/products/waxing-kit.jpg',
-    images: ['/images/products/waxing-kit.jpg'],
-    shortDescription: 'Professional waxing kit for smooth, long-lasting results at home.',
-    description: 'QM Beauty Professional Waxing Kit provides salon-quality results at home. This complete kit includes everything you need for effective hair removal, leaving your skin smooth and silky for weeks.',
-    ingredients: ['Natural Resins', 'Essential Oils', 'Beeswax', 'Plant-based Ingredients'],
-    benefits: [
-      'Long-lasting smooth skin',
-      'Reduces hair regrowth over time',
-      'Exfoliates the skin, removing dead skin cells',
-      'Prevents ingrown hairs',
-      'Easy to use at home'
-    ],
-    inStock: true,
-    packageSize: '200g',
-  },
-  {
     id: '11',
     name: 'Coffee Body Scrub',
     slug: 'coffee-body-scrub',
@@ -261,70 +240,6 @@ export const products: Product[] = [
     inStock: true,
     featured: true,
     packageSize: '200g',
-  },
-  {
-    id: '12',
-    name: 'Hair Relaxer & Treatment',
-    slug: 'hair-relaxer-treatment',
-    price: 55000,
-    category: 'haircare',
-    image: '/images/products/hair-relaxer.png',
-    images: ['/images/products/hair-relaxer.png'],
-    shortDescription: 'Professional hair relaxer and treatment for smooth, manageable hair.',
-    description: 'QM Beauty Hair Relaxer & Treatment provides professional results at home. This specially formulated system strengthens and nourishes your hair while smoothing and straightening frizzy or curly hair.',
-    ingredients: ['Keratin Complex', 'Natural Oils', 'Proteins', 'Moisturizing Agents'],
-    benefits: [
-      'Strengthens and nourishes hair',
-      'Smoothens and straightens frizzy or curly hair',
-      'Reduces hair breakage and split ends',
-      'Promotes healthy hair growth',
-      'Long-lasting results'
-    ],
-    inStock: true,
-    packageSize: '300ml',
-  },
-  {
-    id: '13',
-    name: 'Nail Care Set',
-    slug: 'nail-care-set',
-    price: 30000,
-    category: 'skincare',
-    image: '/images/products/nail-set.jpg',
-    images: ['/images/products/nail-set.jpg'],
-    shortDescription: 'Complete nail care set for professional manicure and pedicure at home.',
-    description: 'QM Beauty Complete Nail Care Set includes all the tools and products needed for a professional-quality manicure and pedicure at home. Maintain healthy, beautiful nails with this comprehensive set.',
-    ingredients: ['Nail Strengtheners', 'Cuticle Oils', 'Natural Polish', 'Essential Tools'],
-    benefits: [
-      'Maintains healthy nails and cuticles',
-      'Prevents nail damage and infections',
-      'Enhances the appearance of hands and feet',
-      'Provides relaxation and stress relief',
-      'Complete solution for nail care'
-    ],
-    inStock: true,
-    packageSize: 'Set',
-  },
-
-  {
-    id: '15',
-    name: 'Henna Art Kit',
-    slug: 'henna-art-kit',
-    price: 25000,
-    category: 'skincare',
-    image: '/images/products/henna-kit.jpg',
-    images: ['/images/products/henna-kit.jpg'],
-    shortDescription: 'Premium henna kit for beautiful body art designs.',
-    description: 'QM Beauty Henna Art Kit provides everything needed to create beautiful, intricate henna designs. This natural, safe henna paste creates long-lasting, stunning body art.',
-    ingredients: ['Natural Henna Powder', 'Essential Oils', 'Natural Binding Agents'],
-    benefits: [
-      'Natural and temporary body art',
-      'Safe for all skin types',
-      'Beautiful and intricate designs for special occasions',
-      'Long-lasting and fades naturally',
-      'Easy application with included tools'
-    ],
-    inStock: true,
-    packageSize: 'Kit',
   },
   {
     id: '16',
@@ -543,7 +458,6 @@ export const services: Service[] = [
     slug: 'japanese-head-spa',
     description: 'Experience the ultimate relaxation with our signature Japanese Head Spa. This luxurious treatment combines scalp massage, deep cleansing, and nourishing treatments to relieve stress and promote healthy hair growth.',
     duration: '90 minutes',
-    price: 80000,
     image: '/services/head-spa.jpg',
     category: 'spa',
     benefits: ['Deep relaxation', 'Scalp rejuvenation', 'Promotes hair growth', 'Stress relief', 'Professional care']
@@ -554,7 +468,6 @@ export const services: Service[] = [
     slug: 'luxury-facial',
     description: 'Pamper yourself with our premium facial treatment using QM Beauty natural products. Deep cleansing, exfoliation, and hydration for glowing, radiant skin.',
     duration: '75 minutes',
-    price: 70000,
     image: '/services/facial.png',
     category: 'facial',
     benefits: ['Deep cleansing', 'Brightens skin', 'Reduces dark spots', 'Hydrating', 'Anti-aging']
@@ -565,7 +478,6 @@ export const services: Service[] = [
     slug: 'body-massage',
     description: 'Relax and unwind with our therapeutic full body massage. Using natural oils and expert techniques to relieve tension and improve circulation.',
     duration: '120 minutes',
-    price: 85000,
     image: '/services/foot-massage.jpg',
     category: 'spa',
     benefits: ['Stress relief', 'Muscle relaxation', 'Improved circulation', 'Tension release']
@@ -576,7 +488,6 @@ export const services: Service[] = [
     slug: 'qm-waxing',
     description: 'Professional waxing service for long-lasting smooth skin.',
     duration: '45 minutes',
-    price: 25000,
     image: '/services/waxing.png',
     category: 'spa',
     benefits: ['Long-lasting smooth skin', 'Reduces hair regrowth over time', 'Exfoliates the skin, removing dead skin cells', 'Prevents ingrown hairs']
@@ -587,7 +498,6 @@ export const services: Service[] = [
     slug: 'qm-full-body-coffee-scrub',
     description: 'Deep exfoliation treatment using coffee, honey, and turmeric for smooth, glowing skin.',
     duration: '60 minutes',
-    price: 65000,
     image: '/services/coffee-scrub.jpg',
     category: 'spa',
     benefits: ['Deep exfoliation removes dead skin cells', 'Coffee stimulates blood circulation and reduces cellulite appearance', 'Honey hydrates and nourishes the skin, providing natural antibacterial properties', 'Turmeric brightens the skin and reduces inflammation', 'Leaves skin feeling smooth, rejuvenated, and glowing']
@@ -598,7 +508,6 @@ export const services: Service[] = [
     slug: 'hair-treatments-relaxer',
     description: 'Professional hair treatment and relaxer service to strengthen and nourish your hair.',
     duration: '90 minutes',
-    price: 45000,
     image: '/services/hair-braiding.png',
     category: 'haircare',
     benefits: ['Strengthens and nourishes hair', 'Smoothens and straightens frizzy or curly hair', 'Reduces hair breakage and split ends', 'Promotes healthy hair growth']
@@ -609,7 +518,6 @@ export const services: Service[] = [
     slug: 'hair-braiding',
     description: 'Professional hair braiding service for stylish and protective styling.',
     duration: '180 minutes',
-    price: 50000,
     image: '/services/hair-braiding.png',
     category: 'haircare',
     benefits: ['Protective styling to prevent hair damage', 'Versatile and stylish looks', 'Low maintenance and easy to manage', 'Promotes hair growth by reducing manipulation']
@@ -620,7 +528,6 @@ export const services: Service[] = [
     slug: 'hair-plaiting',
     description: 'Professional hair plaiting service for neat and stylish looks.',
     duration: '150 minutes',
-    price: 40000,
     image: '/services/hair-plaiting.png',
     category: 'haircare',
     benefits: ['Stylish and neat appearance', 'Protects natural hair from damage', 'Reduces daily styling time', 'Encourages hair growth']
@@ -631,7 +538,6 @@ export const services: Service[] = [
     slug: 'nails-manicure-pedicure',
     description: 'Professional nail care service including manicure and pedicure.',
     duration: '75 minutes',
-    price: 30000,
     image: '/services/nails.png',
     category: 'spa',
     benefits: ['Maintains healthy nails and cuticles', 'Prevents nail damage and infections', 'Enhances the appearance of hands and feet', 'Provides relaxation and stress relief']
@@ -642,7 +548,6 @@ export const services: Service[] = [
     slug: 'make-up',
     description: 'Professional makeup application for special occasions and events.',
     duration: '60 minutes',
-    price: 40000,
     image: '/services/makeup.png',
     category: 'beauty',
     benefits: ['Enhances natural beauty', 'Boosts confidence for special occasions', 'Professional application ensures long-lasting results', 'Tailored looks to suit individual preferences and styles']
@@ -653,7 +558,6 @@ export const services: Service[] = [
     slug: 'heena',
     description: 'Professional henna art service for beautiful designs on special occasions.',
     duration: '90 minutes',
-    price: 35000,
     image: '/services/heena.png',
     category: 'beauty',
     benefits: ['Natural and temporary body art', 'Safe for all skin types', 'Beautiful and intricate designs for special occasions', 'Long-lasting and fades naturally']
@@ -664,7 +568,6 @@ export const services: Service[] = [
     slug: 'foot-massage',
     description: 'Relaxing foot massage to soothe tired and achy feet.',
     duration: '45 minutes',
-    price: 50000,
     image: '/services/foot-massage.jpg',
     category: 'spa',
     benefits: ['Soothes tired and achy feet', 'Exfoliates and softens the skin', 'Improves circulation and reduces swelling', 'Provides relaxation and stress relief']
@@ -676,7 +579,6 @@ export const services: Service[] = [
     slug: 'threading',
     description: 'Precision threading service for eyebrows, upper lip, and chin.',
     duration: '30 minutes',
-    price: 15000,
     image: '/services/heena.png',
     category: 'beauty',
     benefits: ['Precise hair removal for a clean and defined look', 'Gentle on the skin, suitable for sensitive areas', 'Long-lasting results compared to other methods', 'Reduces hair regrowth over time']
@@ -687,7 +589,6 @@ export const services: Service[] = [
     slug: 'special-packages',
     description: 'Customized service packages tailored to meet individual needs.',
     duration: 'Varies',
-    price: 100000,
     image: '/services/head-spa.jpg',
     category: 'spa',
     benefits: ['Customized services to meet individual needs', 'Offers a comprehensive beauty and relaxation experience', 'Value for money with bundled services', 'Ideal for gifting or special occasions']

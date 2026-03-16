@@ -1,4 +1,4 @@
-﻿import { makeWASocket, DisconnectReason, useMultiFileAuthState, delay } from '@whiskeysockets/baileys';
+﻿import { makeWASocket, DisconnectReason, useMultiFileAuthState, delay, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
 import { Boom } from '@hapi/boom';
 
 const QRCode = require('qrcode-terminal');
@@ -36,11 +36,20 @@ const userStates: Map<string, UserState> = new Map();
 
 // Booking services
 const BOOKING_SERVICES = [
-  { id: '1', name: 'Luxury Facial Treatment', price: '70,000 TZS', duration: '75 min' },
-  { id: '2', name: 'Hair Treatments & Relaxer', price: '45,000 TZS', duration: '90 min' },
-  { id: '3', name: 'Nails (Manicure & Pedicure)', price: '30,000 TZS', duration: '75 min' },
-  { id: '4', name: 'QM Waxing', price: '25,000 TZS', duration: '45 min' },
-  { id: '5', name: 'Full Body Massage', price: '85,000 TZS', duration: '120 min' }
+  { id: '1', name: 'Japanese Head Spa Treatment', duration: '90 min' },
+  { id: '2', name: 'Luxury Facial Treatment', duration: '75 min' },
+  { id: '3', name: 'Full Body Massage', duration: '120 min' },
+  { id: '4', name: 'QM Waxing', duration: '45 min' },
+  { id: '5', name: 'QM Full Body Coffee Scrub', duration: '60 min' },
+  { id: '6', name: 'Hair Treatments & Relaxer', duration: '90 min' },
+  { id: '7', name: 'Hair Braiding', duration: '180 min' },
+  { id: '8', name: 'Hair Plaiting', duration: '150 min' },
+  { id: '9', name: 'Nails (Manicure & Pedicure)', duration: '75 min' },
+  { id: '10', name: 'Make Up', duration: '60 min' },
+  { id: '11', name: 'Heena', duration: '90 min' },
+  { id: '12', name: 'Foot Massage', duration: '45 min' },
+  { id: '13', name: 'Eyebrows / Upper Lip / Chin Threading', duration: '30 min' },
+  { id: '14', name: 'Special Packages', duration: 'Varies' }
 ];
 
 const DATE_OPTIONS = ['Today', 'Tomorrow', 'In 2 days', 'In 3 days', 'In 4 days', 'In 5 days', 'In 6 days'];
@@ -335,25 +344,25 @@ async function handleMainMenuInput(jid: string, text: string) {
 // ============ BOOKING FLOW ============
 
 async function showBookingServices(jid: string) {
-  let msg = '💇 Book Appointment\n\nSelect service (1-5):\n\n';
+  let msg = '💇 *Book Appointment*\n\nSelect service:\n\n';
   BOOKING_SERVICES.forEach(s => {
-    msg += s.id + '. ' + s.name + '\n   💰 ' + s.price + ' | ⏱ ' + s.duration + '\n';
+    msg += s.id + '. ' + s.name + ' ⏱ ' + s.duration + '\n';
   });
-  msg += '\n📝 Reply 1-5\n⬅️ Reply M';
+  msg += '\n📝 Reply with number\n⬅️ Reply M';
   await sendReply(jid, msg);
 }
 
 async function handleBookingService(jid: string, text: string) {
   const num = parseInt(text.trim());
-  if (isNaN(num) || num < 1 || num > 5) {
-    await sendReply(jid, '❌ Invalid. Reply 1-5');
+  if (isNaN(num) || num < 1 || num > BOOKING_SERVICES.length) {
+    await sendReply(jid, '❌ Invalid. Reply 1-' + BOOKING_SERVICES.length);
     return;
   }
-  
+
   const service = BOOKING_SERVICES[num - 1];
   setUserState(jid, State.BOOKING_DATE, { service: service });
-  
-  let msg = '✅ ' + service.name + '\n💰 ' + service.price + '\n\nSelect date (1-7):\n\n';
+
+  let msg = '✅ ' + service.name + '\n⏱ ' + service.duration + '\n\n📞 *Pricing is personalised — our team will confirm the cost.*\n\nSelect date (1-7):\n\n';
   DATE_OPTIONS.forEach((d, i) => msg += (i + 1) + '. ' + d + '\n');
   msg += '\n📝 Reply 1-7';
   await sendReply(jid, msg);
@@ -562,12 +571,6 @@ async function handleProductsList(jid: string, text: string) {
 
 // ============ SERVICES FLOW ============
 
-function formatServicePrice(s: any): string {
-  if (s.priceFormatted) return s.priceFormatted;
-  if (typeof s.price === 'number') return s.price.toLocaleString() + ' TZS';
-  return String(s.price);
-}
-
 async function showServicesList(jid: string) {
   const { items } = await getServices();
 
@@ -578,7 +581,7 @@ async function showServicesList(jid: string) {
 
   let msg = '💇 *Our Services*\n\n';
   items.slice(0, 10).forEach((s: any, i: number) => {
-    msg += (i + 1) + '. ' + s.name + '\n   💰 ' + formatServicePrice(s) + ' | ⏱ ' + (s.duration || '') + '\n';
+    msg += (i + 1) + '. ' + s.name + (s.duration ? ' ⏱ ' + s.duration : '') + '\n';
   });
 
   if (items.length > 10) msg += '\n... and ' + (items.length - 10) + ' more';
@@ -601,10 +604,10 @@ async function handleServicesList(jid: string, text: string) {
     const s = items[num - 1];
     const msg =
       '💇 *' + s.name + '*\n\n' +
-      '💰 ' + formatServicePrice(s) + '\n' +
-      '⏱ ' + (s.duration || 'Contact us') + '\n' +
+      '⏱ ' + (s.duration || 'Contact us for duration') + '\n' +
       (s.description ? '\n' + s.description + '\n' : '') +
-      '\n📅 Reply BOOK to book this service\nReply M for Main Menu';
+      '\n💬 *Pricing is personalised — contact us for a quote.*' +
+      '\n\n📅 Reply BOOK to book this service\nReply M for Main Menu';
     setUserState(jid, State.MAIN_MENU, {});
     await sendReply(jid, msg);
   } else {
@@ -621,10 +624,23 @@ async function startBot() {
   await getProducts();
   await getServices();
   
+  // Fetch latest WhatsApp Web version to avoid 405 errors
+  let version: [number, number, number] | undefined;
+  try {
+    const versionInfo = await fetchLatestBaileysVersion();
+    version = versionInfo.version;
+    if (version) {
+      console.log('[' + new Date().toISOString() + '] Using WhatsApp Web version: ' + version.join('.'));
+    }
+  } catch (err: any) {
+    console.warn('[' + new Date().toISOString() + '] Could not fetch version, using default: ' + err.message);
+  }
+  
   const { state, saveCreds } = await useMultiFileAuthState('baileys-auth');
   
   sock = makeWASocket({
     auth: state,
+    version: version,
     browser: ['Mac OS', 'Chrome', '14.4.1'],
     syncFullHistory: false,
     getMessage: async (key: any) => {

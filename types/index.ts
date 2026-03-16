@@ -29,7 +29,7 @@ export interface Service {
   slug: string;
   description: string;
   duration: string;
-  price: number;
+  price?: number;
   image: string;
   category: 'facial' | 'spa' | 'haircare' | 'body' | 'beauty';
   benefits: string[];
