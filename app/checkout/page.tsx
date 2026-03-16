@@ -1,44 +1,37 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
+const DELIVERY_FEE = 5000;
+const MOBILE_MONEY = ['mpesa', 'tigopesa', 'airtel', 'halopesa'];
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const [cart, setCart] = useState<any>(null);
   const [selectedPayment, setSelectedPayment] = useState('');
   const [selectedDelivery, setSelectedDelivery] = useState('pickup');
-  const [customerInfo, setCustomerInfo] = useState({
-    fullName: '',
-    phone: '',
-    email: '',
-    address: ''
-  });
+  const [customerInfo, setCustomerInfo] = useState({ fullName: '', phone: '', email: '', address: '' });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const handleCustomerInfoChange = (field: string, value: string) => {
-    setCustomerInfo(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setCustomerInfo(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors(prev => { const e = { ...prev }; delete e[field]; return e; });
   };
 
   useEffect(() => {
-    // Load cart from localStorage
     const savedCart = localStorage.getItem('qm-beauty-cart');
     if (savedCart) {
       try {
         const parsedCart = JSON.parse(savedCart);
-        // Calculate total from cart items
         const total = parsedCart.reduce((sum: number, item: any) => {
           const price = item.product.salePrice || item.product.price;
-          return sum + (price * item.quantity);
+          return sum + price * item.quantity;
         }, 0);
-        
-        // Set cart with items and total
-        setCart({
-          items: parsedCart,
-          total: total
-        });
+        setCart({ items: parsedCart, total });
       } catch (error) {
         console.error('Error loading cart:', error);
       }
@@ -66,75 +59,85 @@ export default function CheckoutPage() {
     return `${price.toLocaleString()} Tsh`;
   };
 
+  function validate(): boolean {
+    const e: Record<string, string> = {};
+    if (!customerInfo.fullName.trim()) e.fullName = 'Full name is required';
+    if (!/^\d{9}$/.test(customerInfo.phone.trim())) e.phone = 'Enter 9 digits after +255 (e.g. 712345678)';
+    if (customerInfo.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerInfo.email)) e.email = 'Enter a valid email address';
+    if (selectedDelivery === 'home' && !customerInfo.address.trim()) e.address = 'Delivery address is required for home delivery';
+    if (!selectedPayment) e.payment = 'Please select a payment method';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
   const handleCheckout = async (): Promise<void> => {
-    if (!selectedPayment) {
-      alert('Please select a payment method');
-      return;
-    }
-    
-    // Create order data
+    if (!validate()) return;
+    setLoading(true);
+    setSubmitError('');
+
+    const deliveryFee = selectedDelivery === 'home' ? DELIVERY_FEE : 0;
+    const totalAmount = cart.total + deliveryFee;
+    const customerPhone = '+255' + customerInfo.phone.trim();
+
     const orderData = {
-      customerName: customerInfo.fullName,
-      customerPhone: '+255' + customerInfo.phone,
-      customerEmail: customerInfo.email,
-      deliveryAddress: selectedDelivery === 'home' ? customerInfo.address : 'In-store pickup',
+      customerName: customerInfo.fullName.trim(),
+      customerPhone,
+      customerEmail: customerInfo.email || undefined,
+      deliveryAddress: selectedDelivery === 'home' ? customerInfo.address.trim() : 'In-store pickup',
+      deliveryOption: selectedDelivery as 'home' | 'pickup',
+      paymentMethod: selectedPayment,
       items: cart.items.map((item: any) => ({
+        productId: item.product.id,
         name: item.product.name,
         quantity: item.quantity,
         price: item.product.salePrice || item.product.price,
         subtotal: (item.product.salePrice || item.product.price) * item.quantity,
       })),
-      totalAmount: cart.total + (selectedDelivery === 'home' ? 5000 : 0),
+      totalAmount,
     };
-    
-    // Process payment based on selected method
-    if (selectedPayment === 'whatsapp') {
-      // Send WhatsApp message
-      const cartItemsMessage = cart.items.map((item: any) => 
-        `${item.quantity}x ${item.product.name} - ${(item.product.salePrice || item.product.price).toLocaleString()} Tsh each`
-      ).join('\n');
-      const total = cart.total + (selectedDelivery === 'home' ? 5000 : 0);
-      const deliveryMsg = selectedDelivery === 'home' ? '\nDelivery: TZS 5,000\nAddress: ' + customerInfo.address : '\nDelivery: Free (Store Pickup)';
-      const message = `Hello! I would like to place an order for the following items:\n\n${cartItemsMessage}\n\nTotal: ${total.toLocaleString()} Tsh${deliveryMsg}\n\nCustomer: ${customerInfo.fullName}\nPhone: +255${customerInfo.phone}\nEmail: ${customerInfo.email}`;
-      
-      window.open(
-        `https://wa.me/255657120151?text=${encodeURIComponent(message)}`,
-        '_blank'
-      );
-    } else if (['mpesa', 'tigopesa', 'airtel', 'halopesa'].includes(selectedPayment)) {
-      // Call API to create order first
-      try {
-        const response = await fetch('/api/cart/checkout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(orderData),
-        });
-        
-        const result = await response.json();
-        
-        if (result.success && result.data?.orderCode) {
-          // Store order data with the API-generated order code
-          localStorage.setItem('current-order', JSON.stringify({
-            ...orderData, 
-            orderCode: result.data.orderCode
-          }));
-          window.location.href = `/payment?order=${result.data.orderCode}`;
-        } else {
-          alert('Failed to create order: ' + (result.error || 'Unknown error'));
-        }
-      } catch (error) {
-        console.error('Checkout error:', error);
-        alert('Failed to process checkout. Please try again.');
+
+    try {
+      const response = await fetch('/api/cart/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        setSubmitError(result.error || 'Failed to place order. Please try again.');
+        setLoading(false);
+        return;
       }
-    } else if (['visa', 'mastercard'].includes(selectedPayment)) {
-      // Inform user that card payments are coming soon
-      alert('Card payments (Visa/Mastercard) are coming soon. Please select another payment method.');
-      return;
-    } else {
-      // Handle other payment methods
-      alert(`Thank you for your order! We'll process your ${selectedPayment} payment shortly.`);
+
+      const { orderCode } = result.data;
+
+      // Clear cart from localStorage
+      localStorage.removeItem('qm-beauty-cart');
+
+      if (selectedPayment === 'whatsapp') {
+        // Also open WhatsApp so the customer can confirm manually
+        const cartItemsMsg = cart.items
+          .map((item: any) => `${item.quantity}x ${item.product.name} - ${(item.product.salePrice || item.product.price).toLocaleString()} Tsh`)
+          .join('\n');
+        const deliveryMsg = selectedDelivery === 'home'
+          ? `\nDelivery: TZS 5,000\nAddress: ${customerInfo.address}`
+          : '\nDelivery: Free (Store Pickup)';
+        const waMessage = `Hello! I'd like to place an order:\n\n${cartItemsMsg}\n\nTotal: ${totalAmount.toLocaleString()} Tsh${deliveryMsg}\n\nOrder: ${orderCode}\nName: ${customerInfo.fullName}\nPhone: ${customerPhone}`;
+        window.open(`https://wa.me/255657120151?text=${encodeURIComponent(waMessage)}`, '_blank');
+        router.push(`/order-confirmation?order=${orderCode}`);
+      } else if (MOBILE_MONEY.includes(selectedPayment)) {
+        localStorage.setItem('current-order', JSON.stringify({ ...orderData, orderCode }));
+        router.push(`/payment?order=${orderCode}`);
+      } else {
+        // COD, bank transfer, etc.
+        router.push(`/order-confirmation?order=${orderCode}`);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      setSubmitError('Network error. Please check your connection and try again.');
+      setLoading(false);
     }
   };
 
@@ -187,8 +190,9 @@ export default function CheckoutPage() {
                     value={customerInfo.fullName}
                     onChange={(e) => handleCustomerInfoChange('fullName', e.target.value)}
                     placeholder="Enter your full name"
-                    className="w-full px-4 py-3 border border-[var(--borderSoft)] rounded-lg focus:ring-2 focus:ring-[var(--rose-gold)] focus:border-[var(--rose-gold)] transition-colors"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--rose-gold)] focus:border-[var(--rose-gold)] transition-colors ${errors.fullName ? 'border-red-400' : 'border-[var(--borderSoft)]'}`}
                   />
+                  {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[var(--deep-charcoal)] mb-2">Phone Number *</label>
@@ -199,21 +203,24 @@ export default function CheckoutPage() {
                     <input
                       type="tel"
                       value={customerInfo.phone}
-                      onChange={(e) => handleCustomerInfoChange('phone', e.target.value)}
-                      placeholder="712 345 678"
-                      className="flex-1 px-4 py-3 border border-[var(--borderSoft)] rounded-r-lg focus:ring-2 focus:ring-[var(--rose-gold)] focus:border-[var(--rose-gold)] transition-colors"
+                      onChange={(e) => handleCustomerInfoChange('phone', e.target.value.replace(/\D/g, '').slice(0, 9))}
+                      placeholder="712345678"
+                      maxLength={9}
+                      className={`flex-1 px-4 py-3 border rounded-r-lg focus:ring-2 focus:ring-[var(--rose-gold)] focus:border-[var(--rose-gold)] transition-colors ${errors.phone ? 'border-red-400' : 'border-[var(--borderSoft)]'}`}
                     />
                   </div>
+                  {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-[var(--deep-charcoal)] mb-2">Email Address *</label>
+                  <label className="block text-sm font-medium text-[var(--deep-charcoal)] mb-2">Email Address</label>
                   <input
                     type="email"
                     value={customerInfo.email}
                     onChange={(e) => handleCustomerInfoChange('email', e.target.value)}
-                    placeholder="your.email@example.com"
-                    className="w-full px-4 py-3 border border-[var(--borderSoft)] rounded-lg focus:ring-2 focus:ring-[var(--rose-gold)] focus:border-[var(--rose-gold)] transition-colors"
+                    placeholder="your.email@example.com (optional)"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--rose-gold)] focus:border-[var(--rose-gold)] transition-colors ${errors.email ? 'border-red-400' : 'border-[var(--borderSoft)]'}`}
                   />
+                  {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
                 </div>
               </div>
             </div>
@@ -268,8 +275,9 @@ export default function CheckoutPage() {
                       onChange={(e) => handleCustomerInfoChange('address', e.target.value)}
                       placeholder="Street address, Landmark, Area (e.g., Oysterbay, Mikocheni)"
                       rows={3}
-                      className="w-full px-4 py-3 border border-[var(--borderSoft)] rounded-lg focus:ring-2 focus:ring-[var(--rose-gold)] focus:border-[var(--rose-gold)] transition-colors"
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--rose-gold)] focus:border-[var(--rose-gold)] transition-colors ${errors.address ? 'border-red-400' : 'border-[var(--borderSoft)]'}`}
                     />
+                    {errors.address && <p className="mt-1 text-xs text-red-500">{errors.address}</p>}
                   </div>
                 )}
               </div>
@@ -503,21 +511,36 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              {errors.payment && (
+                <p className="mt-4 text-sm text-red-500 text-center">{errors.payment}</p>
+              )}
+              {submitError && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+                  {submitError}
+                </div>
+              )}
+
               <button
                 onClick={handleCheckout}
-                disabled={!selectedPayment}
-                className={`w-full mt-6 py-3 px-6 rounded-lg font-medium transition-all ${
-                  selectedPayment
-                    ? 'bg-[var(--rose-gold)] text-white hover:bg-[var(--accent-gold)]'
-                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                disabled={loading}
+                className={`w-full mt-4 py-3 px-6 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                  loading
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-[var(--rose-gold)] text-white hover:bg-[var(--accent-gold)]'
                 }`}
               >
-                {selectedPayment === 'whatsapp' 
+                {loading ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                    </svg>
+                    Processing…
+                  </>
+                ) : selectedPayment === 'whatsapp'
                   ? 'Continue to WhatsApp'
-                  : selectedPayment === 'cod'
+                  : selectedPayment === 'cod' || selectedPayment === 'bank'
                   ? 'Place Order'
-                  : selectedPayment === 'visa' || selectedPayment === 'mastercard'
-                  ? 'Coming Soon'
                   : 'Pay Now'
                 }
               </button>

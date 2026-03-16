@@ -14,10 +14,17 @@ import {
   isValidProductName
 } from '@/lib/security/validation';
 
-// Dynamic import to avoid bundling venom-bot
 async function getUnifiedWhatsApp() {
   const { unifiedWhatsApp } = await import('@/lib/unified-whatsapp');
   return unifiedWhatsApp;
+}
+
+interface CheckoutItem {
+  productId?: string;
+  name: string;
+  quantity: number;
+  price: number;
+  subtotal: number;
 }
 
 interface CheckoutRequest {
@@ -26,102 +33,114 @@ interface CheckoutRequest {
   customerPhone: string;
   customerEmail?: string;
   deliveryAddress?: string;
-  items: Array<{
-    name: string;
-    quantity: number;
-    price: number;
-    subtotal: number;
-  }>;
+  deliveryOption?: 'pickup' | 'home';
+  paymentMethod?: string;
+  items: CheckoutItem[];
   totalAmount: number;
 }
 
-function generateOrderCodeLegacy(): string {
-  const timestamp = Date.now().toString().slice(-6);
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `QB-${timestamp}${random}`;
-}
+const DELIVERY_FEE = 5000;
 
 export async function POST(request: NextRequest) {
   try {
     const body: CheckoutRequest = await request.json();
-    const { 
-      cartId, 
-      customerName, 
-      customerPhone, 
+    const {
+      cartId,
+      customerName,
+      customerPhone,
       customerEmail,
       deliveryAddress,
-      items, 
-      totalAmount 
+      deliveryOption = 'pickup',
+      paymentMethod = 'whatsapp',
+      items,
+      totalAmount,
     } = body;
 
     // Input sanitization
-    const sanitizedCustomerName = sanitizeInput(customerName);
-    const sanitizedCustomerEmail = customerEmail ? sanitizeInput(customerEmail) : undefined;
-    const sanitizedDeliveryAddress = deliveryAddress ? sanitizeInput(deliveryAddress) : undefined;
-    
-    // Validation
-    if (!sanitizedCustomerName || !customerPhone || !items || !totalAmount) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+    const sanitizedName = sanitizeInput(customerName);
+    const sanitizedEmail = customerEmail ? sanitizeInput(customerEmail) : undefined;
+    const sanitizedAddress = deliveryAddress ? sanitizeInput(deliveryAddress) : undefined;
+
+    // Required field validation
+    if (!sanitizedName || !customerPhone || !items || !totalAmount) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+    if (items.length === 0) {
+      return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
+    }
+    if (!isValidTanzaniaPhone(customerPhone)) {
+      return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 });
+    }
+    if (sanitizedEmail && !isValidEmail(sanitizedEmail)) {
+      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
+    }
+    if (!isValidAmount(totalAmount)) {
+      return NextResponse.json({ error: 'Invalid total amount' }, { status: 400 });
     }
 
-    if (items.length === 0) {
-      return NextResponse.json(
-        { error: 'Cart is empty' },
-        { status: 400 }
-      );
-    }
-    
-    // Additional validation
-    if (!isValidAmount(totalAmount)) {
-      return NextResponse.json(
-        { error: 'Invalid total amount' },
-        { status: 400 }
-      );
-    }
-    
-    if (!isValidTanzaniaPhone(customerPhone)) {
-      return NextResponse.json(
-        { error: 'Invalid phone number format' },
-        { status: 400 }
-      );
-    }
-    
-    if (sanitizedCustomerEmail && !isValidEmail(sanitizedCustomerEmail)) {
-      return NextResponse.json(
-        { error: 'Invalid email format' },
-        { status: 400 }
-      );
-    }
-    
-    // Validate items
+    // Validate and sanitize each item
     for (const item of items) {
-      if (typeof item.name !== 'string' || 
-          typeof item.quantity !== 'number' || 
-          typeof item.price !== 'number' ||
-          typeof item.subtotal !== 'number' ||
-          !isValidQuantity(item.quantity) ||
-          !isValidAmount(item.price) ||
-          !isValidAmount(item.subtotal) ||
-          !isValidProductName(item.name)) {
-        return NextResponse.json(
-          { error: 'Invalid item data' },
-          { status: 400 }
-        );
+      if (
+        typeof item.name !== 'string' ||
+        typeof item.quantity !== 'number' ||
+        typeof item.price !== 'number' ||
+        typeof item.subtotal !== 'number' ||
+        !isValidQuantity(item.quantity) ||
+        !isValidAmount(item.price) ||
+        !isValidAmount(item.subtotal) ||
+        !isValidProductName(item.name)
+      ) {
+        return NextResponse.json({ error: 'Invalid item data' }, { status: 400 });
       }
-      
-      // Sanitize item name
       item.name = sanitizeInput(item.name);
     }
 
-    // Generate order code
+    // ─── SERVER-SIDE PRICE VERIFICATION ───────────────────────────────────────
+    // Verify prices against the database when productIds are supplied.
+    // This prevents a client from manipulating prices before checkout.
+    const productIds = items.map(i => i.productId).filter(Boolean) as string[];
+    if (productIds.length > 0) {
+      const dbProducts = await prisma.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, price: true, salePrice: true, inStock: true, status: true },
+      });
+
+      for (const item of items) {
+        if (!item.productId) continue;
+        const dbProduct = dbProducts.find(p => p.id === item.productId);
+        if (!dbProduct) {
+          return NextResponse.json({ error: `Product not found: ${item.name}` }, { status: 400 });
+        }
+        if (!dbProduct.inStock || dbProduct.status !== 'active') {
+          return NextResponse.json({ error: `Product out of stock: ${item.name}` }, { status: 400 });
+        }
+        // Allow salePrice if set, otherwise full price
+        const expectedPrice = dbProduct.salePrice ?? dbProduct.price;
+        if (Math.abs(item.price - expectedPrice) > 1) {
+          console.error(`Price mismatch for ${item.name}: sent ${item.price}, expected ${expectedPrice}`);
+          return NextResponse.json(
+            { error: `Price mismatch for ${item.name}. Please refresh and try again.` },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
+    // Verify total = sum of subtotals + delivery fee
+    const itemsTotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const expectedDeliveryFee = deliveryOption === 'home' ? DELIVERY_FEE : 0;
+    const expectedTotal = itemsTotal + expectedDeliveryFee;
+    if (Math.abs(totalAmount - expectedTotal) > 1) {
+      console.error(`Total mismatch: sent ${totalAmount}, expected ${expectedTotal}`);
+      return NextResponse.json({ error: 'Total amount does not match items' }, { status: 400 });
+    }
+    // ──────────────────────────────────────────────────────────────────────────
+
     const orderCode = generateOrderCode();
 
-    // Create order in database
+    // ─── DATABASE: CREATE ORDER ───────────────────────────────────────────────
+    let orderId: string | null = null;
     try {
-      // Ensure a Cart record exists for the FK constraint
       const resolvedCartId = cartId || crypto.randomUUID();
       await prisma.cart.upsert({
         where: { id: resolvedCartId },
@@ -133,39 +152,27 @@ export async function POST(request: NextRequest) {
         data: {
           orderCode,
           cartId: resolvedCartId,
-          customerName: sanitizedCustomerName,
+          customerName: sanitizedName,
           customerPhone,
-          customerEmail: sanitizedCustomerEmail || null,
-          deliveryAddress: sanitizedDeliveryAddress || null,
+          customerEmail: sanitizedEmail || null,
+          deliveryAddress: sanitizedAddress || null,
           totalAmount,
           paymentStatus: 'pending',
+          paymentMethod: paymentMethod,
           fulfillmentStatus: 'new',
         },
       });
-      
-      console.log('Order created in database:', order.id);
+      orderId = order.id;
+      console.log('Order created:', orderCode, orderId);
     } catch (dbError: any) {
-      console.error('Database error (order will still be processed via WhatsApp):', dbError);
-      
-      // Handle specific Prisma errors
+      console.error('DB error creating order:', dbError);
       if (dbError.code === 'P2002') {
-        return NextResponse.json(
-          { error: 'Order already exists', code: 'ORDER_DUPLICATE' },
-          { status: 409 }
-        );
+        return NextResponse.json({ error: 'Order already exists', code: 'ORDER_DUPLICATE' }, { status: 409 });
       }
-      
-      if (dbError.code === 'P2025') {
-        return NextResponse.json(
-          { error: 'Cart not found', code: 'CART_NOT_FOUND' },
-          { status: 404 }
-        );
-      }
-      
-      // Continue even if database fails - WhatsApp is the primary notification method
     }
+    // ──────────────────────────────────────────────────────────────────────────
 
-    // Generate WhatsApp message for QM Beauty team
+    // WhatsApp message templates
     const orderMessage = generateOrderMessage({
       orderCode,
       customerName,
@@ -174,8 +181,6 @@ export async function POST(request: NextRequest) {
       totalAmount,
       timestamp: new Date(),
     });
-
-    // Generate customer confirmation message
     const customerMessage = generateCustomerConfirmation({
       orderCode,
       customerName,
@@ -184,157 +189,93 @@ export async function POST(request: NextRequest) {
       totalAmount,
     });
 
-    // Check if Selcom is configured for payment processing
+    // ─── SELCOM PAYMENT INITIATION ────────────────────────────────────────────
     let paymentInitiated = false;
-    let paymentUrl = null;
-    
-    if (selcomClient.isConfigured()) {
+    let paymentUrl: string | null = null;
+    const mobileMoneyMethods = ['mpesa', 'tigopesa', 'airtel', 'halopesa'];
+
+    if (selcomClient.isConfigured() && mobileMoneyMethods.includes(paymentMethod)) {
       try {
-        // Initiate payment through Selcom
-        const paymentRequest = {
+        const paymentResult = await selcomClient.initiatePayment({
           orderId: orderCode,
           amount: totalAmount,
           phone: customerPhone,
-          email: sanitizedCustomerEmail,
-          customerName: sanitizedCustomerName,
-        };
-
-        const paymentResult = await selcomClient.initiatePayment(paymentRequest);
+          email: sanitizedEmail,
+          customerName: sanitizedName,
+        });
 
         if (paymentResult.success) {
           paymentInitiated = true;
-          paymentUrl = paymentResult.redirectUrl;
-          
-          // Update order with payment status
-          try {
-            await prisma.order.update({
-              where: { orderCode },
-              data: { paymentStatus: 'pending' },
-            });
-          } catch (dbError) {
-            console.error('Failed to update order payment status:', dbError);
+          paymentUrl = paymentResult.redirectUrl || null;
+
+          // Record the pending payment in the database
+          if (orderId) {
+            await prisma.payment.create({
+              data: {
+                orderId,
+                selcomReference: paymentResult.reference || null,
+                selcomTransactionId: paymentResult.transactionId || null,
+                amount: totalAmount,
+                phone: customerPhone,
+                paymentMethod: paymentMethod.toUpperCase(),
+                status: 'pending',
+                gatewayResponse: paymentResult as any,
+              },
+            }).catch(e => console.error('Failed to create Payment record:', e));
           }
         } else {
-          console.error('Failed to initiate payment:', paymentResult.error);
+          console.error('Selcom initiation failed:', paymentResult.error);
         }
       } catch (paymentError) {
         console.error('Payment initiation error:', paymentError);
       }
     }
-    
-    // Send to QM Beauty team
+    // ──────────────────────────────────────────────────────────────────────────
+
+    // ─── WHATSAPP NOTIFICATIONS ───────────────────────────────────────────────
     const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151';
-    
-    let teamResult: any = { success: false };
-    let customerResult: any = { success: false };
-    
+    let teamNotified = false;
+    let customerNotified = false;
+
     try {
       const unifiedWhatsApp = await getUnifiedWhatsApp();
-      
+
       if (await unifiedWhatsApp.isConfigured()) {
-        teamResult = await unifiedWhatsApp.sendTextMessage(
-          recipientNumber,
-          orderMessage
-        );
+        const teamResult = await unifiedWhatsApp.sendTextMessage(recipientNumber, orderMessage);
+        teamNotified = teamResult.success;
+        if (!teamNotified) console.error('WhatsApp team send failed:', teamResult.error);
 
-        if (!teamResult.success) {
-          console.error('Failed to send WhatsApp to team:', teamResult.error);
-        }
-
-        // Send confirmation to customer
-        let finalCustomerMessage = customerMessage;
-        
-        // Add payment information if payment was initiated
+        let finalCustomerMsg = customerMessage;
         if (paymentInitiated && paymentUrl) {
-          finalCustomerMessage += `
-
-💳 *Payment Required*
-Click here to pay: ${paymentUrl}`;
-        }
-        
-        customerResult = await unifiedWhatsApp.sendTextMessage(
-          customerPhone,
-          finalCustomerMessage
-        );
-
-        if (!customerResult.success) {
-          console.error('Failed to send WhatsApp to customer:', customerResult.error);
+          finalCustomerMsg += `\n\n💳 *Payment Required*\nClick here to pay: ${paymentUrl}`;
         }
 
-        return NextResponse.json({
-          success: true,
-          message: 'Order placed successfully',
-          data: {
-            orderCode,
-            totalAmount,
-            whatsappSent: teamResult.success,
-            customerNotified: customerResult.success,
-            paymentInitiated,
-            paymentUrl,
-            whatsappProvider: teamResult.provider,
-          },
-        });
+        const customerResult = await unifiedWhatsApp.sendTextMessage(customerPhone, finalCustomerMsg);
+        customerNotified = customerResult.success;
+        if (!customerNotified) console.error('WhatsApp customer send failed:', customerResult.error);
       } else {
-        // WhatsApp not configured, just return order data
-        console.warn('WhatsApp not configured. Order created but notifications not sent.');
-        
-        // Include the messages in the response so business can manually send them
-        const businessWhatsAppLink = `https://wa.me/${process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151'}?text=${encodeURIComponent(orderMessage)}`;
-        const customerWhatsAppLink = `https://wa.me/${customerPhone}?text=${encodeURIComponent(customerMessage)}`;
-        
-        // Add payment information to messages if payment was initiated
-        let businessMessage = orderMessage;
-        let finalCustomerMessage = customerMessage;
-        
-        if (paymentInitiated && paymentUrl) {
-          businessMessage += `\n\n💳 Payment URL: ${paymentUrl}`;
-          finalCustomerMessage += `\n\n💳 *Payment Required*\nClick here to pay: ${paymentUrl}`;
-        }
-        
-        return NextResponse.json({
-          success: true,
-          message: 'Order placed successfully (WhatsApp not configured)',
-          data: {
-            orderCode,
-            totalAmount,
-            whatsappSent: false,
-            customerNotified: false,
-            paymentInitiated,
-            paymentUrl,
-            // Provide links for manual notification
-            manualNotification: {
-              businessLink: businessWhatsAppLink,
-              customerLink: customerWhatsAppLink,
-              businessMessage: businessMessage,
-              customerMessage: finalCustomerMessage,
-            }
-          },
-        });
+        console.warn('WhatsApp not configured — notifications skipped.');
       }
     } catch (whatsappError) {
-      console.error('Failed to send WhatsApp notifications:', whatsappError);
-      
-      // Return success even if WhatsApp fails - order was still created
-      return NextResponse.json({
-        success: true,
-        message: 'Order placed successfully (WhatsApp notification failed)',
-        data: {
-          orderCode,
-          totalAmount,
-          whatsappSent: false,
-          customerNotified: false,
-          paymentInitiated,
-          paymentUrl,
-          whatsappError: true,
-        },
-      });
+      console.error('WhatsApp notifications error:', whatsappError);
     }
+    // ──────────────────────────────────────────────────────────────────────────
+
+    return NextResponse.json({
+      success: true,
+      message: 'Order placed successfully',
+      data: {
+        orderCode,
+        totalAmount,
+        paymentMethod,
+        whatsappSent: teamNotified,
+        customerNotified,
+        paymentInitiated,
+        paymentUrl,
+      },
+    });
   } catch (error: any) {
     console.error('Checkout Error:', error);
-    // Don't expose internal error details to client
-    return NextResponse.json(
-      { error: 'Failed to process checkout' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to process checkout' }, { status: 500 });
   }
 }

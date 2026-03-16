@@ -2,6 +2,7 @@
 // POST /api/payment/webhook
 
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 import { selcomClient } from '@/lib/selcom';
 import { generatePaymentConfirmation } from '@/lib/templates/order-message';
 import {
@@ -11,7 +12,6 @@ import {
   isValidPaymentStatus,
 } from '@/lib/security/validation';
 
-// Dynamic import to avoid bundling venom-bot
 async function getUnifiedWhatsApp() {
   const { unifiedWhatsApp } = await import('@/lib/unified-whatsapp');
   return unifiedWhatsApp;
@@ -32,196 +32,180 @@ interface SelcomWebhook {
 export async function POST(request: NextRequest) {
   try {
     const body: SelcomWebhook = await request.json();
-    
-    // Get signature from headers
+
+    // Verify signature
     const signature = request.headers.get('x-selcom-signature');
-    
     if (!signature) {
       console.error('Missing webhook signature');
-      return NextResponse.json(
-        { error: 'Missing signature' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
     }
-
-    // Verify webhook signature
-    const isValid = selcomClient.verifyWebhookSignature(
-      JSON.stringify(body),
-      signature
-    );
-
+    const isValid = selcomClient.verifyWebhookSignature(JSON.stringify(body), signature);
     if (!isValid) {
       console.error('Invalid webhook signature');
-      return NextResponse.json(
-        { error: 'Invalid signature' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
     }
 
-    const {
-      order_id,
-      transaction_id,
-      status,
-      amount,
-      currency,
-      payment_method,
-      payment_phone,
-      reference,
-    } = body;
+    const { order_id, transaction_id, status, amount, currency, payment_method, payment_phone } = body;
 
-    console.log('Payment Webhook Received:', {
-      orderId: order_id,
-      status,
-      amount,
-      transactionId: transaction_id,
-    });
-
-    // Validate webhook data
+    // Basic field validation
     if (!order_id || !transaction_id || !status || amount === undefined || amount === null) {
-      console.error('Invalid webhook data');
-      return NextResponse.json(
-        { error: 'Invalid webhook data' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid webhook data' }, { status: 400 });
     }
-    
-    // Check for duplicate webhook processing (idempotency)
-    // This would typically involve checking a database for the transaction_id
-    // For now, we'll add a basic check
-    try {
-      // TODO: Implement proper idempotency check in database
-      // const existingPayment = await prisma.payment.findUnique({
-      //   where: { transaction_id: transaction_id }
-      // });
-      // 
-      // if (existingPayment) {
-      //   console.log('Duplicate webhook received for transaction:', transaction_id);
-      //   return NextResponse.json({
-      //     success: true,
-      //     message: 'Duplicate webhook - already processed'
-      //   });
-      // }
-    } catch (dbError) {
-      console.error('Error checking for duplicate transaction:', dbError);
-      // Continue processing even if duplicate check fails
-    }
-    
-    // Validate status
     if (!isValidPaymentStatus(status)) {
-      console.error('Invalid payment status:', status);
-      return NextResponse.json(
-        { error: 'Invalid payment status' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid payment status' }, { status: 400 });
     }
-    
-    // Validate amount
     if (!isValidAmount(amount)) {
-      console.error('Invalid amount:', amount);
-      return NextResponse.json(
-        { error: 'Invalid amount' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
     }
-    
-    // Validate currency
     if (currency !== 'TZS') {
-      console.error('Unsupported currency:', currency);
-      return NextResponse.json(
-        { error: 'Unsupported currency' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Unsupported currency' }, { status: 400 });
     }
-    
-    // Validate phone
     if (!isValidTanzaniaPhone(payment_phone)) {
-      console.error('Invalid phone number:', payment_phone);
-      return NextResponse.json(
-        { error: 'Invalid phone number' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid phone number' }, { status: 400 });
     }
-    
-    // Sanitize payment method
+
     const sanitizedPaymentMethod = sanitizeInput(payment_method);
 
+    console.log('Payment Webhook:', { orderId: order_id, status, amount, transactionId: transaction_id });
+
+    // ─── IDEMPOTENCY CHECK ────────────────────────────────────────────────────
+    // Selcom retries webhooks on failure. Skip if already processed.
+    const existingPayment = await prisma.payment.findFirst({
+      where: { selcomTransactionId: transaction_id },
+    }).catch(() => null);
+
+    if (existingPayment && existingPayment.status === 'completed') {
+      console.log('Duplicate webhook — already processed:', transaction_id);
+      return NextResponse.json({ success: true, message: 'Already processed' });
+    }
+    // ──────────────────────────────────────────────────────────────────────────
+
+    // ─── LOOK UP ORDER ────────────────────────────────────────────────────────
+    // order_id from Selcom is the orderCode (QB-XXXXXX)
+    const order = await prisma.order.findUnique({
+      where: { orderCode: order_id },
+    }).catch(() => null);
+
+    if (!order) {
+      console.error('Order not found for webhook:', order_id);
+      // Return 200 so Selcom doesn't keep retrying for unknown orders
+      return NextResponse.json({ success: true, message: 'Order not found — acknowledged' });
+    }
+    // ──────────────────────────────────────────────────────────────────────────
+
     if (status === 'COMPLETED') {
-      // TODO: Update order payment status in database
-      // TODO: Create payment record in payments table
-      // TODO: Update order fulfillment status to 'processing'
-      
-      // Send WhatsApp confirmation to customer
+      // ─── DATABASE: RECORD PAYMENT + UPDATE ORDER ──────────────────────────
+      try {
+        await prisma.$transaction([
+          // Upsert payment record (create if pending entry exists, else create new)
+          ...(existingPayment
+            ? [prisma.payment.update({
+                where: { id: existingPayment.id },
+                data: {
+                  status: 'completed',
+                  selcomTransactionId: transaction_id,
+                  paymentMethod: sanitizedPaymentMethod,
+                  webhookReceivedAt: new Date(),
+                  gatewayResponse: body as any,
+                },
+              })]
+            : [prisma.payment.create({
+                data: {
+                  orderId: order.id,
+                  selcomTransactionId: transaction_id,
+                  amount,
+                  phone: payment_phone,
+                  paymentMethod: sanitizedPaymentMethod,
+                  status: 'completed',
+                  webhookReceivedAt: new Date(),
+                  gatewayResponse: body as any,
+                },
+              })]),
+          // Mark order as paid and move to processing
+          prisma.order.update({
+            where: { id: order.id },
+            data: {
+              paymentStatus: 'paid',
+              paymentMethod: sanitizedPaymentMethod.toLowerCase(),
+              fulfillmentStatus: 'processing',
+            },
+          }),
+        ]);
+        console.log('Payment recorded and order updated for:', order_id);
+      } catch (dbError) {
+        console.error('DB write failed for payment webhook:', dbError);
+        // Return 500 so Selcom retries — we need these writes to succeed
+        return NextResponse.json({ error: 'Database error' }, { status: 500 });
+      }
+      // ────────────────────────────────────────────────────────────────────────
+
+      // WhatsApp confirmation to customer and team
       const confirmationMessage = generatePaymentConfirmation({
         orderCode: order_id,
-        customerName: 'Customer', // Using default name since not available in webhook
+        customerName: order.customerName,
         amount,
         paymentMethod: sanitizedPaymentMethod,
       });
 
+      const teamMessage =
+        `✅ *PAYMENT RECEIVED*\n\n` +
+        `Order: ${order_id}\n` +
+        `Customer: ${order.customerName}\n` +
+        `Amount: TZS ${amount.toLocaleString()}/=\n` +
+        `Method: ${sanitizedPaymentMethod}\n` +
+        `Transaction: ${transaction_id}\n\n` +
+        `📦 *Action Required:* Process order for delivery`;
+
       try {
         const unifiedWhatsApp = await getUnifiedWhatsApp();
         if (await unifiedWhatsApp.isConfigured()) {
-          await unifiedWhatsApp.sendTextMessage(
-            payment_phone,
-            confirmationMessage
-          );
-
-          // Notify QM Beauty team
-          const teamMessage = `✅ *PAYMENT RECEIVED*
-
-Order: ${order_id}
-Amount: TZS ${amount.toLocaleString()}/=
-Method: ${sanitizedPaymentMethod}
-Transaction: ${transaction_id}
-
-📦 *Action Required:* Process order for delivery`;
-          
+          await unifiedWhatsApp.sendTextMessage(order.customerPhone, confirmationMessage);
           const recipientNumber = process.env.WHATSAPP_RECIPIENT_NUMBER || '+255657120151';
           await unifiedWhatsApp.sendTextMessage(recipientNumber, teamMessage);
         }
       } catch (whatsappError) {
-        console.error('Failed to send WhatsApp notification:', whatsappError);
-        // Continue without failing the webhook
+        // Log but don't fail the webhook — payment was already recorded
+        console.error('WhatsApp notification failed post-payment:', whatsappError);
       }
 
-      return NextResponse.json({
-        success: true,
-        message: 'Payment processed successfully',
-      });
+      return NextResponse.json({ success: true, message: 'Payment processed successfully' });
+
     } else if (status === 'FAILED') {
-      // TODO: Update order payment status to 'failed' in database
-      
+      // Update order and payment status to failed
+      try {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { paymentStatus: 'failed' },
+        });
+        if (existingPayment) {
+          await prisma.payment.update({
+            where: { id: existingPayment.id },
+            data: { status: 'failed', webhookReceivedAt: new Date(), gatewayResponse: body as any },
+          });
+        }
+      } catch (dbError) {
+        console.error('DB update failed for failed payment:', dbError);
+      }
       console.error('Payment failed for order:', order_id);
+      return NextResponse.json({ success: true, message: 'Payment failure recorded' });
 
-      return NextResponse.json({
-        success: true,
-        message: 'Payment failure recorded',
-      });
     } else {
-      // PENDING status
-      console.log('Payment pending for order:', order_id);
-
-      return NextResponse.json({
-        success: true,
-        message: 'Payment status updated to pending',
-      });
+      // PENDING — update timestamp if record exists
+      if (existingPayment) {
+        await prisma.payment.update({
+          where: { id: existingPayment.id },
+          data: { webhookReceivedAt: new Date() },
+        }).catch(() => null);
+      }
+      return NextResponse.json({ success: true, message: 'Payment pending acknowledged' });
     }
   } catch (error: any) {
     console.error('Webhook Processing Error:', error);
-    
-    // Don't expose internal error details to prevent information disclosure
-    // Still return 200 to prevent webhook retries for processing errors
-    return NextResponse.json({
-      error: 'Webhook processing error',
-      // details: error.message, // Commented out to prevent information disclosure
-    }, { status: 200 });
+    return NextResponse.json({ error: 'Webhook processing error' }, { status: 500 });
   }
 }
 
-// Selcom might send GET requests to verify webhook endpoint
+// Selcom might send GET to verify the endpoint is alive
 export async function GET() {
-  return NextResponse.json({
-    status: 'active',
-    service: 'QM Beauty Payment Webhook',
-  });
+  return NextResponse.json({ status: 'active', service: 'QM Beauty Payment Webhook' });
 }
