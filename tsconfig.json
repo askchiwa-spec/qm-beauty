@@ -33,6 +33,9 @@
   "exclude": [
     "node_modules",
     "wwebjs-server.ts",
+    "wwebjs-server-debug.ts",
+    "wwebjs-server-fixed.ts",
+    "wwebjs-server-new.ts",
     "whatsapp-server.ts",
     "ecosystem.config.js",
     "**/*.disabled"
