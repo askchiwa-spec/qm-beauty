@@ -76,14 +76,11 @@ export const isValidProductName = (name: string): boolean => {
   if (!name || typeof name !== 'string') {
     return false;
   }
-  
-  // Check for minimum and maximum length
   if (name.length < 1 || name.length > 200) {
     return false;
   }
-  
-  // Basic sanitization check
-  return name === sanitizeInput(name);
+  // Reject script injection patterns only — allow normal product name chars like &, ', ()
+  return !/<script|javascript:|on\w+=/i.test(name);
 };
 
 // Validate quantity (positive integers only)
